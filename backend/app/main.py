@@ -1,41 +1,103 @@
-from fastapi import FastAPI
-from fastapi import APIRouter
-# from fastapi.routing import APIRoute
-# from starlette.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+from typing import Any, Dict
+from datetime import datetime
 
-# from app.api.main import api_router
-# from app.core.config import settings
+from fastapi import FastAPI, status, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+from app.core.logging import logger
+from app.core.config import settings
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Handle application startup and shutdown events."""
+    logger.info(
+        "application_startup",
+        project_name=settings.PROJECT_NAME,
+        version=settings.VERSION,
+        api_prefix=settings.API_V1_STR,
+    )
+    yield
+    logger.info("application_shutdown")
 
 app = FastAPI(
-    title="HR Assistant API",
-    openapi_url="/api/v1/openapi.json",
-    docs_url="/api/v1/docs",
-    redoc_url="/api/v1/redoc",
-    # generate_unique_id_function=custom_generate_unique_id,
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION,
+    description=settings.DESCRIPTION,
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    docs_url=f"{settings.API_V1_STR}/docs",
+    redoc_url=f"{settings.API_V1_STR}/redoc",
+    lifespan=lifespan,
 )
 
-# Set all CORS enabled origins
-# if settings.all_cors_origins:
-#     app.add_middleware(
-#         CORSMiddleware,
-#         allow_origins=settings.all_cors_origins,
-#         allow_credentials=True,
-#         allow_methods=["*"],
-#         allow_headers=["*"],
-#     )
+# Add validation exception handler
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Handle validation errors from request data.
 
-# app.include_router(api_router, prefix=settings.API_V1_STR)
+    Args:
+        request: The request that caused the validation error
+        exc: The validation error
+
+    Returns:
+        JSONResponse: A formatted error response
+    """
+    # Log the validation error
+    logger.error(
+        "validation_error",
+        client_host=request.client.host if request.client else "unknown",
+        path=request.url.path,
+        errors=str(exc.errors()),
+    )
+
+    # Format the errors to be more user-friendly
+    formatted_errors = []
+    for error in exc.errors():
+        loc = " -> ".join([str(loc_part) for loc_part in error["loc"] if loc_part != "body"])
+        formatted_errors.append({"field": loc, "message": error["msg"]})
+
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"detail": "Validation error", "errors": formatted_errors},
+    )
+
+# Set up CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+@app.get("/health")
+# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["health"][0])
+async def health_check(request: Request) -> Dict[str, Any]:
+    """Health check endpoint with environment-specific information.
 
+    Returns:
+        Dict[str, Any]: Health status information
+    """
+    logger.info("health_check_called")
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: str | None = None):
-    return {"item_id": item_id, "q": q}
+    # Check database connectivity
+    # db_healthy = await database_service.health_check()
+    db_healthy = True
 
-# def custom_generate_unique_id(route: APIRoute) -> str:
-#     return f"{route.tags[0]}-{route.name}"
+    response = {
+        "status": "healthy" if db_healthy else "degraded",
+        "version": settings.VERSION,
+        "environment": settings.ENVIRONMENT.value,
+        "components": {"api": "healthy", "database": "healthy" if db_healthy else "unhealthy"},
+        "timestamp": datetime.now().isoformat(),
+    }
+
+    # If DB is unhealthy, set the appropriate status code
+    status_code = status.HTTP_200_OK if db_healthy else status.HTTP_503_SERVICE_UNAVAILABLE
+
+    return JSONResponse(content=response, status_code=status_code)
 
