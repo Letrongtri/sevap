@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 
 from app.core.logging import logger
 from app.core.config import settings
+from app.api.v1.api import api_router
 
 
 @asynccontextmanager
@@ -73,6 +74,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include API router
+app.include_router(api_router, prefix=settings.API_V1_STR)
 
 @app.get("/health")
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["health"][0])

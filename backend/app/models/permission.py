@@ -12,7 +12,6 @@ class Permission(Base):
     description = Column(Text)
 
     role_associations = relationship("RolePermission", 
-                                     foreign_keys=[RolePermission.permission_id], 
                                      back_populates="permission", 
                                      cascade="all, delete-orphan")
     

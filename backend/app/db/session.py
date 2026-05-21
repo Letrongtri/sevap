@@ -3,7 +3,7 @@ from sqlalchemy.orm import sessionmaker
 import os
 
 # Lấy URL từ biến môi trường (đã cấu hình trong docker-compose)
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres_password@localhost:5432/hr_assistant")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@db:5432/hr_assistant").strip()
 
 engine = create_async_engine(DATABASE_URL, echo=True)
 
