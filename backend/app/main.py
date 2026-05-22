@@ -8,6 +8,9 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.db.session import AsyncSessionLocal
+from app.db.init_db import add_system_default_data
+
 from app.core.logging import logger
 from app.core.config import settings
 from app.api.v1.api import api_router
@@ -24,6 +27,8 @@ async def lifespan(app: FastAPI):
         version=settings.VERSION,
         api_prefix=settings.API_V1_STR,
     )
+    async with AsyncSessionLocal() as db:
+        await add_system_default_data(db)
     yield
     logger.info("application_shutdown")
 

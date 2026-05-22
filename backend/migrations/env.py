@@ -35,7 +35,9 @@ target_metadata = Base.metadata
 
 # Lấy URL từ .env
 def get_url():
-    return os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres_password@localhost:5432/hr_assistant")
+    DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/hr_assistant")
+    DATABASE_URL = DATABASE_URL.replace("@db", "@localhost")
+    return DATABASE_URL
 
 # Ghi đè sqlalchemy.url trong config
 config.set_main_option("sqlalchemy.url", get_url())
