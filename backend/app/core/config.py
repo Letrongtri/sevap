@@ -130,6 +130,7 @@ class Settings:
         )
         self.API_V1_STR = os.getenv("API_V1_STR", "/api/v1")
         self.DEBUG = os.getenv("DEBUG", "false").lower() in ("true", "1", "t", "yes")
+        self.DEFAULT_USER_PASSWORD = os.getenv("DEFAULT_USER_PASSWORD", "password")
 
         # CORS Settings
         self.ALLOWED_ORIGINS = parse_list_from_env("ALLOWED_ORIGINS", ["*"])
@@ -157,7 +158,7 @@ class Settings:
         self.LOG_FORMAT = os.getenv("LOG_FORMAT", "json")  # "json" or "console"
 
         # Postgres Configuration
-        self.DATABASE_URL = os.getenv("DATABASE_URL", "")
+        self.DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@db:5432/hr_assistant")
         self.POSTGRES_POOL_SIZE = int(os.getenv("POSTGRES_POOL_SIZE", "20"))
         self.POSTGRES_MAX_OVERFLOW = int(os.getenv("POSTGRES_MAX_OVERFLOW", "10"))
         self.CHECKPOINT_TABLES = ["checkpoint_blobs", "checkpoint_writes", "checkpoints"]

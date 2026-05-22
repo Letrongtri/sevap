@@ -9,3 +9,6 @@ class NotFoundError(Exception):
 
 class UserAlreadyExistsError(Exception):
     pass
+
+class InvalidPasswordError(Exception):
+    pass

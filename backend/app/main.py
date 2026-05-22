@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from typing import Any, Dict
 from datetime import datetime
+from dotenv import load_dotenv
 
 from fastapi import FastAPI, status, Request
 from fastapi.exceptions import RequestValidationError
@@ -11,6 +12,8 @@ from app.core.logging import logger
 from app.core.config import settings
 from app.api.v1.api import api_router
 
+# Load environment variables from .env file
+load_dotenv()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

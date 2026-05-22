@@ -14,6 +14,20 @@ class UserCreate(BaseModel):
     def sanitize(cls, v):
         validate_password_strength(v)
         return v
+    
+class UserUpdate(BaseModel):
+    full_name: str | None = None
+    email: EmailStr | None = None
+
+class UserUpdatePassword(BaseModel):
+    new_password: str
+    old_password: str
+
+    @field_validator("new_password", "old_password")
+    @classmethod
+    def sanitize(cls, v):
+        validate_password_strength(v)
+        return v
 
 # Schema cho dữ liệu trả về (ẨN MẬT KHẨU)
 class UserResponse(BaseModel):
