@@ -8,6 +8,7 @@ from fastapi import APIRouter
 
 from app.api.v1.auth import router as auth_router
 from app.api.v1.user import router as user_router
+from app.api.v1.role import router as role_router
 from app.core.logging import logger
 
 api_router = APIRouter()
@@ -15,6 +16,7 @@ api_router = APIRouter()
 # Include routers
 api_router.include_router(auth_router, prefix="/auth", tags=["auth"])
 api_router.include_router(user_router, prefix="/users", tags=["users"])
+api_router.include_router(role_router, prefix="/roles", tags=["roles"])
 
 @api_router.get("/health")
 async def health_check():

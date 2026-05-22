@@ -12,3 +12,6 @@ class UserAlreadyExistsError(Exception):
 
 class InvalidPasswordError(Exception):
     pass
+
+class RoleAlreadyExistsError(Exception):
+    pass

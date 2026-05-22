@@ -11,9 +11,7 @@ class Permission(Base):
     action = Column(String(32), nullable=False)
     description = Column(Text)
 
-    role_associations = relationship("RolePermission", 
-                                     back_populates="permission", 
-                                     cascade="all, delete-orphan")
+    roles = relationship("Role", secondary="role_permissions", back_populates="permissions")
     
     __table_args__ = (
         UniqueConstraint('resource', 'action', name='unique_permission'),

@@ -15,5 +15,5 @@ class Role(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     user_associations = relationship("UserRole", back_populates="role", cascade="all, delete-orphan")
-    permission_associations = relationship("RolePermission", back_populates="role", cascade="all, delete-orphan")
+    permissions = relationship("Permission", secondary="role_permissions", back_populates="roles")
     
