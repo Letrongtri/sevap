@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
@@ -16,7 +16,7 @@ class Document(Base):
     file_type = Column(String(32))
     file_path = Column(String(255), nullable=False)
     file_size = Column(Integer)
-    status = Column(Boolean, default=True, nullable=False)
+    status = Column(String(32))
     meta_data = Column(JSONB)
     is_deleted = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
@@ -24,3 +24,5 @@ class Document(Base):
 
     document_chunks = relationship("DocumentChunk", back_populates="document", cascade="all, delete-orphan")
     uploader = relationship("User", back_populates="documents")
+    roles = relationship("Role", secondary="document_role_access", back_populates="documents")
+    
