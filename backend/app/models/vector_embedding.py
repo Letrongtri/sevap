@@ -8,9 +8,9 @@ class VectorEmbedding(Base):
     __tablename__ = "vector_embeddings"
 
     id = Column(Integer, primary_key=True, index=True)
-    embedding = Column(Vector(1536), nullable=False)
+    embedding = Column(Vector(1024), nullable=False)
     model_name = Column(String(128))
-    dimentions = Column(Integer, nullable=False)
+    dimensions = Column(Integer, nullable=False)
     document_chunk_id = Column(Integer, ForeignKey("document_chunks.id", ondelete="CASCADE"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
