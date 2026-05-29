@@ -12,6 +12,9 @@ class DocumentResponse(BaseModel):
     file_path: str
     file_size: int | None = None
     status: str | None = None
+    category: str | None = None
+    effective_date: datetime | None = None
+    meta_data: dict | None = None
     is_deleted: bool
     created_at: datetime
     updated_at: datetime

@@ -9,6 +9,7 @@ from fastapi import (
     BackgroundTasks
 )
 from typing import List
+from datetime import datetime
 
 from app.services.document_service import DocumentService
 from app.schemas.document_schema import (
@@ -28,6 +29,8 @@ async def upload_document(
     access_level: str = Form(..., description="Document's access level"),
     department_scope: str | None = Form(None, description="Document's department scope"),
     title: str | None = Form(None, description="Document's title"),
+    category: str | None = Form(None, description="Document's category"),
+    effective_date: datetime | None = Form(None, description="Document's effective date"),
     document_service: DocumentService = Depends(get_document_service),
 ):
     if not file.filename.endswith(".docx"):
@@ -43,6 +46,8 @@ async def upload_document(
             access_level=access_level,
             department_scope=department_scope,
             title=title,
+            category=category,
+            effective_date=effective_date,
             background_tasks=background_tasks
         )
         

@@ -15,3 +15,6 @@ class InvalidPasswordError(Exception):
 
 class RoleAlreadyExistsError(Exception):
     pass
+
+class DocumentAlreadyExistsError(Exception):
+    pass

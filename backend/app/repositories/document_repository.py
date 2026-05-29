@@ -43,4 +43,28 @@ class DocumentRepository:
         stmt = select(Document).where(Document.id == document_id).options(selectinload(Document.document_chunks))
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
+    
+    async def get_document_by_hash(self, file_hash: str):
+        stmt = select(Document).where(Document.file_hash == file_hash)
+
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
+    
+    async def delete_document(self, document_id: int):
+        try:
+            stmt = update(Document).where(Document.id == document_id).values(is_deleted=True)
+            await self.db.execute(stmt)
+            await self.db.commit()
+        except Exception as e:
+            await self.db.rollback()
+            raise e
+        
+    async def restore_document(self, document_id: int):
+        try:
+            stmt = update(Document).where(Document.id == document_id).values(is_deleted=False)
+            await self.db.execute(stmt)
+            await self.db.commit()
+        except Exception as e:
+            await self.db.rollback()
+            raise e
    
