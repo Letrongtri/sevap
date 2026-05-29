@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey, UniqueConstraint
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
@@ -19,4 +19,8 @@ class DocumentChunk(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     document = relationship("Document", back_populates="document_chunks")
-    vector_embeddings = relationship("VectorEmbedding", back_populates="document_chunk")
+    vector_embedding = relationship("VectorEmbedding", back_populates="document_chunk", uselist=False)
+
+    __table_args__ = (
+        UniqueConstraint('document_id', 'chunk_index', name='unique_document_chunk_index'),
+    )

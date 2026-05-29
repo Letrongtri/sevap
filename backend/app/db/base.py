@@ -2,7 +2,9 @@ from app.db.base_class import Base
 from app.models.activity_log import ActivityLog
 from app.models.conversation import Conversation
 from app.models.document_chunks import DocumentChunk
+from app.models.document_role_access import DocumentRoleAccess
 from app.models.document import Document
+from app.models.embedding_job import EmbeddingJob
 from app.models.message import Message
 from app.models.permission import Permission
 from app.models.role_permission import RolePermission

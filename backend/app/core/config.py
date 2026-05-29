@@ -135,6 +135,17 @@ class Settings:
         # CORS Settings
         self.ALLOWED_ORIGINS = parse_list_from_env("ALLOWED_ORIGINS", ["*"])
 
+        # Model Configuration
+        self.HF_HUB_OFFLINE = os.getenv("HF_HUB_OFFLINE", "1")
+
+        # Embedding Configuration
+        self.EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "BAAI/bge-m3")
+        self.TOKENIZER_NAME = os.getenv("TOKENIZER_NAME", "BAAI/bge-m3")
+        self.EMBEDDING_MODEL_DIMENSION = int(os.getenv("EMBEDDING_MODEL_DIMENSION", "1024"))
+        self.EMBEDDING_CHUNK_SIZE = int(os.getenv("EMBEDDING_CHUNK_SIZE", "512"))
+        self.EMBEDDING_CHUNK_OVERLAP = int(os.getenv("EMBEDDING_CHUNK_OVERLAP", "64"))
+        self.EMBEDDING_BATCH_SIZE = int(os.getenv("EMBEDDING_BATCH_SIZE", "32"))
+
         # Langfuse Configuration
         # self.LANGFUSE_PUBLIC_KEY = os.getenv("LANGFUSE_PUBLIC_KEY", "")
         # self.LANGFUSE_SECRET_KEY = os.getenv("LANGFUSE_SECRET_KEY", "")

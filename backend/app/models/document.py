@@ -13,7 +13,7 @@ class Document(Base):
     access_level = Column(String(32), nullable=False)
     department_scope = Column(String(64))
     file_name = Column(String(255), nullable=False)
-    file_type = Column(String(32))
+    file_type = Column(String(128), nullable=False)
     file_path = Column(String(255), nullable=False)
     file_size = Column(Integer)
     status = Column(String(32))
@@ -25,4 +25,5 @@ class Document(Base):
     document_chunks = relationship("DocumentChunk", back_populates="document", cascade="all, delete-orphan")
     uploader = relationship("User", back_populates="documents")
     roles = relationship("Role", secondary="document_role_access", back_populates="documents")
+    embedding_jobs = relationship("EmbeddingJob", back_populates="document", cascade="all, delete-orphan")
     

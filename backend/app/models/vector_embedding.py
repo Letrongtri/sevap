@@ -14,4 +14,4 @@ class VectorEmbedding(Base):
     document_chunk_id = Column(Integer, ForeignKey("document_chunks.id", ondelete="CASCADE"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
-    document_chunk = relationship("DocumentChunk", back_populates="vector_embeddings")
+    document_chunk = relationship("DocumentChunk", back_populates="vector_embedding", uselist=False)

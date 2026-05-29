@@ -31,6 +31,7 @@ load_dotenv()
 
 # Import Base đã chứa toàn bộ metadata của các bảng
 from app.db.base import Base
+from app.models import *
 target_metadata = Base.metadata
 
 # Lấy URL từ .env
