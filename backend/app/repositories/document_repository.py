@@ -39,8 +39,12 @@ class DocumentRepository:
             await self.db.rollback()
             raise e
         
-    async def get_document_by_id(self, document_id: int):
-        stmt = select(Document).where(Document.id == document_id).options(selectinload(Document.document_chunks))
+    async def get_document_by_id(self, document_id: int, get_chunks: bool = False):
+        stmt = select(Document).where(Document.id == document_id)
+        
+        if get_chunks:
+            stmt = stmt.options(selectinload(Document.document_chunks))
+
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
     
@@ -67,4 +71,22 @@ class DocumentRepository:
         except Exception as e:
             await self.db.rollback()
             raise e
+
+    async def get_documents(self, is_deleted: bool = False, get_chunks: bool = False):
+        stmt = select(Document).where(Document.is_deleted == is_deleted)
+        
+        if get_chunks:
+            stmt = stmt.options(selectinload(Document.document_chunks))
+
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
+    
+    async def save_document(self, document: Document):
+        try:
+            await self.db.commit()
+            return await self.get_document_by_id(document.id)
+        except Exception as e:
+            await self.db.rollback()
+            raise e
+        
    

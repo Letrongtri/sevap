@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Tách lớp (layer) cài đặt thư viện để tối ưu cache của Docker
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Sao chép toàn bộ mã nguồn của dự án vào container
 COPY . .
@@ -29,4 +29,4 @@ COPY . .
 EXPOSE 8000
 
 # Lệnh khởi chạy Uvicorn server hỗ trợ Auto-Reload phục vụ phát triển
-CMD sh -c "pip install -r requirements.txt && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

@@ -12,15 +12,13 @@ from app.models.document_chunks import DocumentChunk
 from app.models.vector_embedding import VectorEmbedding
 from app.repositories.document_repository import DocumentRepository
 from app.services.chunking_service import ChunkService
-from app.services.exceptions import DocumentAlreadyExistsError
+from app.services.exceptions import DocumentAlreadyExistsError, NotFoundError
 from app.core.enum import DocumentStatus
 from app.core.logging import logger
 
 class DocumentService:
     def __init__(self, repo: DocumentRepository):
         self.repo = repo
-        self.chunking_service = ChunkService()
-
 
     async def upload(self, file: UploadFile, access_level: str,
                      background_tasks: BackgroundTasks, 
@@ -96,11 +94,12 @@ class DocumentService:
             self, document_id: int, file_path: str, access_level: str, 
             department_scope: str, category: str = None, effective_date: datetime = None):
         try:
-            chunks = await self.chunking_service.hybrid_chunking(doc_path=str(file_path))
+            chunking_service = ChunkService()
+            chunks = await chunking_service.hybrid_chunking(doc_path=str(file_path))
             document_chunks = []
 
             for i, chunk in enumerate(chunks):
-                context_content = await self.chunking_service.get_chunk_context(chunk)
+                context_content = await chunking_service.get_chunk_context(chunk)
                 chunk_meta = getattr(chunk, 'meta_data', {}) or {}
                 chunk_meta.update({
                     "chunking_strategy": "hybrid",
@@ -114,19 +113,19 @@ class DocumentService:
                     chunk_index=i,
                     content=chunk.text,
                     context_content=context_content,
-                    embedding_model=self.chunking_service.embedding_model_name,
+                    embedding_model=chunking_service.embedding_model_name,
                     embedding_status=DocumentStatus.DONE,
                     meta_data=chunk_meta
                 )
 
-                embedding = await self.chunking_service.embedding_chunking(
+                embedding = await chunking_service.embedding_chunking(
                     chunk=chunk
                 )
 
                 vector_embedding = VectorEmbedding(
                     embedding=embedding,
-                    model_name=self.chunking_service.embedding_model_name,
-                    dimensions=self.chunking_service.embedding_model_dimension
+                    model_name=chunking_service.embedding_model_name,
+                    dimensions=chunking_service.embedding_model_dimension
                 )
                 document_chunk.vector_embedding = vector_embedding
                 document_chunks.append(document_chunk)
@@ -138,4 +137,46 @@ class DocumentService:
             logger.error("document_chunking_failed", document_id=document_id, exc_info=True)
             await self.repo.update_document_status(document_id, DocumentStatus.FAILED)
 
+    async def get_documents(self):
+        return await self.repo.get_documents()
+    
+    async def get_document_by_id(self, document_id: int):
+        document = await self.repo.get_document_by_id(document_id, get_chunks=True)
+
+        if document is None or document.is_deleted is True:
+            raise NotFoundError()
+        
+        return document
+
+    async def update_document(self, document_id: int, access_level: str = None, 
+                              department_scope: str = None, title: str = None, 
+                              category: str = None, effective_date: datetime = None) -> Document:
+        existing = await self.repo.get_document_by_id(document_id)
+        
+        if existing is None or existing.is_deleted is True:
+            raise DocumentAlreadyExistsError()
+
+        if access_level is not None:
+            existing.access_level = access_level
+        if department_scope is not None:
+            existing.department_scope = department_scope
+        if title is not None:
+            existing.title = title
+        if category is not None:
+            existing.category = category
+        if effective_date is not None:
+            existing.effective_date = effective_date
+
+        await self.repo.save_document(existing)
+
+        return existing
+
+    async def delete_document(self, document_id: int):
+        existing = await self.repo.get_document_by_id(document_id)
+
+        if existing is None or existing.is_deleted is True:
+            raise NotFoundError()
+        
+        await self.repo.delete_document(document_id)
+        return existing
     

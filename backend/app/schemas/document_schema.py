@@ -1,5 +1,54 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator, field_validator
 from datetime import datetime
+
+class DocumentUpdate(BaseModel):
+    access_level: str | None = None
+    department_scope: str | None = None
+    title: str | None = None
+    category: str | None = None
+    effective_date: datetime | None = None
+
+    @model_validator(mode="after")
+    def validate_at_least_one_field(self):
+        values = [
+            self.access_level,
+            self.department_scope,
+            self.title,
+            self.category,
+            self.effective_date
+        ]
+
+        has_value = any(
+            v not in (None, "", [])
+            for v in values
+        )
+
+        if not has_value:
+            raise ValueError(
+                "At least one field must be provided"
+            )
+
+        return self
+    
+    @field_validator("access_level")
+    def validate_access_level(cls, v):
+        if v is not None and v not in ["public", "private", "protected"]:
+            raise ValueError("Invalid access level")
+        return v
+
+class DocumentChunkResponse(BaseModel):
+    id: int
+    document_id: int
+    chunk_index: int
+    content: str
+    context_content: str | None = None
+    meta_data: dict | None = None
+    embedding_model: str
+    embedding_status: str
+    embedded_at: datetime
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 class DocumentResponse(BaseModel):
     id: int
@@ -18,5 +67,7 @@ class DocumentResponse(BaseModel):
     is_deleted: bool
     created_at: datetime
     updated_at: datetime
+
+    document_chunks: list[DocumentChunkResponse] = []
 
     model_config = ConfigDict(from_attributes=True)

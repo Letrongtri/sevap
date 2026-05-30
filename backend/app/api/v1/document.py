@@ -14,7 +14,9 @@ from datetime import datetime
 from app.services.document_service import DocumentService
 from app.schemas.document_schema import (
     DocumentResponse, 
+    DocumentUpdate
 )
+from app.services.exceptions import NotFoundError
 from app.dependencies.document import get_document_service
 from app.core.logging import logger
 
@@ -59,3 +61,94 @@ async def upload_document(
             exc_info=True
         )
         raise HTTPException(status_code=422, detail="Failed to upload document")
+
+@router.get("", response_model=List[DocumentResponse])
+# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+async def get_all_documents(
+    request: Request,
+    document_service: DocumentService = Depends(get_document_service),
+):
+    try:
+        documents = await document_service.get_documents()
+        
+        return [
+            DocumentResponse.model_validate(document) 
+            for document in documents
+        ]
+    except Exception:
+        logger.error(
+            "get_all_documents_failed", 
+            exc_info=True
+        )
+        raise HTTPException(status_code=422, detail="Failed to get all documents")
+
+@router.get("/{document_id}", response_model=DocumentResponse)
+# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+async def get_document(
+    request: Request, 
+    document_id: int,
+    document_service: DocumentService = Depends(get_document_service),
+):
+    try:
+        document = await document_service.get_document_by_id(document_id)
+        
+        return DocumentResponse.model_validate(document)
+    except NotFoundError:
+        logger.error("document_not_found", document_id=document_id)
+        raise HTTPException(status_code=404, detail="Document not found")
+    except Exception:
+        logger.error(
+            "get_document_failed",
+            document_id=document_id,
+            exc_info=True
+        )
+        raise HTTPException(status_code=422, detail="Failed to get document")
+
+@router.put("/{document_id}", response_model=DocumentResponse)
+# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["upload_document"][0])
+async def update_document(
+    request: Request,
+    document_id: int,
+    data: DocumentUpdate,
+    document_service: DocumentService = Depends(get_document_service),
+):
+    try:
+        document = await document_service.update_document(
+            document_id=document_id,
+            access_level=data.access_level,
+            department_scope=data.department_scope,
+            title=data.title,
+            category=data.category,
+            effective_date=data.effective_date,
+        )
+        
+        return DocumentResponse.model_validate(document)
+    except Exception:
+        logger.error(
+            "upload_document_failed", 
+            document_id=document_id, 
+            exc_info=True
+        )
+        raise HTTPException(status_code=422, detail="Failed to upload document")
+
+@router.delete("/{document_id}", response_model=DocumentResponse)
+# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+async def delete_document(
+    request: Request,
+    document_id: int,
+    document_service: DocumentService = Depends(get_document_service),
+):
+    try:
+        document = await document_service.delete_document(document_id=document_id)
+        
+        return DocumentResponse.model_validate(document)
+    except NotFoundError:
+        logger.error("deleted_document_not_found", document_id=document_id)
+        raise HTTPException(status_code=404, detail="Document not found")
+    except Exception:
+        logger.error(
+            "delete_document_failed", 
+            document_id=document_id, 
+            exc_info=True
+        )
+        raise HTTPException(status_code=422, detail="Failed to delete document")
