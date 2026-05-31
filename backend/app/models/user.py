@@ -25,3 +25,4 @@ class User(Base):
     documents = relationship("Document", back_populates="uploader")
     activity_logs = relationship("ActivityLog", back_populates="user")
     embedding_jobs = relationship("EmbeddingJob", back_populates="user", cascade="all, delete-orphan")
+    user_sessions = relationship("UserSession", back_populates="user")

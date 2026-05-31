@@ -4,14 +4,17 @@ from datetime import datetime
 
 # Schema cho JWT Token
 class Token(BaseModel):
-    access_token: str = Field(..., description="The JWT access token")
+    jti: str = Field(..., description="The unique identifier of the token")
+    token: str = Field(..., description="The JWT access token")
     token_type: str = Field(default="bearer", description="The type of the token")
     expires_at: datetime = Field(..., description="The expiration date of the token")
 
 class TokenResponse(BaseModel):
-    access_token: str = Field(..., description="The JWT access token")
     token_type: str = Field(default="bearer", description="The type of the token")
-    expires_at: datetime = Field(..., description="The expiration date of the token")
+    access_token: str = Field(..., description="The JWT access token")
+    access_token_expires_at: datetime = Field(..., description="The expiration date of the token")
+    refresh_token: str = Field(..., description="The JWT refresh token")
+    refresh_token_expires_at: datetime = Field(..., description="The expiration date of the token")
 
     class Config:
         from_attributes = True # Cho phép ánh xạ trực tiếp từ SQLAlchemy Model sang Pydantic
@@ -26,3 +29,6 @@ class LoginForm(BaseModel):
     def sanitize(cls, v):
         validate_password_strength(v)
         return v
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str = Field(..., description="The JWT refresh token")

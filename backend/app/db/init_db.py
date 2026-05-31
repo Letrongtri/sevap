@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.models import User, Role, UserRole, Permission, RolePermission
-from app.utils.password import hash_password
+from app.utils.auth import hash_password
 from app.core.logging import logger
 
 async def add_system_default_data(db: AsyncSession):

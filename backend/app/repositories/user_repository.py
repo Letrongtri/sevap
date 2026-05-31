@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 
 from app.models.user import User
 
@@ -7,13 +8,21 @@ class UserRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_user_by_employee_code(self, employee_code: str):
+    async def get_user_by_employee_code(self, employee_code: str, get_user_roles: bool = False):
         stmt = select(User).where(User.employee_code == employee_code)
+
+        if get_user_roles:
+            stmt = stmt.options(selectinload(User.role_associations))
+
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
     
-    async def get_user_by_id(self, user_id: int):
+    async def get_user_by_id(self, user_id: int, get_user_roles: bool = False):
         stmt = select(User).where(User.id == user_id)
+
+        if get_user_roles:
+            stmt = stmt.options(selectinload(User.role_associations))
+            
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
     

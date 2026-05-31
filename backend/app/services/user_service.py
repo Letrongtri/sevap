@@ -8,7 +8,7 @@ from app.services.exceptions import (
     InvalidPasswordError
 )
 from app.core.config import settings
-from app.utils.password import hash_password, verify_password
+from app.utils.auth import hash_password, verify_password
 
 class UserService:
     def __init__(self, repo: UserRepository):

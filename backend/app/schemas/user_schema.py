@@ -1,13 +1,15 @@
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, field_validator
 from app.utils.sanitization import validate_password_strength
 from datetime import datetime
+
+from app.schemas.conversation_schema import ConversationResponse
 
 # Schema cho dữ liệu gửi lên khi tạo User
 class UserCreate(BaseModel):
     employee_code: str
     full_name: str
     password: str
-    email: EmailStr | None = None
+    email: str | None = None
 
     @field_validator("password")
     @classmethod
@@ -17,7 +19,7 @@ class UserCreate(BaseModel):
     
 class UserUpdate(BaseModel):
     full_name: str | None = None
-    email: EmailStr | None = None
+    email: str | None = None
 
 class UserUpdatePassword(BaseModel):
     new_password: str
@@ -34,7 +36,7 @@ class UserResponse(BaseModel):
     id: int
     employee_code: str
     full_name: str
-    email: EmailStr | None
+    email: str | None
     is_active: bool
     is_deleted: bool
     last_login: datetime | None

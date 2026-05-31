@@ -5,7 +5,6 @@ and token verification.
 """
 
 from fastapi import APIRouter, HTTPException, Depends, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from app.models.user import User
 from app.services.auth_service import AuthService
@@ -14,15 +13,13 @@ from app.services.exceptions import (
     InvalidTokenError,
     NotFoundError
 )
-from app.schemas.auth_schema import Token, TokenResponse, LoginForm
+from app.schemas.auth_schema import TokenResponse, LoginForm, RefreshTokenRequest
 from app.schemas.user_schema import UserResponse
 from app.dependencies.auth import get_auth_service
-from app.utils.auth import create_access_token, verify_token
-from app.utils.sanitization import sanitize_string
+from app.dependencies.security import get_current_user
 from app.core.logging import logger
 
 router = APIRouter()
-security = HTTPBearer()
 
 @router.post("/login", response_model=TokenResponse)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["login"][0])
@@ -45,62 +42,77 @@ async def login(
         HTTPException: If credentials are invalid
     """
     try:
-        user = await auth_service.login(
+        client_ip = request.client.host if request.client else None
+        access_token, refresh_token = await auth_service.login(
             data.employee_code, 
-            data.password
+            data.password,
+            client_ip
         )
-        
-        token = create_access_token(str(user.id))
-        return Token(
-            access_token=token.access_token, 
+
+        return TokenResponse(
             token_type="bearer", 
-            expires_at=token.expires_at
+            access_token=access_token.token, 
+            access_token_expires_at=access_token.expires_at,
+            refresh_token=refresh_token.token,
+            refresh_token_expires_at=refresh_token.expires_at,
         )
     
     except InvalidCredentialsError:
-        logger.error("login_invalid_credentials", exc_info=True)
+        logger.error("login_invalid_credentials", employee_code=data.employee_code, exc_info=True)
         raise HTTPException(
             status_code=401,
-            employee_code=data.employee_code,
             detail="Incorrect credentials",
         )
     except ValueError as ve:
         logger.error("login_validation_failed", error=str(ve), exc_info=True)
         raise HTTPException(status_code=422, detail=str(ve))
 
+@router.post("/refresh")
+async def refresh_token(
+    request: Request, 
+    data: RefreshTokenRequest,
+    current_user=Depends(get_current_user),
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    try:
+        new_access_token = await auth_service.refresh_token(data.refresh_token)
+        return {
+            "access_token": new_access_token.token,
+            "token_type": "bearer"
+        }
+    except InvalidTokenError:
+        logger.error("refresh_token_invalid", exc_info=True)
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+    except NotFoundError:
+        logger.error("user_not_found", exc_info=True)
+        raise HTTPException(status_code=404, detail="User not found")
+    
+@router.post("/logout")
+async def logout(
+    request: Request,
+    data: RefreshTokenRequest,
+    current_user=Depends(get_current_user),
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    try:
+        await auth_service.logout(data.refresh_token)
+        return {"message": "Logout successful"}
+    except NotFoundError:
+        logger.error("user_not_found", exc_info=True)
+        raise HTTPException(status_code=404, detail="User not found")
+
 @router.get("/me", response_model=UserResponse)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["login"][0])
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    current_user=Depends(get_current_user),
     auth_service: AuthService = Depends(get_auth_service),
 ) -> User:
-    """Get the current user ID from the token.
-
-    Args:
-        credentials: The HTTP authorization credentials containing the JWT token.
-
-    Returns:
-        User: The user extracted from the token.
-
-    Raises:
-        HTTPException: If the token is invalid or missing.
-    """
     try:
-        # Sanitize token
-        token = sanitize_string(credentials.credentials)
-
-        user_id = verify_token(token)
+        user_id = current_user.get("user_id")
         if user_id is None:
             raise InvalidTokenError
         
-        return auth_service.get_current_user(user_id)
-    except InvalidTokenError or NotFoundError:
-        logger.error("invalid_token", token_part=token[:10] + "...")
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        return await auth_service.get_current_user(int(user_id))
     except ValueError as ve:
         logger.error("token_validation_failed", error=str(ve), exc_info=True)
         raise HTTPException(

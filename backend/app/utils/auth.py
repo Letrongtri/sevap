@@ -1,29 +1,32 @@
 """This file contains the authentication utilities for the application."""
 
+import hashlib
 import re
-from datetime import (
-    UTC,
-    datetime,
-    timedelta,
-)
-from typing import Optional
-
-from jose import (
-    JWTError,
-    jwt,
-)
+from datetime import UTC, datetime, timedelta
+from typing import List, Optional
+from jose import JWTError, jwt
 
 from app.core.config import settings
 from app.core.logging import logger
 from app.schemas.auth_schema import Token
 from app.utils.sanitization import sanitize_string
 
+from pwdlib import PasswordHash
 
-def create_access_token(thread_id: str, expires_delta: Optional[timedelta] = None) -> Token:
+password_hash = PasswordHash.recommended()
+
+def verify_password(password: str, hashed_password: str) -> bool:
+    """Verify if the provided password matches the hash."""
+    return password_hash.verify(password, hashed_password)
+
+def hash_password(password: str) -> str:
+    return password_hash.hash(password)
+
+def create_access_token(user_id: str, user_roles: List[int], expires_delta: Optional[timedelta] = None) -> Token:
     """Create a new access token for a thread.
 
     Args:
-        thread_id: The unique thread ID for the conversation.
+        user_id: The unique thread ID for the conversation.
         expires_delta: Optional expiration time delta.
 
     Returns:
@@ -32,21 +35,53 @@ def create_access_token(thread_id: str, expires_delta: Optional[timedelta] = Non
     if expires_delta:
         expire = datetime.now(UTC) + expires_delta
     else:
-        expire = datetime.now(UTC) + timedelta(days=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(UTC) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    jti = sanitize_string(f"{user_id}-{datetime.now(UTC).timestamp()}")  # Add unique token identifier
 
     to_encode = {
-        "sub": thread_id,
+        "sub": user_id, # User ID
+        "roles": user_roles,
         "exp": expire,
         "iat": datetime.now(UTC),
-        "jti": sanitize_string(f"{thread_id}-{datetime.now(UTC).timestamp()}"),  # Add unique token identifier
+        "jti": jti
     }
 
     encoded_jwt = jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
-    logger.info("token_created", thread_id=thread_id, expires_at=expire.isoformat())
+    logger.info("access_token_created", user_id=user_id, expires_at=expire.isoformat())
 
-    return Token(access_token=encoded_jwt, expires_at=expire)
+    return Token(jti=jti, token=encoded_jwt, expires_at=expire)
 
+def create_refresh_token(user_id: str, expires_delta: Optional[timedelta] = None) -> Token:
+    """Create a new refresh token for a thread.
+
+    Args:
+        user_id: The unique thread ID for the conversation.
+        expires_delta: Optional expiration time delta.
+
+    Returns:
+        Token: The generated refresh token.
+    """
+    if expires_delta:
+        expire = datetime.now(UTC) + expires_delta
+    else:
+        expire = datetime.now(UTC) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+
+    jti = sanitize_string(f"{user_id}-{datetime.now(UTC).timestamp()}")  # Add unique token identifier
+
+    to_encode = {
+        "sub": user_id, # User ID
+        "exp": expire,
+        "iat": datetime.now(UTC),
+        "jti": jti
+    }
+
+    encoded_jwt = jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+
+    logger.info("refresh_token_created", user_id=user_id, expires_at=expire.isoformat())
+
+    return Token(jti=jti, token=encoded_jwt, expires_at=expire)
 
 def verify_token(token: str) -> Optional[str]:
     """Verify a JWT token and return the thread ID.
@@ -72,14 +107,7 @@ def verify_token(token: str) -> Optional[str]:
 
     try:
         payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
-        thread_id: str = payload.get("sub")
-        if thread_id is None:
-            logger.warning("token_missing_thread_id")
-            return None
-
-        logger.info("token_verified", thread_id=thread_id)
-        return thread_id
-
+        return payload
     except JWTError as e:
         logger.error("token_verification_failed", error=str(e))
         return None
