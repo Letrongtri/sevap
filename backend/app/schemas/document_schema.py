@@ -1,12 +1,15 @@
 from pydantic import BaseModel, ConfigDict, model_validator, field_validator
 from datetime import datetime
 
+from app.core.enum import AccessLevel
+
 class DocumentUpdate(BaseModel):
-    access_level: str | None = None
+    access_level: AccessLevel | None = None
     department_scope: str | None = None
     title: str | None = None
     category: str | None = None
     effective_date: datetime | None = None
+    role_access: list[int] | None = None
 
     @model_validator(mode="after")
     def validate_at_least_one_field(self):

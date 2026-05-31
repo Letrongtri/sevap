@@ -11,19 +11,22 @@ from app.models.document import Document
 from app.models.document_chunks import DocumentChunk
 from app.models.vector_embedding import VectorEmbedding
 from app.repositories.document_repository import DocumentRepository
+from app.repositories.role_repository import RoleRepository
 from app.services.chunking_service import ChunkService
 from app.services.exceptions import DocumentAlreadyExistsError, NotFoundError
 from app.core.enum import DocumentStatus
 from app.core.logging import logger
 
 class DocumentService:
-    def __init__(self, repo: DocumentRepository):
+    def __init__(self, repo: DocumentRepository, role_repo: RoleRepository):
         self.repo = repo
+        self.role_repo = role_repo
 
     async def upload(self, file: UploadFile, access_level: str,
-                     background_tasks: BackgroundTasks, 
-                     department_scope: str, title: str = None, 
-                     category: str = None, effective_date: datetime = None) -> Document:
+                     background_tasks: BackgroundTasks, department_scope: str, 
+                     title: str = None, category: str = None, 
+                     effective_date: datetime = None, role_access: List[int] = None
+    ) -> Document:
         BASE_DIR = Path(__file__).resolve().parent.parent.parent
         UPLOAD_DIR = BASE_DIR / "data" / "uploads"
         UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -51,10 +54,20 @@ class DocumentService:
         # If document already exists, raise already exists error
         # If document exists but is deleted, restore it
         if existing and existing.is_deleted is False:
-            raise DocumentAlreadyExistsError()
+            raise NotFoundError()
         elif existing and existing.is_deleted is True:
             await self.repo.restore_document(existing)
             return existing
+        
+        # check roles
+        roles = []
+        if role_access is not None:
+            for role_id in role_access:
+                existing_role = await self.role_repo.get_role_by_id(role_id)
+                if existing_role is None:
+                    raise NotFoundError()
+                
+                roles.append(existing_role)
         
         shutil.move(temp_file_path, uploaded_file_path)
             
@@ -75,6 +88,9 @@ class DocumentService:
             effective_date=effective_date,
             file_hash=file_hash.hexdigest(),
         )
+
+        if role_access is not None:
+            document.roles = roles
 
         saved_document = await self.repo.create_document(document)
 
@@ -150,7 +166,8 @@ class DocumentService:
 
     async def update_document(self, document_id: int, access_level: str = None, 
                               department_scope: str = None, title: str = None, 
-                              category: str = None, effective_date: datetime = None) -> Document:
+                              category: str = None, effective_date: datetime = None,
+                              role_access: List[int] = None) -> Document:
         existing = await self.repo.get_document_by_id(document_id)
         
         if existing is None or existing.is_deleted is True:
@@ -167,6 +184,16 @@ class DocumentService:
         if effective_date is not None:
             existing.effective_date = effective_date
 
+        if role_access is not None:
+            roles = []
+            for role_id in role_access:
+                existing_role = await self.role_repo.get_role_by_id(role_id)
+                if existing_role is None:
+                    raise NotFoundError()
+                
+                roles.append(existing_role)
+            existing.roles = roles
+
         await self.repo.save_document(existing)
 
         return existing
@@ -177,6 +204,8 @@ class DocumentService:
         if existing is None or existing.is_deleted is True:
             raise NotFoundError()
         
-        await self.repo.delete_document(document_id)
+        existing.is_deleted = True
+        
+        await self.repo.save_document(document_id)
         return existing
     

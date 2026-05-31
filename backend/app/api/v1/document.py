@@ -19,6 +19,7 @@ from app.schemas.document_schema import (
 from app.services.exceptions import NotFoundError
 from app.dependencies.document import get_document_service
 from app.core.logging import logger
+from app.core.enum import AccessLevel
 
 router = APIRouter()
 
@@ -28,19 +29,16 @@ async def upload_document(
     request: Request,
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    access_level: str = Form(..., description="Document's access level"),
+    access_level: AccessLevel = Form(..., description="Document's access level"),
     department_scope: str | None = Form(None, description="Document's department scope"),
     title: str | None = Form(None, description="Document's title"),
     category: str | None = Form(None, description="Document's category"),
     effective_date: datetime | None = Form(None, description="Document's effective date"),
+    role_access: List[int] | None = Form(..., description="User's role to access document"),
     document_service: DocumentService = Depends(get_document_service),
 ):
     if not file.filename.endswith(".docx"):
         raise HTTPException(status_code=400, detail="File must be a docx file")
-    
-    valid_levels = ["public", "private", "managerial"]
-    if access_level not in valid_levels:
-        raise HTTPException(status_code=400, detail="Invalid access level")
     
     try:
         document = await document_service.upload(
@@ -50,10 +48,14 @@ async def upload_document(
             title=title,
             category=category,
             effective_date=effective_date,
+            role_access=role_access,
             background_tasks=background_tasks
         )
         
         return DocumentResponse.model_validate(document)
+    except NotFoundError:
+        logger.error("document_role_access_not_found", role_access=role_access)
+        raise HTTPException(status_code=404, detail="Document role access not found")
     except Exception:
         logger.error(
             "upload_document_failed", 
@@ -119,6 +121,7 @@ async def update_document(
             department_scope=data.department_scope,
             title=data.title,
             category=data.category,
+            role_access=data.role_access,
             effective_date=data.effective_date,
         )
         

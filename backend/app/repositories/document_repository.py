@@ -53,15 +53,6 @@ class DocumentRepository:
 
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
-    
-    async def delete_document(self, document_id: int):
-        try:
-            stmt = update(Document).where(Document.id == document_id).values(is_deleted=True)
-            await self.db.execute(stmt)
-            await self.db.commit()
-        except Exception as e:
-            await self.db.rollback()
-            raise e
         
     async def restore_document(self, document_id: int):
         try:
@@ -84,7 +75,7 @@ class DocumentRepository:
     async def save_document(self, document: Document):
         try:
             await self.db.commit()
-            return await self.get_document_by_id(document.id)
+            await self.db.refresh(document)
         except Exception as e:
             await self.db.rollback()
             raise e
