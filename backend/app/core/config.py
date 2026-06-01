@@ -146,6 +146,9 @@ class Settings:
         self.EMBEDDING_CHUNK_OVERLAP = int(os.getenv("EMBEDDING_CHUNK_OVERLAP", "64"))
         self.EMBEDDING_BATCH_SIZE = int(os.getenv("EMBEDDING_BATCH_SIZE", "32"))
 
+        BASE_DIR = Path(__file__).resolve().parent.parent.parent
+        self.EMBEDDING_MODEL_PATH = os.getenv("EMBEDDING_MODEL_PATH", BASE_DIR / "data" / "models" / "bge-m3")
+
         # Langfuse Configuration
         # self.LANGFUSE_PUBLIC_KEY = os.getenv("LANGFUSE_PUBLIC_KEY", "")
         # self.LANGFUSE_SECRET_KEY = os.getenv("LANGFUSE_SECRET_KEY", "")
