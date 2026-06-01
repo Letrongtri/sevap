@@ -1,6 +1,6 @@
 from sqlalchemy import select
 
-from app.models.permission import Permission
+from app.models import Permission
 
 
 class PermissionRepository:

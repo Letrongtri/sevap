@@ -1,5 +1,4 @@
-from typing import List, Union
-from pathlib import Path
+from typing import List
 
 from langchain_core.documents import Document
 from transformers import AutoTokenizer
@@ -7,7 +6,6 @@ from sentence_transformers import SentenceTransformer
 
 from docling.document_converter import DocumentConverter
 from docling.chunking import HybridChunker, BaseChunk
-from docling_core.transforms.chunker.tokenizer.huggingface import HuggingFaceTokenizer
 
 from app.core.config import settings
 
@@ -20,8 +18,7 @@ class ChunkService:
         self.chunk_overlap = settings.EMBEDDING_CHUNK_OVERLAP
         self.batch_size = settings.EMBEDDING_BATCH_SIZE
 
-        BASE_DIR = Path(__file__).resolve().parent.parent.parent
-        local_model_path = BASE_DIR / "data" / "models" / "bge-m3"
+        local_model_path = settings.EMBEDDING_MODEL_PATH
 
         self.tokenizer = AutoTokenizer.from_pretrained(
             str(local_model_path),

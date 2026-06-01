@@ -1,19 +1,19 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import List
 
-from app.services.user_service import UserService
-from app.services.exceptions import (
+from app.services import (
+    UserService,
     UserAlreadyExistsError,
     InvalidPasswordError,
     NotFoundError
 )
-from app.schemas.user_schema import (
+from app.schemas import (
     UserCreate, 
     UserResponse, 
     UserUpdate, 
     UserUpdatePassword,
 )
-from app.dependencies.user import get_user_service
+from app.dependencies import get_user_service
 from app.core.logging import logger
 
 router = APIRouter()

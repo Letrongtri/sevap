@@ -1,8 +1,8 @@
 from typing import List
 
-from app.repositories.conversation_repository import ConversationRepository
-from app.models.conversation import Conversation
-from app.services.exceptions import NotFoundError
+from app.repositories import ConversationRepository
+from app.models import Conversation
+from app.services import NotFoundError
 
 
 class ConversationService:

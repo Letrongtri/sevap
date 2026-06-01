@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
-from app.models.conversation import Conversation
+from app.models import Conversation
 
 class ConversationRepository:
     def __init__(self, db: AsyncSession):

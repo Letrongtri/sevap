@@ -7,13 +7,9 @@ from datetime import datetime
 import shutil
 import uuid
 
-from app.models.document import Document
-from app.models.document_chunks import DocumentChunk
-from app.models.vector_embedding import VectorEmbedding
-from app.repositories.document_repository import DocumentRepository
-from app.repositories.role_repository import RoleRepository
-from app.services.chunking_service import ChunkService
-from app.services.exceptions import DocumentAlreadyExistsError, NotFoundError
+from app.models import Document, DocumentChunk, VectorEmbedding
+from app.repositories import DocumentRepository, RoleRepository
+from app.services import ChunkService, DocumentAlreadyExistsError, NotFoundError
 from app.core.enum import DocumentStatus
 from app.core.logging import logger
 
@@ -22,7 +18,7 @@ class DocumentService:
         self.repo = repo
         self.role_repo = role_repo
 
-    async def upload(self, file: UploadFile, access_level: str,
+    async def upload(self, file: UploadFile, uploader_id: int, access_level: str,
                      background_tasks: BackgroundTasks, department_scope: str, 
                      title: str = None, category: str = None, 
                      effective_date: datetime = None, role_access: List[int] = None
@@ -71,7 +67,7 @@ class DocumentService:
         
         shutil.move(temp_file_path, uploaded_file_path)
             
-        uploader_id = 1 # TODO: get from token
+        uploader_id = uploader_id
         title = file.filename if title is None else title
         document = Document(
             uploader_id=uploader_id, 
@@ -101,14 +97,16 @@ class DocumentService:
             access_level=access_level,
             department_scope=department_scope,
             category=category,
-            effective_date=effective_date
+            effective_date=effective_date,
+            role_access=role_access
         )
 
         return saved_document
         
     async def _process_document_chunking(
             self, document_id: int, file_path: str, access_level: str, 
-            department_scope: str, category: str = None, effective_date: datetime = None):
+            department_scope: str, category: str = None, effective_date: datetime = None,
+            role_access: List[int] = None):
         try:
             chunking_service = ChunkService()
             chunks = await chunking_service.hybrid_chunking(doc_path=str(file_path))
@@ -119,8 +117,6 @@ class DocumentService:
                 chunk_meta = getattr(chunk, 'meta_data', {}) or {}
                 chunk_meta.update({
                     "chunking_strategy": "hybrid",
-                    "access_level": access_level,
-                    "department": department_scope,
                     "category": category,
                     "effective_date": effective_date.strftime("%Y-%m-%d")
                 })

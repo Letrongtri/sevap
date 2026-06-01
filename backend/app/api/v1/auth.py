@@ -6,17 +6,15 @@ and token verification.
 
 from fastapi import APIRouter, HTTPException, Depends, Request
 
-from app.models.user import User
-from app.services.auth_service import AuthService
-from app.services.exceptions import (
+from app.models import User
+from app.services import (
+    AuthService,
     InvalidCredentialsError,
     InvalidTokenError,
     NotFoundError
 )
-from app.schemas.auth_schema import TokenResponse, LoginForm, RefreshTokenRequest
-from app.schemas.user_schema import UserResponse
-from app.dependencies.auth import get_auth_service
-from app.dependencies.security import get_current_user
+from app.schemas import TokenResponse, LoginForm, RefreshTokenRequest, UserResponse
+from app.dependencies import get_auth_service, get_current_user
 from app.core.logging import logger
 
 router = APIRouter()

@@ -1,6 +1,5 @@
 """This file contains the authentication utilities for the application."""
 
-import hashlib
 import re
 from datetime import UTC, datetime, timedelta
 from typing import List, Optional
@@ -8,7 +7,7 @@ from jose import JWTError, jwt
 
 from app.core.config import settings
 from app.core.logging import logger
-from app.schemas.auth_schema import Token
+from app.schemas import Token
 from app.utils.sanitization import sanitize_string
 
 from pwdlib import PasswordHash

@@ -1,16 +1,14 @@
 from datetime import datetime, timezone
 
-from app.repositories.user_repository import UserRepository
-from app.repositories.user_session_repository import UserSessionRepository
-from app.services.exceptions import (
+from app.repositories import UserRepository, UserSessionRepository
+from app.services import (
     InvalidCredentialsError,
     InvalidTokenError, 
     NotFoundError,
 )
-from app.models.user import User
+from app.models import User, UserSession
 from app.utils.auth import create_access_token, create_refresh_token, verify_password, verify_token
 from app.core.logging import logger
-from app.models.user_session import UserSession
 
 class AuthService:
     def __init__(self, user_repo: UserRepository, session_repo: UserSessionRepository):

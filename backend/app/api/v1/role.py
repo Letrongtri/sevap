@@ -1,17 +1,17 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import List
 
-from app.services.role_service import RoleService
-from app.services.exceptions import (
+from app.services import (
+    RoleService,
     RoleAlreadyExistsError,
     NotFoundError
 )
-from app.schemas.role_schema import (
+from app.schemas import (
     RoleCreate, 
     RoleResponse, 
     RoleUpdate,
 )
-from app.dependencies.role import get_role_service
+from app.dependencies import get_role_service
 from app.core.logging import logger
 
 router = APIRouter()

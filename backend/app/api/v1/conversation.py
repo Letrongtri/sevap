@@ -2,11 +2,10 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
-from app.dependencies.conversation import get_conversation_service
-from app.schemas.conversation_schema import ConversationCreate, ConversationResponse, ConversationUpdate
-from app.services.conversation_service import ConversationService
+from app.dependencies import get_conversation_service
+from app.schemas import ConversationCreate, ConversationResponse, ConversationUpdate
+from app.services import ConversationService, NotFoundError
 from app.core.logging import logger
-from app.services.exceptions import NotFoundError
 
 
 router = APIRouter()

@@ -12,7 +12,7 @@ from app.api.v1.role import router as role_router
 from app.api.v1.document import router as document_router
 from app.api.v1.conversation import router as conversation_router
 from app.core.logging import logger
-from app.dependencies.security import get_current_user
+from app.dependencies import get_current_user
 
 api_router = APIRouter()
 

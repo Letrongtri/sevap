@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
-from app.models.role import Role
+from app.models import Role
 
 class RoleRepository:
     def __init__(self, db: AsyncSession):

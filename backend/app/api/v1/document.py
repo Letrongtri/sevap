@@ -11,13 +11,12 @@ from fastapi import (
 from typing import List
 from datetime import datetime
 
-from app.services.document_service import DocumentService
-from app.schemas.document_schema import (
+from app.services import DocumentService, NotFoundError
+from app.schemas import (
     DocumentResponse, 
     DocumentUpdate
 )
-from app.services.exceptions import NotFoundError
-from app.dependencies.document import get_document_service
+from app.dependencies import get_document_service
 from app.core.logging import logger
 from app.core.enum import AccessLevel
 
@@ -43,6 +42,7 @@ async def upload_document(
     try:
         document = await document_service.upload(
             file=file,
+            uploader_id=request.user.id,
             access_level=access_level,
             department_scope=department_scope,
             title=title,

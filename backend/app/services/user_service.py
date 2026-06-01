@@ -1,8 +1,8 @@
 from typing import List
 
-from app.models.user import User
-from app.repositories.user_repository import UserRepository
-from app.services.exceptions import (
+from app.models import User
+from app.repositories import UserRepository
+from app.services import (
     UserAlreadyExistsError, 
     NotFoundError,
     InvalidPasswordError

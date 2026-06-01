@@ -1,8 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
 
-from app.models.user_session import UserSession
+from app.models import UserSession
 
 class UserSessionRepository:
     def __init__(self, db: AsyncSession):

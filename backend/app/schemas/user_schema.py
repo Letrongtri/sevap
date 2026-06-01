@@ -2,7 +2,7 @@ from pydantic import BaseModel, field_validator
 from app.utils.sanitization import validate_password_strength
 from datetime import datetime
 
-from app.schemas.conversation_schema import ConversationResponse
+from app.schemas import ConversationResponse
 
 # Schema cho dữ liệu gửi lên khi tạo User
 class UserCreate(BaseModel):

@@ -12,3 +12,20 @@ from app.models.user_role import UserRole
 from app.models.user_session import UserSession
 from app.models.user import User
 from app.models.vector_embedding import VectorEmbedding
+
+__all__ = [
+    "ActivityLog",
+    "Conversation",
+    "DocumentChunk",
+    "DocumentRoleAccess",
+    "Document",
+    "EmbeddingJob",
+    "Message",
+    "Permission",
+    "RolePermission",
+    "Role",
+    "UserRole",
+    "UserSession",
+    "User",
+    "VectorEmbedding",
+]

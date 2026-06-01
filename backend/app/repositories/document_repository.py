@@ -3,8 +3,7 @@ from sqlalchemy.future import select
 from sqlalchemy import update
 from sqlalchemy.orm import selectinload
 
-from app.models.document import Document
-from app.models.document_chunks import DocumentChunk
+from app.models import Document, DocumentChunk
 
 class DocumentRepository:
     def __init__(self, db: AsyncSession):

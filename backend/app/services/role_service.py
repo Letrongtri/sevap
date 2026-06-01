@@ -1,9 +1,8 @@
 from typing import List
 
-from app.models.role import Role
-from app.repositories.role_repository import RoleRepository
-from app.repositories.permission_repository import PermissionRepository
-from app.services.exceptions import (
+from app.models import Role
+from app.repositories import RoleRepository, PermissionRepository
+from app.services import (
     RoleAlreadyExistsError, 
     NotFoundError,
 )
