@@ -29,11 +29,12 @@ async def upload_document(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     access_level: AccessLevel = Form(..., description="Document's access level"),
-    department_scope: str | None = Form(None, description="Document's department scope"),
+    department_id: int | None = Form(None, description="Document's department scope"),
     title: str | None = Form(None, description="Document's title"),
     category: str | None = Form(None, description="Document's category"),
+    target_user_ids: List[int] | None = Form(None, description="Document's target user ids"),
     effective_date: datetime | None = Form(None, description="Document's effective date"),
-    role_access: List[int] | None = Form(..., description="User's role to access document"),
+    role_access: List[int] | None = Form(None, description="User's role to access document"),
     document_service: DocumentService = Depends(get_document_service),
 ):
     if not file.filename.endswith(".docx"):
@@ -44,9 +45,10 @@ async def upload_document(
             file=file,
             uploader_id=request.user.id,
             access_level=access_level,
-            department_scope=department_scope,
+            department_id=department_id,
             title=title,
             category=category,
+            target_user_ids=target_user_ids,
             effective_date=effective_date,
             role_access=role_access,
             background_tasks=background_tasks
@@ -118,7 +120,7 @@ async def update_document(
         document = await document_service.update_document(
             document_id=document_id,
             access_level=data.access_level,
-            department_scope=data.department_scope,
+            department_id=data.department_id,
             title=data.title,
             category=data.category,
             role_access=data.role_access,

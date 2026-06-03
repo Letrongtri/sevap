@@ -1,11 +1,14 @@
-from typing import Any, Dict, List, Set
+from typing import List, Set
 from sqlalchemy import and_, or_, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 
 from app.ai_brain.retrieval.schemas import ACCESS_LEVEL_HIERARCHY, PARContext, RetrievalResult
 from app.core.enum import AccessLevel, DocumentStatus
-from app.models import Document, DocumentRoleAccess, Role, UserRole
+from app.models import Document, DocumentRoleAccess, Department, User, UserRole
+from sqlalchemy import cast
+from sqlalchemy.dialects.postgresql import JSONB
 
 
 class PARRepository:
@@ -15,29 +18,58 @@ class PARRepository:
     async def build_par_context(self, user_id: int) -> PARContext:
         """Xây dựng PAR Context từ user_id, truy vấn DB một lần."""
         
-        # Lấy tất cả roles của user
+        # Lấy thông tin user
         stmt = (
-            select(Role)
-            .join(UserRole, UserRole.role_id == Role.id)
-            .where(UserRole.user_id == user_id)
+            select(User)
+            .options(selectinload(User.role_associations).selectinload(UserRole.role))
+            .where(User.id == user_id)
         )
         result = await self.db.execute(stmt)
-        roles = result.scalars().all()
+        user = result.scalar_one_or_none()
+
+        highest_level = AccessLevel.PUBLIC
+        is_admin = False
+        role_ids = []
+        department_ids = []
+        managed_department_ids = []
         
-        if not roles:
+        if not user:
             # Fallback: chỉ đọc public
-            return PARContext(user_id=user_id, role_ids=[], role_access_level="public")
+            return PARContext(
+                user_id=user_id, 
+                role_ids=role_ids, 
+                role_access_level=highest_level,
+                department_ids=department_ids,
+                managed_department_ids=managed_department_ids,
+                is_admin=is_admin
+            )
         
-        # Lấy access level cao nhất trong các role
-        highest_level = max(
-            roles,
-            key=lambda r: ACCESS_LEVEL_HIERARCHY.get(r.access_level, 0)
-        )
+        if user.role_associations:
+            # Lấy access level cao nhất trong các role
+            valid_roles = [r.role for r in user.role_associations if r.role]
+            if valid_roles:
+                highest_level_role = max(
+                    valid_roles,
+                    key=lambda r: ACCESS_LEVEL_HIERARCHY.get(r.access_level, 0)
+                )
+                highest_level = highest_level_role.access_level
+                is_admin = any(r.name == "admin" for r in valid_roles)
+            role_ids = [r.role_id for r in user.role_associations]
+
+        stmt_managed = select(Department.id).where(Department.manager_id == user_id)
+        res_managed = await self.db.execute(stmt_managed)
+        managed_department_ids = [row[0] for row in res_managed.fetchall()]
+        
+        department_ids = [user.department_id] if user.department_id else []
+
         
         return PARContext(
             user_id=user_id,
-            role_ids=[r.id for r in roles],
-            role_access_level=highest_level.access_level,
+            role_ids=role_ids,
+            role_access_level=highest_level,
+            department_ids=department_ids,
+            managed_department_ids=managed_department_ids,
+            is_admin=is_admin
         )
 
     async def get_allowed_document_ids(
@@ -51,49 +83,83 @@ class PARRepository:
         """
 
         allowed_levels = ctx.allowed_access_levels()
+        allowed_ids = set()
 
-        # --- Nhánh A: Document public theo access_level ---
-        # Bất kỳ document nào có access_level nằm trong phạm vi của user
-        # Với 'private': KHÔNG dùng nhánh này — dùng nhánh B bên dưới
-        # để tránh user A đọc private doc của user B
-        stmt_level = (
-            select(Document.id)
-            .where(
+        # Admin có quyền cao nhất, đọc toàn bộ tài liệu 
+        if ctx.is_admin:
+            stmt_private_admin = select(Document.id).where(
+                and_(
+                    Document.is_deleted == False,
+                    Document.status == DocumentStatus.DONE
+                )
+            )
+            res_private_admin = await self.db.execute(stmt_private_admin)
+            allowed_ids.update({row[0] for row in res_private_admin.fetchall()})
+            return allowed_ids
+
+        # NHÁNH 1: TÀI LIỆU PUBLIC (Ai hợp lệ cũng được đọc)
+        stmt_public = select(Document.id).where(
+            and_(
+                Document.is_deleted == False,
+                Document.status == DocumentStatus.DONE,
+                Document.access_level == AccessLevel.PUBLIC
+            )
+        )
+        res_public = await self.db.execute(stmt_public)
+        allowed_ids.update({row[0] for row in res_public.fetchall()})
+
+
+        # NHÁNH 2: TÀI LIỆU MANAGERIAL (Chỉ Manager và Admin)
+        if AccessLevel.MANAGERIAL in allowed_levels:
+            stmt_managerial = select(Document.id).where(
                 and_(
                     Document.is_deleted == False,
                     Document.status == DocumentStatus.DONE,
-                    Document.access_level.in_(allowed_levels),
-                    or_( # Không lấy document private
-                        Document.access_level == AccessLevel.PUBLIC,
-                        Document.access_level == AccessLevel.MANAGERIAL,
-                    )
+                    Document.access_level == AccessLevel.MANAGERIAL
                 )
             )
-        )
+            res_managerial = await self.db.execute(stmt_managerial)
+            allowed_ids.update({row[0] for row in res_managerial.fetchall()})
 
-        # --- Nhánh B: Document 'private' được gán explicit cho role của user ---
-        # Qua bảng document_role_access (PAR Gate fine-grained)
-        stmt_role = (
-            select(DocumentRoleAccess.document_id)
-            .join(Document, Document.id == DocumentRoleAccess.document_id)
-            .where(
+        # NHÁNH 3: TÀI LIỆU PRIVATE
+        ## Điều kiện 1: Là người upload hoặc người được cấu hình để xem
+        private_conds = [
+            Document.uploader_id == ctx.user_id,
+            Document.meta_data["target_user_ids"].contains(cast([ctx.user_id], JSONB))
+        ] 
+        
+        ## Điều kiện 2: Là Quản lý của phòng ban sở hữu tài liệu đó
+        if ctx.managed_department_ids:
+            private_conds.append(Document.department_id.in_(ctx.managed_department_ids))
+            
+        stmt_private_base = select(Document.id).where(
+            and_(
+                Document.is_deleted == False,
+                Document.status == DocumentStatus.DONE,
+                Document.access_level == AccessLevel.PRIVATE,
+                or_(*private_conds)
+            )
+        )
+        res_private_base = await self.db.execute(stmt_private_base)
+        allowed_ids.update({row[0] for row in res_private_base.fetchall()})
+
+        ## Điều kiện 3: Gán Explicit Quyền riêng cho Role (Ví dụ: HR chuyên trách)
+        if ctx.role_ids:
+            stmt_private_role = select(DocumentRoleAccess.document_id).join(
+                Document, Document.id == DocumentRoleAccess.document_id
+            ).where(
                 and_(
-                    DocumentRoleAccess.role_id.in_(ctx.role_ids) if ctx.role_ids else False,
+                    DocumentRoleAccess.role_id.in_(ctx.role_ids),
                     Document.is_deleted == False,
                     Document.status == DocumentStatus.DONE,
+                    Document.access_level == AccessLevel.PRIVATE
                 )
             )
-        )
+            res_private_role = await self.db.execute(stmt_private_role)
+            allowed_ids.update({row[0] for row in res_private_role.fetchall()})
 
-        result_level = await self.db.execute(stmt_level)
-        result_role  = await self.db.execute(stmt_role)
-
-        ids_from_level = {row[0] for row in result_level.fetchall()}
-        ids_from_role  = {row[0] for row in result_role.fetchall()}
-
-        # Union: được phép nếu thoả MỘT TRONG HAI điều kiện
-        return ids_from_level | ids_from_role
-
+        return allowed_ids
+    
     async def similarity_search(
         self,
         query_embedding: List[float],
@@ -115,7 +181,7 @@ class PARRepository:
                 dc.id               AS chunk_id,
                 dc.document_id,
                 dc.content,
-                dc.metadata,
+                dc.meta_data        AS metadata,
                 d.title             AS doc_title,
                 d.access_level,
                 1 - (ve.embedding <=> CAST(:qvec AS vector))  AS score

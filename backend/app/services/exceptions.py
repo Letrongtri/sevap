@@ -18,3 +18,6 @@ class RoleAlreadyExistsError(Exception):
 
 class DocumentAlreadyExistsError(Exception):
     pass
+
+class MissingRequiredFieldsError(Exception):
+    pass

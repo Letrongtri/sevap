@@ -16,6 +16,9 @@ class PARContext:
     user_id: int
     role_ids: list[int]
     role_access_level: str   # level cao nhất trong các role của user
+    department_ids: list[int]
+    managed_department_ids: list[int]
+    is_admin: bool = False
     
     def allowed_access_levels(self) -> list[str]:
         """Trả về tất cả access levels mà user này được phép đọc."""

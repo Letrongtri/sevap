@@ -6,12 +6,14 @@ from pathlib import Path
 from datetime import datetime
 import shutil
 import uuid
+import tempfile
+import os
 
 from app.models import Document, DocumentChunk, VectorEmbedding
 from app.repositories import DocumentRepository, RoleRepository
 from app.services.chunking_service import ChunkService
-from app.services.exceptions import DocumentAlreadyExistsError, NotFoundError
-from app.core.enum import DocumentStatus
+from app.services.exceptions import DocumentAlreadyExistsError, NotFoundError, MissingRequiredFieldsError
+from app.core.enum import AccessLevel, DocumentStatus
 from app.core.logging import logger
 
 class DocumentService:
@@ -20,17 +22,22 @@ class DocumentService:
         self.role_repo = role_repo
 
     async def upload(self, file: UploadFile, uploader_id: int, access_level: str,
-                     background_tasks: BackgroundTasks, department_scope: str, 
+                     background_tasks: BackgroundTasks, department_id: int = None, 
                      title: str = None, category: str = None, 
-                     effective_date: datetime = None, role_access: List[int] = None
+                     effective_date: datetime = None, role_access: List[int] = None,
+                     target_user_ids: List[int] = None
     ) -> Document:
+        if access_level == AccessLevel.PRIVATE:
+            if not department_id and not role_access and not target_user_ids:
+                raise MissingRequiredFieldsError()
+            
         BASE_DIR = Path(__file__).resolve().parent.parent.parent
         UPLOAD_DIR = BASE_DIR / "data" / "uploads"
         UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
         uploaded_file_name = f"{uuid.uuid4()}_{file.filename}"
         uploaded_file_path = UPLOAD_DIR / uploaded_file_name
-        temp_file_path = f"/tmp/{uploaded_file_name}"
+        temp_file_path = os.path.join(tempfile.gettempdir(), uploaded_file_name)
 
         file_hash = hashlib.sha256() # Khởi tạo bộ băm SHA-256
         
@@ -74,7 +81,7 @@ class DocumentService:
             uploader_id=uploader_id, 
             title=title, 
             access_level=access_level, 
-            department_scope=department_scope, 
+            department_id=department_id, 
             file_name=uploaded_file_name, 
             file_type=file.content_type, 
             file_path=str(uploaded_file_path), 
@@ -84,6 +91,7 @@ class DocumentService:
             category=category,
             effective_date=effective_date,
             file_hash=file_hash.hexdigest(),
+            meta_data={"target_user_ids": target_user_ids},
         )
 
         if role_access is not None:
@@ -96,18 +104,19 @@ class DocumentService:
             document_id=saved_document.id, 
             file_path=str(uploaded_file_path),
             access_level=access_level,
-            department_scope=department_scope,
+            department_id=department_id,
             category=category,
             effective_date=effective_date,
-            role_access=role_access
+            role_access=role_access,
+            target_user_ids=target_user_ids
         )
 
         return saved_document
         
     async def _process_document_chunking(
             self, document_id: int, file_path: str, access_level: str, 
-            department_scope: str, category: str = None, effective_date: datetime = None,
-            role_access: List[int] = None):
+            department_id: str, category: str = None, effective_date: datetime = None,
+            role_access: List[int] = None, target_user_ids: List[int] = None):
         try:
             chunking_service = ChunkService()
             chunks = await chunking_service.hybrid_chunking(doc_path=str(file_path))
@@ -119,7 +128,11 @@ class DocumentService:
                 chunk_meta.update({
                     "chunking_strategy": "hybrid",
                     "category": category,
-                    "effective_date": effective_date.strftime("%Y-%m-%d")
+                    "effective_date": effective_date.strftime("%Y-%m-%d") if effective_date else None,
+                    "access_level": access_level,
+                    "department_id": department_id,
+                    "target_user_ids": target_user_ids,
+                    "role_access": role_access
                 })
 
                 document_chunk = DocumentChunk(
@@ -162,7 +175,7 @@ class DocumentService:
         return document
 
     async def update_document(self, document_id: int, access_level: str = None, 
-                              department_scope: str = None, title: str = None, 
+                              department_id: str = None, title: str = None, 
                               category: str = None, effective_date: datetime = None,
                               role_access: List[int] = None) -> Document:
         existing = await self.repo.get_document_by_id(document_id)
@@ -172,8 +185,8 @@ class DocumentService:
 
         if access_level is not None:
             existing.access_level = access_level
-        if department_scope is not None:
-            existing.department_scope = department_scope
+        if department_id is not None:
+            existing.department_id = department_id
         if title is not None:
             existing.title = title
         if category is not None:
