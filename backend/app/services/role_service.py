@@ -2,7 +2,7 @@ from typing import List
 
 from app.models import Role
 from app.repositories import RoleRepository, PermissionRepository
-from app.services import (
+from app.services.exceptions import (
     RoleAlreadyExistsError, 
     NotFoundError,
 )

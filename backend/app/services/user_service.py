@@ -2,7 +2,7 @@ from typing import List
 
 from app.models import User
 from app.repositories import UserRepository
-from app.services import (
+from app.services.exceptions import (
     UserAlreadyExistsError, 
     NotFoundError,
     InvalidPasswordError

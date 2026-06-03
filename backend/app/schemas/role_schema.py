@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict, model_validator
 from datetime import datetime
 
-from app.schemas import PermissionResponse
+from app.schemas.permission_schema import PermissionResponse
 
 # Schema cho dữ liệu gửi lên khi tạo Role
 class RoleCreate(BaseModel):

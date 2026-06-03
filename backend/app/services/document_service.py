@@ -9,7 +9,8 @@ import uuid
 
 from app.models import Document, DocumentChunk, VectorEmbedding
 from app.repositories import DocumentRepository, RoleRepository
-from app.services import ChunkService, DocumentAlreadyExistsError, NotFoundError
+from app.services.chunking_service import ChunkService
+from app.services.exceptions import DocumentAlreadyExistsError, NotFoundError
 from app.core.enum import DocumentStatus
 from app.core.logging import logger
 

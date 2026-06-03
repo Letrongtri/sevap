@@ -2,7 +2,7 @@ from typing import List
 
 from app.repositories import ConversationRepository
 from app.models import Conversation
-from app.services import NotFoundError
+from app.services.exceptions import NotFoundError
 
 
 class ConversationService:

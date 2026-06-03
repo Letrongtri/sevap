@@ -1,7 +1,7 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.dependencies import get_db
+from app.dependencies.db import get_db
 from app.repositories import ConversationRepository
 from app.services import ConversationService
 
