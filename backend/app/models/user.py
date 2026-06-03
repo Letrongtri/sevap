@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, DateTime
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.db.base_class import Base
@@ -12,6 +12,9 @@ class User(Base):
     full_name = Column(String(128), nullable=False)
     email = Column(String(255), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
+
+    department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
+    job_title_id = Column(Integer, ForeignKey("job_titles.id"), nullable=True)
     
     is_active = Column(Boolean, default=True, nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
@@ -26,3 +29,14 @@ class User(Base):
     activity_logs = relationship("ActivityLog", back_populates="user")
     embedding_jobs = relationship("EmbeddingJob", back_populates="user", cascade="all, delete-orphan")
     user_sessions = relationship("UserSession", back_populates="user")
+    department = relationship(
+        "Department", 
+        foreign_keys="User.department_id", 
+        back_populates="users"
+    )
+    managed_department = relationship(
+        "Department",
+        foreign_keys="Department.manager_id",
+        back_populates="manager"
+    )
+    job_title = relationship("JobTitle", back_populates="users")
