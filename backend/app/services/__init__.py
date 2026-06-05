@@ -6,3 +6,4 @@ from .conversation_service import ConversationService
 from .chunking_service import ChunkService
 from .auth_service import AuthService
 from .department_service import DepartmentService
+from .job_title_service import JobTitleService

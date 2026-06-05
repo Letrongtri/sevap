@@ -5,3 +5,4 @@ from .document_schema import DocumentUpdate, DocumentChunkResponse, DocumentResp
 from .conversation_schema import ConversationCreate, ConversationUpdate, ConversationResponse
 from .auth_schema import Token, TokenResponse, LoginForm, RefreshTokenRequest
 from .department_schema import DepartmentCreate, DepartmentUpdate, DepartmentResponse
+from .job_title_schema import JobTitleCreate, JobTitleUpdate, JobTitleResponse
