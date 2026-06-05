@@ -41,9 +41,10 @@ async def upload_document(
         raise HTTPException(status_code=400, detail="File must be a docx file")
     
     try:
+        user_id = request.state.user["id"]
         document = await document_service.upload(
             file=file,
-            uploader_id=request.user.id,
+            uploader_id=int(user_id),
             access_level=access_level,
             department_id=department_id,
             title=title,

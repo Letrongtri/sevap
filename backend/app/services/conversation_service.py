@@ -9,8 +9,8 @@ class ConversationService:
     def __init__(self, repo: ConversationRepository):
         self.repo = repo
     
-    async def get_all_conversations(self) -> List[Conversation]:
-        return await self.repo.get_all_conversations()
+    async def get_all_conversations_by_user_id(self, user_id: int) -> List[Conversation]:
+        return await self.repo.get_all_conversations_by_user_id(user_id)
 
     async def create_conversation(self, user_id: int, title: str | None = None) -> Conversation:
         if title is None:

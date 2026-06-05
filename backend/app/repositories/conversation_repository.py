@@ -26,8 +26,8 @@ class ConversationRepository:
             await self.db.rollback()
             raise e
     
-    async def get_all_conversations(self):
-        stmt = select(Conversation)
+    async def get_all_conversations_by_user_id(self, user_id: int):
+        stmt = select(Conversation).where(Conversation.user_id == user_id)
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
