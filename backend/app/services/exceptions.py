@@ -24,3 +24,6 @@ class MissingRequiredFieldsError(Exception):
 
 class DepartmentAlreadyExistsError(Exception):
     pass
+
+class JobTitleAlreadyExistsError(Exception):
+    pass
