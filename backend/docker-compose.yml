@@ -25,22 +25,26 @@ services:
       retries: 5
 
   # --- LOCAL LLM SERVER (ĐẢM BẢO 100% BẢO MẬT DỮ LIỆU) ---
-  # ollama:
-  #   image: ollama/ollama:latest
-  #   container_name: hr_assistant_ollama
-  #   restart: always
-  #   ports:
-  #     - "11434:11434"
-  #   volumes:
-  #     - ollama_data:/root/.ollama
-  # NẾU MÁY CỦA BẠN CÓ GPU NVIDIA, HÃY BỎ DẤU # Ở CÁC DÒNG DƯỚI ĐỂ CHẠY CHO NHANH:
-  # deploy:
-  #   resources:
-  #     reservations:
-  #       devices:
-  #         - driver: nvidia
-  #           count: all
-  #           capabilities: [gpu]
+  ollama:
+    image: ollama/ollama:latest
+    container_name: hr_assistant_ollama
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    pull_policy: always
+    tty: true
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+      - OLLAMA_HOST=0.0.0.0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   # --- BACKEND FASTAPI APPLICATION ---
   backend:
@@ -55,14 +59,21 @@ services:
       - .:/app
     env_file:
       - .env
-    # environment:
-    # - OLLAMA_BASE_URL=http://ollama:11434
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
     depends_on:
       db:
         condition: service_healthy
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
 volumes:
   postgres_data:
     driver: local
-  # ollama_data:
-  #   driver: local
+  ollama_data:
+    driver: local

@@ -186,7 +186,7 @@ class PARRepository:
                 d.access_level,
                 1 - (ve.embedding <=> CAST(:qvec AS vector))  AS score
             FROM  vector_embeddings  ve
-            JOIN  document_chunks    dc ON dc.id = ve.chunk_id
+            JOIN  document_chunks    dc ON dc.id = ve.document_chunk_id
             JOIN  documents          d  ON d.id  = dc.document_id
             WHERE
                 dc.document_id  = ANY(:doc_ids)     -- ← PAR boundary inject

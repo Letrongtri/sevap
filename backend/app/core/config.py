@@ -149,6 +149,10 @@ class Settings:
         BASE_DIR = Path(__file__).resolve().parent.parent.parent
         self.EMBEDDING_MODEL_PATH = os.getenv("EMBEDDING_MODEL_PATH", BASE_DIR / "data" / "models" / "bge-m3")
 
+        # OLLAMA Configuration
+        self.OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")
+        self.OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
+
         # Langfuse Configuration
         # self.LANGFUSE_PUBLIC_KEY = os.getenv("LANGFUSE_PUBLIC_KEY", "")
         # self.LANGFUSE_SECRET_KEY = os.getenv("LANGFUSE_SECRET_KEY", "")

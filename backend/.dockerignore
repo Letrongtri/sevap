@@ -106,4 +106,4 @@ ehthumbs.db
 Thumbs.db
 desktop.ini
 
-backend/data
+data/

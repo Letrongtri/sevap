@@ -1,6 +1,6 @@
 from app.ai_brain.retrieval.pipeline import RetrievalPipeline
 from app.ai_brain.retrieval.repository import PARRepository
-from app.ai_brain.retrieval.schemas import RetrievalResult
+from app.ai_brain.retrieval.schemas import RetrievalResult, PARContext
 
 
 class RetrievalService:
@@ -11,20 +11,19 @@ class RetrievalService:
 
     async def retrieve(
         self,
-        user_id: int,
         query: str,
+        par_context: PARContext,
         top_k: int = 5,
     ) -> list[RetrievalResult]:
-        par_ctx = await self.repo.build_par_context(user_id)
 
         # ── Bước 1: Relational Filter ─────────────────────────────
-        allowed_ids = await self.repo.get_allowed_document_ids(par_ctx)
+        allowed_ids = await self.repo.get_allowed_document_ids(par_context)
 
         if not allowed_ids:
             return []           # Chặn sớm — không tốn tài nguyên embedding
 
         # ── Bước 2: Vector Search ─────────────────────────────────
-        query_embedding = await self.pipeline.encode_query(query)
+        query_embedding = self.pipeline.encode_query(query)
 
         chunks = await self.repo.similarity_search(
             query_embedding=query_embedding,
