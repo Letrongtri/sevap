@@ -4,3 +4,4 @@ from .role_repository import RoleRepository
 from .permission_repository import PermissionRepository
 from .document_repository import DocumentRepository
 from .conversation_repository import ConversationRepository
+from .department_repository import DepartmentRepository

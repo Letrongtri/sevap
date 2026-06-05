@@ -11,6 +11,8 @@ from app.api.v1.user import router as user_router
 from app.api.v1.role import router as role_router
 from app.api.v1.document import router as document_router
 from app.api.v1.conversation import router as conversation_router
+from app.api.v1.department import router as department_router
+
 from app.core.logging import logger
 from app.dependencies import get_current_user
 
@@ -22,6 +24,7 @@ api_router.include_router(user_router, prefix="/users", tags=["users"], dependen
 api_router.include_router(role_router, prefix="/roles", tags=["roles"], dependencies=[Depends(get_current_user)])
 api_router.include_router(document_router, prefix="/documents", tags=["documents"], dependencies=[Depends(get_current_user)])
 api_router.include_router(conversation_router, prefix="/conversations", tags=["conversations"], dependencies=[Depends(get_current_user)])
+api_router.include_router(department_router, prefix="/departments", tags=["departments"], dependencies=[Depends(get_current_user)])
 
 @api_router.get("/health")
 async def health_check():

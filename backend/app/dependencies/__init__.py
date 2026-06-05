@@ -5,3 +5,4 @@ from .document import get_document_service
 from .db import get_db
 from .conversation import get_conversation_service
 from .auth import get_auth_service
+from .department import get_department_service

@@ -21,3 +21,6 @@ class DocumentAlreadyExistsError(Exception):
 
 class MissingRequiredFieldsError(Exception):
     pass
+
+class DepartmentAlreadyExistsError(Exception):
+    pass
