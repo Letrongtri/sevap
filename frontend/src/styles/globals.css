@@ -1,0 +1,123 @@
+/* ============================================================
+   HR Assistant — Global Styles
+   Imports all partials and applies base resets.
+   ============================================================ */
+@import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..800;1,14..32,300..800&display=swap');
+@import './variables.css';
+@import './animations.css';
+
+/* ---- Base Reset ---- */
+@layer base {
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    html {
+        font-size: 16px;
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: var(--font-sans);
+        font-size: var(--text-sm);
+        line-height: 1.5;
+        color: var(--color-text-primary);
+        background-color: var(--color-bg);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        min-height: 100vh;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-weight: var(--weight-bold);
+        line-height: 1.25;
+        color: var(--color-text-primary);
+    }
+
+    a {
+        color: var(--color-primary);
+        text-decoration: none;
+        transition: color var(--transition-fast);
+    }
+
+    a:hover {
+        color: var(--color-primary-hover);
+    }
+
+    img,
+    svg {
+        display: block;
+        max-width: 100%;
+    }
+
+    button {
+        cursor: pointer;
+        font-family: inherit;
+    }
+
+    input,
+    textarea,
+    select {
+        font-family: inherit;
+        font-size: inherit;
+    }
+
+    /* Custom scrollbar (webkit) */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: var(--color-border);
+        border-radius: var(--radius-full);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--color-text-placeholder);
+    }
+}
+
+/* ---- App Layout Shell ---- */
+#root {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.app-layout {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.app-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin-left: var(--sidebar-width);
+    transition: margin-left var(--transition-slow);
+}
+
+.app-main.sidebar-collapsed {
+    margin-left: var(--sidebar-collapsed-width);
+}
+
+.page-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-6);
+    background-color: var(--color-bg);
+}
