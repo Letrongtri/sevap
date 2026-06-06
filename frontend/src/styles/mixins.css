@@ -1,0 +1,67 @@
+/* ============================================================
+   CSS Mixins — Utility class compositions
+   ============================================================ */
+
+/* Card surface */
+.card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-md);
+}
+
+.card-hover {
+    transition:
+        box-shadow var(--transition-base),
+        transform var(--transition-base);
+}
+.card-hover:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-1px);
+}
+
+/* Focus ring */
+.focus-ring:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* Truncate text */
+.text-truncate {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* Visually hidden (accessible) */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Skeleton placeholder */
+.skeleton {
+    border-radius: var(--radius-md);
+    background: linear-gradient(
+        90deg,
+        var(--color-bg) 25%,
+        #e5e7eb 50%,
+        var(--color-bg) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+/* Divider */
+.divider {
+    border: none;
+    border-top: 1px solid var(--color-border-subtle);
+    margin: var(--space-4) 0;
+}
