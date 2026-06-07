@@ -45,3 +45,45 @@ export interface ChatClientActions {
 }
 
 export type ChatStore = ChatClientState & ChatClientActions
+
+/* ============================================================
+   Streaming — SSE event types from /conversations/message
+   ============================================================ */
+
+/** Emitted right after user message is persisted. Carries IDs for optimistic UI. */
+export interface MetadataEvent {
+    type: 'metadata'
+    conversationId: number
+    userMessageId: number
+}
+
+/** One LLM token chunk. */
+export interface TokenEvent {
+    type: 'token'
+    token: string
+}
+
+/** Stream finished successfully. */
+export interface DoneEvent {
+    type: 'done'
+    assistantMessageId: number
+    sources: Array<{ title: string; chunk_id: string | null }>
+    agentType: string
+}
+
+/** No retrieval results — stream ends after this. */
+export interface ErrorEvent {
+    type: 'error'
+    message: string
+}
+
+export type StreamEvent = MetadataEvent | TokenEvent | DoneEvent | ErrorEvent
+
+/** Local UI state while a stream is in progress. */
+export interface StreamingState {
+    isStreaming: boolean
+    /** ID of the conversation being streamed into (known after metadata event) */
+    streamingConversationId: number | null
+    /** Accumulated assistant answer as tokens arrive */
+    streamingContent: string
+}

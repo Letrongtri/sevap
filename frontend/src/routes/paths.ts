@@ -6,16 +6,18 @@ export const PUBLIC_ROUTES = {
 
 // Private route paths (auth required)
 export const PRIVATE_ROUTES = {
-    DASHBOARD: '/',
+    HOME: '/',
+    DASHBOARD: '/dashboard',
     CHAT: '/chat',
     DOCUMENTS: '/documents',
     AGENTS: '/agents',
     REPORTS: '/reports',
     SETTINGS: '/settings',
+    SUPPORT: '/support',
 } as const
 
 // Route that users are redirected to after login
-export const DEFAULT_REDIRECT = PRIVATE_ROUTES.DASHBOARD
+export const DEFAULT_REDIRECT = PRIVATE_ROUTES.HOME
 
 // Route that unauthenticated users are sent to
 export const AUTH_REDIRECT = PUBLIC_ROUTES.LOGIN

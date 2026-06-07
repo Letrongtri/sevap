@@ -19,6 +19,7 @@ function lazyPage(importFn: () => Promise<{ default: React.ComponentType }>) {
 const LoginPage = lazyPage(() => import('../pages/LoginPage'))
 
 // Private
+const HomePage = lazyPage(() => import('../pages/HomePage'))
 const DashboardPage = lazyPage(() => import('../pages/DashboardPage'))
 const ChatPage = lazyPage(() => import('../pages/ChatPage'))
 const DocumentsPage = lazyPage(() => import('../pages/DocumentsPage'))
@@ -39,6 +40,12 @@ const loginRoute = createRoute({
 /* ============================================================
    Private route leaves
    ============================================================ */
+
+const homeRoute = createRoute({
+    getParentRoute: () => privateLayoutRoute,
+    path: PRIVATE_ROUTES.HOME,
+    component: HomePage,
+})
 
 const dashboardRoute = createRoute({
     getParentRoute: () => privateLayoutRoute,
@@ -83,6 +90,7 @@ const settingsRoute = createRoute({
 const routeTree = rootRoute.addChildren([
     publicLayoutRoute.addChildren([loginRoute]),
     privateLayoutRoute.addChildren([
+        homeRoute,
         dashboardRoute,
         chatRoute,
         documentsRoute,
