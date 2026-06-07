@@ -11,7 +11,7 @@ class UserSessionRepository:
         try:
             self.db.add(user_session)
             await self.db.commit()
-            self.db.refresh(user_session)
+            await self.db.refresh(user_session)
         except Exception as e:
             await self.db.rollback()
             raise e
@@ -19,7 +19,7 @@ class UserSessionRepository:
     async def save(self, user_session: UserSession):
         try:
             await self.db.commit()
-            await self.db.refresh(user_session)
+            # NOTE: No refresh() — see user_repository.py save() for explanation.
         except Exception as e:
             await self.db.rollback()
             raise e

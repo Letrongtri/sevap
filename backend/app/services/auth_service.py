@@ -16,13 +16,17 @@ class AuthService:
         self.session_repo = session_repo
 
     async def login(self, employee_code: str, password: str, client_ip: str | None = None) -> User:
-        user = await self.user_repo.get_user_by_employee_code(employee_code, get_user_roles=True)
+        user = await self.user_repo.get_user_by_employee_code(
+            employee_code, get_user_roles=True, 
+            get_user_department=True, 
+            get_user_job_title=True
+            )
         if not user or not verify_password(password, user.password):
             raise InvalidCredentialsError()
         
         user_roles = []
         for role in user.role_associations:
-            user_roles.append(role.user_id)
+            user_roles.append(role.role.name)
         
         access_token = create_access_token(str(user.id), user_roles)
         refresh_token = create_refresh_token(str(user.id))
@@ -34,6 +38,8 @@ class AuthService:
             expires_at=refresh_token.expires_at
         )
 
+        user.last_login = datetime.now(timezone.utc)
+        await self.user_repo.save(user)
         await self.session_repo.create_user_session(user_session)
 
         logger.info(
@@ -42,7 +48,7 @@ class AuthService:
             client_ip=client_ip
         )
         
-        return access_token, refresh_token
+        return user, access_token, refresh_token
 
     async def refresh_token(self, refresh_token: str):
         token_payload = verify_token(refresh_token)
@@ -58,7 +64,7 @@ class AuthService:
         
         roles = []
         for role in user.role_associations:
-            roles.append(role.user_id)
+            roles.append(role.role.name)
         
         new_access_token = create_access_token(user_id=session.user_id, user_roles=roles)
 

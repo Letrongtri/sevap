@@ -13,13 +13,13 @@ from app.services import (
     InvalidTokenError,
     NotFoundError
 )
-from app.schemas import TokenResponse, LoginForm, RefreshTokenRequest, UserResponse
+from app.schemas import LoginResponse, LoginForm, RefreshTokenRequest, UserResponse, UserInfoResponse
 from app.dependencies import get_auth_service, get_current_user
 from app.core.logging import logger
 
 router = APIRouter()
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login", response_model=LoginResponse)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["login"][0])
 async def login(
     request: Request, 
@@ -41,18 +41,33 @@ async def login(
     """
     try:
         client_ip = request.client.host if request.client else None
-        access_token, refresh_token = await auth_service.login(
+        user, access_token, refresh_token = await auth_service.login(
             data.employee_code, 
             data.password,
             client_ip
         )
 
-        return TokenResponse(
+        user_roles = []
+        for role in user.role_associations:
+            user_roles.append(role.role.name)
+        
+        user_info = UserInfoResponse(
+            id=user.id,
+            full_name=user.full_name,
+            employee_code=user.employee_code,
+            roles=user_roles,
+            department=user.department.name if user.department else "",
+            job_title=user.job_title.name if user.job_title else "",
+            last_login=user.last_login,
+        )
+
+        return LoginResponse(
             token_type="bearer", 
             access_token=access_token.token, 
             access_token_expires_at=access_token.expires_at,
             refresh_token=refresh_token.token,
             refresh_token_expires_at=refresh_token.expires_at,
+            user=user_info
         )
     
     except InvalidCredentialsError:

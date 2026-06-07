@@ -2,17 +2,25 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
-from app.models import User
+from app.models import User, UserRole
 
 class UserRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_user_by_employee_code(self, employee_code: str, get_user_roles: bool = False):
+    async def get_user_by_employee_code(self, employee_code: str, 
+                                        get_user_roles: bool = False, 
+                                        get_user_department: bool = False, 
+                                        get_user_job_title: bool = False
+    ):
         stmt = select(User).where(User.employee_code == employee_code)
 
         if get_user_roles:
-            stmt = stmt.options(selectinload(User.role_associations))
+            stmt = stmt.options(selectinload(User.role_associations).selectinload(UserRole.role))
+        if get_user_department:
+            stmt = stmt.options(selectinload(User.department))
+        if get_user_job_title:
+            stmt = stmt.options(selectinload(User.job_title))
 
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
@@ -21,7 +29,7 @@ class UserRepository:
         stmt = select(User).where(User.id == user_id)
 
         if get_user_roles:
-            stmt = stmt.options(selectinload(User.role_associations))
+            stmt = stmt.options(selectinload(User.role_associations).selectinload(UserRole.role))
             
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
@@ -44,7 +52,10 @@ class UserRepository:
     async def save(self, user: User):
         try:
             await self.db.commit()
-            await self.db.refresh(user)
+            # NOTE: Do NOT call refresh() here — it expires all eager-loaded
+            # relationships (role_associations, department, job_title), causing
+            # MissingGreenlet errors when they are accessed after this call.
+            # expire_on_commit=False in the session factory already handles this.
         except Exception as e:
             await self.db.rollback()
             raise e
