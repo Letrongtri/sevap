@@ -133,7 +133,11 @@ class Settings:
         self.DEFAULT_USER_PASSWORD = os.getenv("DEFAULT_USER_PASSWORD", "password")
 
         # CORS Settings
-        self.ALLOWED_ORIGINS = parse_list_from_env("ALLOWED_ORIGINS", ["*"])
+        # self.ALLOWED_ORIGINS = parse_list_from_env("ALLOWED_ORIGINS", ["*"])
+        self.ALLOWED_ORIGINS = [
+            "http://localhost:5173",
+            "http://localhost:3000",
+        ]
 
         # Model Configuration
         self.HF_HUB_OFFLINE = os.getenv("HF_HUB_OFFLINE", "1")

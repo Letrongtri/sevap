@@ -1,29 +1,60 @@
-/* Entry point — imports the design system globals */
+/* ============================================================
+   index.css — Single entry point for all styles.
+   ALL @import statements must come first (CSS spec).
+   ============================================================ */
 @import './styles/globals.css';
 @import 'tailwindcss';
 
-:root {
-    --background: #f9f9ff;
-    --foreground: #111c2d;
-    --primary: #0350ff;
-    --primary-hover: #003cc8;
-    --card: #ffffff;
-}
-
-/* Định nghĩa theme khi có class .dark ở thẻ html */
-.dark {
-    --background: #111c2d;
-    --foreground: #f8fafc;
-    --primary: #0350ff;
-    --primary-hover: #003cc8;
-    --card: #434656;
-}
-
-/* Áp dụng các biến đó vào hệ thống theme của Tailwind */
+/* ---- Expose ALL design tokens to Tailwind v4 via @theme ---- */
 @theme {
-    --color-bg-main: var(--background);
-    --color-text-main: var(--foreground);
-    --color-btn-primary: var(--primary);
-    --color-btn-primary-hover: var(--primary-hover);
-    --color-bg-card: var(--card);
+    /* --- Colors: Brand --- */
+    --color-primary:          var(--color-primary);
+    --color-primary-hover:    var(--color-primary-hover);
+    --color-primary-active:   var(--color-primary-active);
+    --color-primary-light:    var(--color-primary-light);
+    --color-primary-glow:     var(--color-primary-glow);
+
+    /* --- Colors: Surface / Background --- */
+    --color-bg:               var(--color-bg);
+    --color-surface:          var(--color-surface);
+    --color-surface-raised:   var(--color-surface-raised);
+
+    /* --- Colors: Border --- */
+    --color-border:           var(--color-border);
+    --color-border-subtle:    var(--color-border-subtle);
+
+    /* --- Colors: Text --- */
+    --color-text-primary:     var(--color-text-primary);
+    --color-text-secondary:   var(--color-text-secondary);
+    --color-text-muted:       var(--color-text-muted);
+    --color-text-placeholder: var(--color-text-placeholder);
+    --color-text-disabled:    var(--color-text-disabled);
+
+    /* --- Colors: Semantic --- */
+    --color-success:          var(--color-success);
+    --color-success-bg:       var(--color-success-bg);
+    --color-success-border:   var(--color-success-border);
+    --color-warning:          var(--color-warning);
+    --color-warning-bg:       var(--color-warning-bg);
+    --color-warning-border:   var(--color-warning-border);
+    --color-error:            var(--color-error);
+    --color-error-bg:         var(--color-error-bg);
+    --color-error-border:     var(--color-error-border);
+    --color-error-text:       var(--color-error-text);
+    --color-info:             var(--color-info);
+
+    /* --- Shadows --- */
+    --shadow-primary:         var(--shadow-primary);
+    --shadow-primary-lg:      var(--shadow-primary-lg);
+
+    /* --- Font family --- */
+    --font-sans: var(--font-sans);
+    --font-mono: var(--font-mono);
+
+    /* --- Z-index (Tailwind v4 uses --z-index-* → class z-<name>) --- */
+    --z-index-dropdown: var(--z-dropdown);
+    --z-index-sticky:   var(--z-sticky);
+    --z-index-modal:    var(--z-modal);
+    --z-index-toast:    var(--z-toast);
+    --z-index-tooltip:  var(--z-tooltip);
 }

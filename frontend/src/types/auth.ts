@@ -5,9 +5,8 @@ import type { UserRole, AccessLevel, Timestamp, ID } from './common'
    ============================================================ */
 
 export interface LoginCredentials {
-    username: string
+    employeeCode: string
     password: string
-    rememberMe: boolean
 }
 
 export interface AuthUser {
@@ -26,11 +25,21 @@ export interface AuthState {
     isAuthenticated: boolean
     isLoading: boolean
     error: string | null
-    token?: string
+    accessToken?: string
+    refreshToken?: string
+    expiresAt?: string
 }
 
-export interface AuthTokens {
-    accessToken: string
-    refreshToken: string
-    expiresAt: Timestamp
+export interface AuthActions {
+    setAuth: (
+        tokens: {
+            accessToken: string
+            refreshToken: string
+            expiresAt: string
+        },
+        user?: AuthUser
+    ) => void
+    clearAuth: () => void
+    setLoading: (status: boolean) => void
+    setError: (msg: string | null) => void
 }
