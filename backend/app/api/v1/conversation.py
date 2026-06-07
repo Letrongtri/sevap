@@ -1,9 +1,10 @@
+from fastapi.responses import StreamingResponse
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.dependencies import get_conversation_service, get_message_service
-from app.schemas import ConversationCreate, ConversationResponse, ConversationUpdate, MessageSend
+from app.schemas import ConversationResponse, ConversationUpdate, MessageSend
 from app.services import ConversationService, MessageService, NotFoundError
 from app.core.logging import logger
 
@@ -33,28 +34,45 @@ async def get_all_personal_conversations(
         )
         raise HTTPException(status_code=422, detail="Failed to get all personal conversations")
 
-@router.post("", response_model=ConversationResponse)
+# POST /message
+# Nhận câu hỏi ->
+# tạo cuộc hội thoại mới (nếu chưa có) ->
+# thêm câu hỏi vào cuộc hội thoại ->
+# stream câu trả lời từ AI brain token-by-token
+@router.post("/message")
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
-async def create_conversation(
-    request: Request, 
-    data: ConversationCreate,
-    conversation_service: ConversationService = Depends(get_conversation_service),
+async def send_message(
+    request: Request,
+    data: MessageSend,
+    message_service: MessageService = Depends(get_message_service),
 ):
-    user_id = request.state.user["id"]
+    user_id: int | None = None
     try:
-        conversation = await conversation_service.create_conversation(
-            user_id=int(user_id), 
-            title=data.title
+        user_id = int(request.state.user["id"])
+        stream_generator = message_service.stream_message_response(
+            user_id=user_id,
+            content=data.content,
+            conversation_id=data.conversation_id,
         )
-        
-        return ConversationResponse.model_validate(conversation)
+
+        return StreamingResponse(
+            stream_generator,
+            media_type="text/event-stream",
+            headers={
+                # Prevent proxy / CDN buffering
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+                "Connection": "keep-alive",
+            },
+        )
     except Exception:
         logger.error(
-            "create_conversation_failed", 
-            user_id=user_id, 
-            exc_info=True
+            "send_message_failed",
+            user_id=user_id,
+            exc_info=True,
         )
-        raise HTTPException(status_code=422, detail="Failed to create conversation")
+        raise HTTPException(status_code=422, detail="Failed to send message")
+
 
 @router.get("/{conversation_id}", response_model=ConversationResponse)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])

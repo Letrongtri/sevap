@@ -3,9 +3,6 @@ from datetime import datetime
 
 
 # Schema cho dữ liệu gửi lên khi tạo Conversation
-class ConversationCreate(BaseModel):
-    title: str | None = None
-
 class ConversationUpdate(BaseModel):
     title: str
 

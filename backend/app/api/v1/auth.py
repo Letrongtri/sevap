@@ -84,7 +84,6 @@ async def login(
 async def refresh_token(
     request: Request, 
     data: RefreshTokenRequest,
-    current_user=Depends(get_current_user),
     auth_service: AuthService = Depends(get_auth_service)
 ):
     try:
