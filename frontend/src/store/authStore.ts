@@ -1,7 +1,19 @@
 import { create } from 'zustand'
-import type { AuthActions, AuthState } from '../types/auth'
+import type { AuthActions, AuthState, AuthUser } from '../types/auth'
 
 type AuthStore = AuthState & AuthActions
+
+const normalizeAuthUser = (user): AuthUser => {
+    return {
+        id: user.id,
+        fullName: user.full_name,
+        employeeCode: user.employee_code,
+        roles: user.roles,
+        department: user.department,
+        jobTitle: user.job_title,
+        lastLogin: user.last_login,
+    }
+}
 
 export const useAuthStore = create<AuthStore>((set) => ({
     user: null,
@@ -22,7 +34,10 @@ export const useAuthStore = create<AuthStore>((set) => ({
             accessToken: tokens.accessToken,
             refreshToken: tokens.refreshToken,
             expiresAt: tokens.expiresAt,
-            user: user !== undefined ? user : useAuthStore.getState().user,
+            user:
+                user !== undefined
+                    ? normalizeAuthUser(user)
+                    : useAuthStore.getState().user,
             isAuthenticated: true,
             error: null,
         })
@@ -75,7 +90,8 @@ export const checkAuthOrRefresh = async (): Promise<boolean> => {
                     refreshToken: data.refresh_token,
                     expiresAt: data.access_token_expires_at,
                 }
-                setAuth(newTokens)
+                const user = normalizeAuthUser(data.user)
+                setAuth(newTokens, user)
                 return true
             }
         } catch (error) {

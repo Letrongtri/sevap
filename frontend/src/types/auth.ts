@@ -1,4 +1,4 @@
-import type { UserRole, AccessLevel, Timestamp, ID } from './common'
+import type { Timestamp, ID } from './common'
 
 /* ============================================================
    Auth — Type definitions
@@ -11,12 +11,11 @@ export interface LoginCredentials {
 
 export interface AuthUser {
     id: ID
-    name: string
-    email: string
-    role: UserRole
-    avatar?: string
+    fullName: string
+    employeeCode: string
+    roles: string[]
     department?: string
-    accessLevels: AccessLevel[]
+    jobTitle?: string
     lastLogin?: Timestamp
 }
 
