@@ -3,7 +3,6 @@ import { useChatStore } from '../../store/chatStore'
 import { useConversations } from '../../hooks/useConversations'
 import { useDeleteConversation } from '../../hooks/useDeleteConversation'
 import { useNavigate } from '@tanstack/react-router'
-import { PRIVATE_ROUTES } from '../../routes/paths'
 import Tooltip from '../ui/Tooltip'
 
 const ChatHistory = ({ collapsed }: { collapsed: boolean }) => {
@@ -17,7 +16,10 @@ const ChatHistory = ({ collapsed }: { collapsed: boolean }) => {
 
     const handleSelectChat = (id: number) => {
         setActiveChat(id)
-        navigate({ to: PRIVATE_ROUTES.CHAT })
+        navigate({
+            to: '/chat/$conversationId',
+            params: { conversationId: String(id) },
+        })
     }
 
     return (

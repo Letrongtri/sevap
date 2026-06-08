@@ -121,3 +121,357 @@
     padding: var(--space-6);
     background-color: var(--color-bg);
 }
+
+/* ============================================================
+   Chat Page — Layout
+   ============================================================ */
+
+.chat-page {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-sans);
+}
+
+.chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.chat-container__messages {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.chat-container__input {
+    flex-shrink: 0;
+    border-top: 1px solid var(--color-border);
+}
+
+/* ============================================================
+   Message List
+   ============================================================ */
+
+.msg-list {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.msg-list__sentinel {
+    height: 1px;
+    flex-shrink: 0;
+}
+
+.msg-list__inner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    flex: 1;
+}
+
+.msg-list__load-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+}
+
+.msg-list__load-more-text {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+}
+
+/* Centred utility (loading / error) */
+.msg-list-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.error-text {
+    font-size: var(--text-sm);
+    color: var(--color-error);
+}
+
+/* ============================================================
+   Message Row
+   ============================================================ */
+
+.msg-row {
+    display: flex;
+    gap: var(--space-3);
+    max-width: 85%;
+}
+
+.msg-row--user {
+    margin-left: auto;
+    flex-direction: row-reverse;
+}
+
+.msg-row--bot {
+    margin-right: auto;
+}
+
+/* ============================================================
+   Avatar
+   ============================================================ */
+
+.msg-avatar {
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--radius-xl);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+}
+
+.msg-avatar--user {
+    background-color: var(--color-primary);
+    color: var(--color-surface);
+}
+
+.msg-avatar--bot {
+    background-color: var(--color-surface-raised);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+}
+
+/* ============================================================
+   Bubble
+   ============================================================ */
+
+.msg-bubble {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-2xl);
+    font-size: var(--text-sm);
+    line-height: 1.6;
+}
+
+.msg-bubble--user {
+    background-color: var(--color-primary);
+    color: var(--color-surface);
+    border-top-right-radius: var(--radius-sm);
+}
+
+.msg-bubble--bot {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+    border-top-left-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+}
+
+.msg-bubble__content {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.msg-bubble__time {
+    font-size: 0.625rem; /* 10px */
+    margin-top: var(--space-1);
+    color: var(--color-text-muted);
+}
+
+.msg-bubble__time--user {
+    color: rgba(255, 255, 255, 0.6);
+    text-align: right;
+}
+
+/* ============================================================
+   Typing indicator
+   ============================================================ */
+
+.typing-indicator {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+    height: 1rem;
+}
+
+.typing-dot {
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: var(--radius-full);
+    background-color: var(--color-text-placeholder);
+    animation: typing-bounce 1.2s infinite ease-in-out;
+}
+
+.typing-dot--1 {
+    animation-delay: 0ms;
+}
+.typing-dot--2 {
+    animation-delay: 150ms;
+}
+.typing-dot--3 {
+    animation-delay: 300ms;
+}
+
+@keyframes typing-bounce {
+    0%,
+    60%,
+    100% {
+        transform: translateY(0);
+    }
+    30% {
+        transform: translateY(-6px);
+    }
+}
+
+/* ============================================================
+   Empty State
+   ============================================================ */
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    gap: var(--space-4);
+    padding: var(--space-4);
+}
+
+.empty-state__icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: var(--radius-2xl);
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.empty-state__title {
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-secondary);
+}
+
+.empty-state__desc {
+    font-size: var(--text-sm);
+    color: var(--color-text-placeholder);
+    margin-top: var(--space-1);
+    max-width: 20rem;
+}
+
+/* ============================================================
+   Input Box
+   ============================================================ */
+
+.input-box {
+    padding: var(--space-4);
+}
+
+.input-box__row {
+    display: flex;
+    gap: var(--space-3);
+    align-items: flex-end;
+}
+
+.input-box__textarea {
+    flex: 1;
+    resize: none;
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface-raised);
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-sm);
+    font-family: var(--font-sans);
+    color: var(--color-text-primary);
+    line-height: 1.5;
+    min-height: 48px;
+    max-height: 8rem;
+    transition:
+        border-color var(--transition-base),
+        background-color var(--transition-base),
+        box-shadow var(--transition-base);
+    outline: none;
+}
+
+.input-box__textarea::placeholder {
+    color: var(--color-text-placeholder);
+}
+
+.input-box__textarea:focus {
+    border-color: var(--color-primary);
+    background-color: var(--color-surface);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.input-box__textarea:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.input-box__send-btn {
+    flex-shrink: 0;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--radius-xl);
+    background-color: var(--color-primary);
+    color: var(--color-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    transition:
+        background-color var(--transition-fast),
+        box-shadow var(--transition-fast),
+        opacity var(--transition-fast);
+}
+
+.input-box__send-btn:hover:not(:disabled) {
+    background-color: var(--color-primary-hover);
+    box-shadow: var(--shadow-primary);
+}
+
+.input-box__send-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.input-box__hint {
+    font-size: 0.625rem; /* 10px */
+    color: var(--color-text-placeholder);
+    text-align: center;
+    margin-top: var(--space-2);
+}
+
+/* ============================================================
+   Utility
+   ============================================================ */
+
+.spin-icon {
+    animation: spin 1s linear infinite;
+}
+
+.spin-icon--sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}

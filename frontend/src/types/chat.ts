@@ -12,14 +12,24 @@ export interface Conversation {
     lastMessage?: string
 }
 
-export type MessageRole = 'user' | 'assistant' | 'system'
+/** actor: 'user' | 'assistant' | agent names — mirrors backend MessageResponse.actor */
+export type MessageActor = string
 
 export interface Message {
     id: ID
     conversationId: ID
-    role: MessageRole
+    /** actor = 'user' → người dùng; còn lại → bot/agent */
+    actor: MessageActor
+    agentType?: string | null
     content: string
     createdAt: Timestamp
+}
+
+/** Response từ GET /conversations/{id} — bao gồm messages (10 cuối) */
+export interface ConversationDetail extends Conversation {
+    userId: ID
+    isDeleted: boolean
+    messages: Message[]
 }
 
 export interface SendMessagePayload {

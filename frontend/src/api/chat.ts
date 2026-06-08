@@ -2,6 +2,7 @@ import axiosClient from './axios'
 import { useAuthStore } from '../store/authStore'
 import type {
     Conversation,
+    ConversationDetail,
     Message,
     SendMessagePayload,
     CreateConversationPayload,
@@ -20,14 +21,6 @@ export const fetchConversations = async (): Promise<Conversation[]> => {
     return res.data
 }
 
-/** Lấy chi tiết một conversation */
-export const fetchConversationById = async (
-    id: number
-): Promise<Conversation> => {
-    const res = await axiosClient.get(`/conversations/${id}`)
-    return res.data
-}
-
 /** Tạo conversation mới */
 export const createConversation = async (
     payload: CreateConversationPayload
@@ -41,18 +34,61 @@ export const deleteConversation = async (id: number): Promise<void> => {
     await axiosClient.delete(`/conversations/${id}`)
 }
 
-/* ============================================================
-   Messages
-   ============================================================ */
 
-/** Lấy danh sách messages của một conversation */
+/**
+ * Lấy chi tiết conversation + 10 messages cuối.
+ * Dùng cho lần đầu mở chat (initial load).
+ */
+export const fetchConversationDetail = async (
+    id: number
+): Promise<ConversationDetail> => {
+    const res = await axiosClient.get(`/conversations/${id}`)
+    // Backend trả về snake_case, map sang camelCase
+    const d = res.data
+    return {
+        id: d.id,
+        userId: d.user_id,
+        title: d.title,
+        isDeleted: d.is_deleted,
+        createdAt: d.created_at,
+        updatedAt: d.updated_at,
+        messages: (d.messages ?? []).map(mapMessage),
+    }
+}
+
+/** Lấy thêm messages cũ hơn (cursor-based pagination ngược) */
+export const fetchMoreMessages = async (
+    conversationId: number,
+    lastId: number,
+    limit = 20
+): Promise<Message[]> => {
+    const res = await axiosClient.get(
+        `/conversations/${conversationId}/messages`,
+        { params: { last_id: lastId, limit } }
+    )
+    return (res.data ?? []).map(mapMessage)
+}
+
+/** Map từ backend snake_case sang frontend camelCase */
+function mapMessage(m: Record<string, unknown>): Message {
+    return {
+        id: m.id as number,
+        conversationId: m.conversation_id as number,
+        actor: m.actor as string,
+        agentType: (m.agent_type as string | null) ?? null,
+        content: m.content as string,
+        createdAt: m.created_at as string,
+    }
+}
+
+/** Lấy danh sách messages của một conversation (legacy) */
 export const fetchMessages = async (
     conversationId: number
 ): Promise<Message[]> => {
     const res = await axiosClient.get(
         `/conversations/${conversationId}/messages`
     )
-    return res.data
+    return (res.data ?? []).map(mapMessage)
 }
 
 /** Gửi một tin nhắn vào conversation (non-streaming, légacy) */
@@ -64,7 +100,7 @@ export const sendMessage = async (
         `/conversations/${conversationId}/messages`,
         { content }
     )
-    return res.data
+    return mapMessage(res.data)
 }
 
 /**

@@ -9,6 +9,7 @@ export const PRIVATE_ROUTES = {
     HOME: '/',
     DASHBOARD: '/dashboard',
     CHAT: '/chat',
+    CHAT_DETAIL: '/chat/$conversationId',
     DOCUMENTS: '/documents',
     AGENTS: '/agents',
     REPORTS: '/reports',

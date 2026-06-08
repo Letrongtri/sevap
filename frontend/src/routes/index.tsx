@@ -59,6 +59,12 @@ const chatRoute = createRoute({
     component: ChatPage,
 })
 
+const chatDetailRoute = createRoute({
+    getParentRoute: () => privateLayoutRoute,
+    path: PRIVATE_ROUTES.CHAT_DETAIL,
+    component: ChatPage,
+})
+
 const documentsRoute = createRoute({
     getParentRoute: () => privateLayoutRoute,
     path: PRIVATE_ROUTES.DOCUMENTS,
@@ -93,6 +99,7 @@ const routeTree = rootRoute.addChildren([
         homeRoute,
         dashboardRoute,
         chatRoute,
+        chatDetailRoute,
         documentsRoute,
         agentsRoute,
         reportsRoute,
