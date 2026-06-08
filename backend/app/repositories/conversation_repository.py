@@ -2,18 +2,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
-from app.models import Conversation
+from app.models import Conversation, Message
 
 class ConversationRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_conversation_by_id(self, conversation_id: int, get_messages: bool = False):
+    async def get_conversation_by_id(
+        self, 
+        conversation_id: int
+    ):
         stmt = select(Conversation).where(Conversation.id == conversation_id)
-
-        if get_messages:
-            stmt = stmt.options(selectinload(Conversation.messages))
-
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
     
@@ -21,7 +20,7 @@ class ConversationRepository:
         try:
             self.db.add(conversation)
             await self.db.commit()
-            return await self.get_conversation_by_id(conversation.id, get_messages=True)
+            return await self.get_conversation_by_id(conversation.id)
         except Exception as e:
             await self.db.rollback()
             raise e

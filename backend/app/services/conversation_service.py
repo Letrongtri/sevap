@@ -1,13 +1,14 @@
 from typing import List
 
-from app.repositories import ConversationRepository
+from app.repositories import ConversationRepository, MessageRepository
 from app.models import Conversation
 from app.services.exceptions import NotFoundError
 
 
 class ConversationService:
-    def __init__(self, repo: ConversationRepository):
+    def __init__(self, repo: ConversationRepository, message_repo: MessageRepository):
         self.repo = repo
+        self.message_repo = message_repo
     
     async def get_all_conversations_by_user_id(self, user_id: int) -> List[Conversation]:
         return await self.repo.get_all_conversations_by_user_id(user_id)
@@ -24,10 +25,20 @@ class ConversationService:
 
         return await self.repo.create_conversation(conversation)
     
-    async def get_conversation_by_id(self, conversation_id: int) -> Conversation | None:
-        conversation = await self.repo.get_conversation_by_id(conversation_id, get_messages=True)
+    async def get_conversation_by_id(
+        self, 
+        conversation_id: int,
+        get_messages: bool = False
+    ) -> Conversation | None:
+        conversation = await self.repo.get_conversation_by_id(conversation_id)
         if conversation is None:
             raise NotFoundError()
+        if get_messages:
+            messages = await self.message_repo.get_messages_by_conversation_id(
+                conversation_id=conversation_id,
+                limit=10
+            )
+            return conversation, messages
         return conversation
     
     async def update_conversation(self, conversation_id: int, title: str) -> Conversation:

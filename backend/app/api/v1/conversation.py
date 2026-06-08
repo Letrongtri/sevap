@@ -4,8 +4,8 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.dependencies import get_conversation_service, get_message_service
-from app.schemas import ConversationResponse, ConversationUpdate, MessageSend
-from app.services import ConversationService, MessageService, NotFoundError
+from app.schemas import ConversationResponse, ConversationDetailResponse, ConversationUpdate, MessageSend, MessageResponse
+from app.services import ConversationService, MessageService, NotFoundError, InternalError
 from app.core.logging import logger
 
 
@@ -74,7 +74,7 @@ async def send_message(
         raise HTTPException(status_code=422, detail="Failed to send message")
 
 
-@router.get("/{conversation_id}", response_model=ConversationResponse)
+@router.get("/{conversation_id}", response_model=ConversationDetailResponse)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_conversation(
     request: Request, 
@@ -82,9 +82,22 @@ async def get_conversation(
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     try:
-        conversation = await conversation_service.get_conversation_by_id(conversation_id)
-        
-        return ConversationResponse.model_validate(conversation)
+        conversation, messages = await conversation_service.get_conversation_by_id(
+            conversation_id=conversation_id,
+            get_messages=True
+        )
+
+        return ConversationDetailResponse(
+            id=conversation.id,
+            user_id=conversation.user_id,
+            title=conversation.title,
+            is_deleted=conversation.is_deleted,
+            created_at=conversation.created_at,
+            updated_at=conversation.updated_at,
+            messages=[
+                MessageResponse.model_validate(m) for m in messages
+            ],
+        )
     except NotFoundError:
         logger.error("conversation_not_found", conversation_id=conversation_id)
         raise HTTPException(status_code=404, detail="Conversation not found")
@@ -143,6 +156,37 @@ async def delete_conversation(
             exc_info=True
         )
         raise HTTPException(status_code=422, detail="Failed to delete conversation")
+
+@router.get("/{conversation_id}/messages", response_model=List[MessageResponse])
+# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+async def get_messages_by_conversation_id(
+    request: Request,
+    conversation_id: int,
+    limit: int = 20,
+    last_id: int | None = None,
+    message_service: MessageService = Depends(get_message_service),
+):
+    try:
+        messages = await message_service.get_messages_by_conversation_id(
+            conversation_id=conversation_id,
+            last_id=last_id,
+            limit=limit,
+        )
+        
+        return [
+            MessageResponse.model_validate(message) 
+            for message in messages
+        ]
+    except NotFoundError:
+        logger.error("messages_not_found", conversation_id=conversation_id)
+        raise HTTPException(status_code=404, detail="Messages not found")
+    except InternalError:
+        logger.error(
+            "get_messages_failed", 
+            conversation_id=conversation_id, 
+            exc_info=True
+        )
+        raise HTTPException(status_code=500, detail="Failed to get messages")
 
 @router.post("/{conversation_id}/message", response_model=ConversationResponse)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])

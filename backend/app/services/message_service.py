@@ -3,9 +3,10 @@ from typing import List, AsyncGenerator
 
 from app.repositories import MessageRepository, ConversationRepository
 from app.models import Message, Conversation
-from app.services.exceptions import NotFoundError
+from app.services.exceptions import NotFoundError, InternalError
 from app.ai_brain.retrieval.repository import PARRepository
 from app.ai_brain.router.intent_router import IntentRouter
+from app.core.logging import logger
 
 
 class MessageService:
@@ -20,6 +21,31 @@ class MessageService:
         self.conv_repo = conv_repo
         self.par_repo = par_repo
         self.intent_router = intent_router
+
+    async def get_messages_by_conversation_id(
+        self,
+        conversation_id: int,
+        limit: int = 20,
+        last_id: int | None = None,
+    ) -> List[Message]:
+        try:
+            messages = await self.msg_repo.get_messages_by_conversation_id(
+                conversation_id=conversation_id,
+                last_id=last_id,
+                limit=limit,
+            )
+            return messages
+        except NotFoundError:
+            raise NotFoundError()
+        except Exception:
+            logger.error(
+                "get_messages_by_conversation_id_failed",
+                conversation_id=conversation_id,
+                last_id=last_id,
+                limit=limit,
+                exc_info=True,
+            )
+            raise InternalError("Failed to get messages by conversation_id")
 
     async def create_user_message(self, user_id: int, conversation_id: int, content: str) -> Message:
         try:
@@ -138,4 +164,4 @@ class MessageService:
                 "assistant_message_id": new_assistant_message.id,
                 "sources": sources,
                 "agent_type": agent_type,
-            }) + "\n\n"
+            }) + "\n\n"
