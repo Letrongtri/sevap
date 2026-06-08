@@ -1,9 +1,11 @@
 import { create } from 'zustand'
 import type { AuthActions, AuthState, AuthUser } from '../types/auth'
+import axiosClient from '../api/axios'
 
 type AuthStore = AuthState & AuthActions
 
 const normalizeAuthUser = (user): AuthUser => {
+    if (!user) return null as any
     return {
         id: user.id,
         fullName: user.full_name,
@@ -27,20 +29,24 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
     setAuth: (tokens, user) => {
         localStorage.setItem('access_token', tokens.accessToken)
-        localStorage.setItem('refresh_token', tokens.refreshToken)
-        localStorage.setItem('expires_at', tokens.expiresAt)
+        if (tokens.refreshToken) {
+            localStorage.setItem('refresh_token', tokens.refreshToken)
+        }
+        if (tokens.expiresAt) {
+            localStorage.setItem('expires_at', tokens.expiresAt)
+        }
 
-        set({
+        set((state) => ({
             accessToken: tokens.accessToken,
-            refreshToken: tokens.refreshToken,
-            expiresAt: tokens.expiresAt,
+            refreshToken: tokens.refreshToken || state.refreshToken,
+            expiresAt: tokens.expiresAt || state.expiresAt,
             user:
-                user !== undefined
+                user !== undefined && user !== null
                     ? normalizeAuthUser(user)
-                    : useAuthStore.getState().user,
+                    : state.user,
             isAuthenticated: true,
             error: null,
-        })
+        }))
     },
 
     clearAuth: () => {
@@ -77,23 +83,18 @@ export const checkAuthOrRefresh = async (): Promise<boolean> => {
 
     if (refreshToken) {
         try {
-            const response = await fetch('/api/v1/auth/refresh', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ refresh_token: refreshToken }),
+            const response = await axiosClient.post('/auth/refresh', {
+                refresh_token: refreshToken,
             })
 
-            if (response.ok) {
-                const data = await response.json()
-                const newTokens = {
-                    accessToken: data.access_token,
-                    refreshToken: data.refresh_token,
-                    expiresAt: data.access_token_expires_at,
-                }
-                const user = normalizeAuthUser(data.user)
-                setAuth(newTokens, user)
-                return true
+            const data = response.data
+            const newTokens = {
+                accessToken: data.access_token,
+                refreshToken: data.refresh_token || refreshToken,
+                expiresAt: data.access_token_expires_at,
             }
+            setAuth(newTokens, data.user)
+            return true
         } catch (error) {
             console.error('Lỗi gia hạn token ngầm:', error)
         }

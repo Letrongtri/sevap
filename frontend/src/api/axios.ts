@@ -32,18 +32,18 @@ axiosClient.interceptors.response.use(
             if (refreshToken) {
                 try {
                     // Gọi API refresh riêng biệt
-                    const res = await axios.post('/api/auth/refresh', {
+                    const res = await axios.post('http://localhost:8000/api/v1/auth/refresh', {
                         refresh_token: refreshToken,
                     })
                     const {
                         access_token,
-                        refresh_token,
+                        refresh_token: new_refresh_token,
                         access_token_expires_at,
                     } = res.data
 
                     setAuth({
                         accessToken: access_token,
-                        refreshToken: refresh_token,
+                        refreshToken: new_refresh_token || refreshToken,
                         expiresAt: access_token_expires_at,
                     })
 

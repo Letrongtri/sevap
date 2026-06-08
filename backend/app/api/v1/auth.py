@@ -13,7 +13,7 @@ from app.services import (
     InvalidTokenError,
     NotFoundError
 )
-from app.schemas import LoginResponse, LoginForm, RefreshTokenRequest, UserResponse, UserInfoResponse
+from app.schemas import LoginResponse, LoginForm, RefreshTokenRequest, UserResponse, UserInfoResponse, RefreshTokenResponse
 from app.dependencies import get_auth_service, get_current_user
 from app.core.logging import logger
 
@@ -80,7 +80,7 @@ async def login(
         logger.error("login_validation_failed", error=str(ve), exc_info=True)
         raise HTTPException(status_code=422, detail=str(ve))
 
-@router.post("/refresh")
+@router.post("/refresh", response_model=RefreshTokenResponse)
 async def refresh_token(
     request: Request, 
     data: RefreshTokenRequest,
@@ -88,10 +88,11 @@ async def refresh_token(
 ):
     try:
         new_access_token = await auth_service.refresh_token(data.refresh_token)
-        return {
-            "access_token": new_access_token.token,
-            "token_type": "bearer"
-        }
+        return RefreshTokenResponse(
+            access_token=new_access_token.token,
+            access_token_expires_at=new_access_token.expires_at,
+            token_type="bearer"
+        )
     except InvalidTokenError:
         logger.error("refresh_token_invalid", exc_info=True)
         raise HTTPException(status_code=401, detail="Invalid refresh token")
