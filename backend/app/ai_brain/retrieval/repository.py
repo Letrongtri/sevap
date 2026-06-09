@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from app.ai_brain.retrieval.schemas import ACCESS_LEVEL_HIERARCHY, PARContext, RetrievalResult
 from app.core.enum import AccessLevel, DocumentStatus
-from app.models import Document, DocumentRoleAccess, Department, User, UserRole
+from app.models import Document, DocumentRoleAccess, DocumentUserAccess, Department, User, UserRole
 from sqlalchemy import cast
 from sqlalchemy.dialects.postgresql import JSONB
 
@@ -122,10 +122,9 @@ class PARRepository:
             allowed_ids.update({row[0] for row in res_managerial.fetchall()})
 
         # NHÁNH 3: TÀI LIỆU PRIVATE
-        ## Điều kiện 1: Là người upload hoặc người được cấu hình để xem
+        ## Điều kiện 1: Là người upload
         private_conds = [
             Document.uploader_id == ctx.user_id,
-            Document.meta_data["target_user_ids"].contains(cast([ctx.user_id], JSONB))
         ] 
         
         ## Điều kiện 2: Là Quản lý của phòng ban sở hữu tài liệu đó
@@ -143,7 +142,21 @@ class PARRepository:
         res_private_base = await self.db.execute(stmt_private_base)
         allowed_ids.update({row[0] for row in res_private_base.fetchall()})
 
-        ## Điều kiện 3: Gán Explicit Quyền riêng cho Role (Ví dụ: HR chuyên trách)
+        ## Điều kiện 3: Gán Explicit Quyền riêng cho User qua document_user_access
+        stmt_private_user = select(DocumentUserAccess.document_id).join(
+            Document, Document.id == DocumentUserAccess.document_id
+        ).where(
+            and_(
+                DocumentUserAccess.user_id == ctx.user_id,
+                Document.is_deleted == False,
+                Document.status == DocumentStatus.DONE,
+                Document.access_level == AccessLevel.PRIVATE
+            )
+        )
+        res_private_user = await self.db.execute(stmt_private_user)
+        allowed_ids.update({row[0] for row in res_private_user.fetchall()})
+
+        ## Điều kiện 4: Gán Explicit Quyền riêng cho Role (Ví dụ: HR chuyên trách)
         if ctx.role_ids:
             stmt_private_role = select(DocumentRoleAccess.document_id).join(
                 Document, Document.id == DocumentRoleAccess.document_id
