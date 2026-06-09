@@ -16,5 +16,6 @@ class Role(Base):
 
     user_associations = relationship("UserRole", back_populates="role", cascade="all, delete-orphan")
     permissions = relationship("Permission", secondary="role_permissions", back_populates="roles")
-    documents = relationship("Document", secondary="document_role_access", back_populates="roles")
+    document_accesses = relationship("DocumentRoleAccess", back_populates="role", cascade="all, delete-orphan")
+
     

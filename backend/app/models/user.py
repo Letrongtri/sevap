@@ -40,3 +40,4 @@ class User(Base):
         back_populates="manager"
     )
     job_title = relationship("JobTitle", back_populates="users")
+    document_accesses = relationship("DocumentUserAccess", back_populates="user", cascade="all, delete-orphan")

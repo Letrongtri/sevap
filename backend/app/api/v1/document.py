@@ -118,6 +118,7 @@ async def update_document(
     document_service: DocumentService = Depends(get_document_service),
 ):
     try:
+        user_id = request.state.user["id"]
         document = await document_service.update_document(
             document_id=document_id,
             access_level=data.access_level,
@@ -126,6 +127,7 @@ async def update_document(
             category=data.category,
             role_access=data.role_access,
             effective_date=data.effective_date,
+            target_user_ids=data.target_user_ids
         )
         
         return DocumentResponse.model_validate(document)

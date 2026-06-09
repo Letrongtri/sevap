@@ -1,3 +1,5 @@
+from app.schemas import RoleResponse
+from app.schemas import UserResponse
 from pydantic import BaseModel, ConfigDict, model_validator, field_validator
 from datetime import datetime
 
@@ -5,20 +7,23 @@ from app.core.enum import AccessLevel
 
 class DocumentUpdate(BaseModel):
     access_level: AccessLevel | None = None
-    department_scope: str | None = None
+    department_id: int | None = None
     title: str | None = None
     category: str | None = None
     effective_date: datetime | None = None
     role_access: list[int] | None = None
+    target_user_ids: list[int] | None = None
 
     @model_validator(mode="after")
     def validate_at_least_one_field(self):
         values = [
             self.access_level,
-            self.department_scope,
+            self.department_id,
             self.title,
             self.category,
-            self.effective_date
+            self.effective_date,
+            self.role_access,
+            self.target_user_ids
         ]
 
         has_value = any(
@@ -58,7 +63,7 @@ class DocumentResponse(BaseModel):
     uploader_id: int
     title: str
     access_level: str
-    department_scope: str | None = None
+    department_id: int | None = None
     file_name: str
     file_type: str | None = None
     file_path: str
@@ -72,5 +77,7 @@ class DocumentResponse(BaseModel):
     updated_at: datetime
 
     document_chunks: list[DocumentChunkResponse] = []
+    target_users: list[UserResponse] = []
+    roles: list[RoleResponse] = []
 
     model_config = ConfigDict(from_attributes=True)

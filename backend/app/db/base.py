@@ -15,5 +15,6 @@ from app.models import (
     UserRole, 
     UserSession, 
     User, 
-    VectorEmbedding
+    VectorEmbedding,
+    DocumentUserAccess
 )

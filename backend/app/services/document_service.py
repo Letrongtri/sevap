@@ -10,16 +10,17 @@ import tempfile
 import os
 
 from app.models import Document, DocumentChunk, VectorEmbedding
-from app.repositories import DocumentRepository, RoleRepository
+from app.repositories import DocumentRepository, RoleRepository, UserRepository
 from app.services.chunking_service import ChunkService
 from app.services.exceptions import DocumentAlreadyExistsError, NotFoundError, MissingRequiredFieldsError
 from app.core.enum import AccessLevel, DocumentStatus
 from app.core.logging import logger
 
 class DocumentService:
-    def __init__(self, repo: DocumentRepository, role_repo: RoleRepository):
+    def __init__(self, repo: DocumentRepository, role_repo: RoleRepository, user_repo: UserRepository):
         self.repo = repo
         self.role_repo = role_repo
+        self.user_repo = user_repo
 
     async def upload(self, file: UploadFile, uploader_id: int, access_level: str,
                      background_tasks: BackgroundTasks, department_id: int = None, 
@@ -72,6 +73,15 @@ class DocumentService:
                     raise NotFoundError()
                 
                 roles.append(existing_role)
+
+        target_users = []
+        if target_user_ids is not None:
+            for user_id in target_user_ids:
+                existing_user = await self.user_repo.get_user_by_id(user_id)
+                if existing_user is None:
+                    raise NotFoundError()
+                
+                target_users.append(existing_user)
         
         shutil.move(temp_file_path, uploaded_file_path)
             
@@ -91,11 +101,13 @@ class DocumentService:
             category=category,
             effective_date=effective_date,
             file_hash=file_hash.hexdigest(),
-            meta_data={"target_user_ids": target_user_ids},
         )
 
         if role_access is not None:
             document.roles = roles
+
+        if target_user_ids is not None:
+            document.target_users = target_users
 
         saved_document = await self.repo.create_document(document)
 
@@ -131,7 +143,7 @@ class DocumentService:
                     "effective_date": effective_date.strftime("%Y-%m-%d") if effective_date else None,
                     "access_level": access_level,
                     "department_id": department_id,
-                    "target_user_ids": target_user_ids,
+                    "user_accesses": target_user_ids,
                     "role_access": role_access
                 })
 
@@ -177,7 +189,7 @@ class DocumentService:
     async def update_document(self, document_id: int, access_level: str = None, 
                               department_id: str = None, title: str = None, 
                               category: str = None, effective_date: datetime = None,
-                              role_access: List[int] = None) -> Document:
+                              role_access: List[int] = None, target_user_ids: List[int] = None) -> Document:
         existing = await self.repo.get_document_by_id(document_id)
         
         if existing is None or existing.is_deleted is True:
@@ -203,6 +215,16 @@ class DocumentService:
                 
                 roles.append(existing_role)
             existing.roles = roles
+        
+        if target_user_ids is not None:
+            users = []
+            for user_id in target_user_ids:
+                existing_user = await self.user_repo.get_user_by_id(user_id)
+                if existing_user is None:
+                    raise NotFoundError()
+                
+                users.append(existing_user)
+            existing.target_users = users
 
         await self.repo.save_document(existing)
 

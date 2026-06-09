@@ -14,6 +14,7 @@ from app.models.user_role import UserRole
 from app.models.user_session import UserSession
 from app.models.user import User
 from app.models.vector_embedding import VectorEmbedding
+from app.models.document_user_access import DocumentUserAccess
 
 __all__ = [
     "ActivityLog",
@@ -32,4 +33,5 @@ __all__ = [
     "UserSession",
     "User",
     "VectorEmbedding",
+    "DocumentUserAccess"
 ]

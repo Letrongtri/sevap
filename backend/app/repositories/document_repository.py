@@ -3,7 +3,7 @@ from sqlalchemy.future import select
 from sqlalchemy import update
 from sqlalchemy.orm import selectinload
 
-from app.models import Document, DocumentChunk
+from app.models import Document, DocumentChunk, DocumentUserAccess, DocumentRoleAccess
 
 class DocumentRepository:
     def __init__(self, db: AsyncSession):
@@ -38,11 +38,18 @@ class DocumentRepository:
             await self.db.rollback()
             raise e
         
-    async def get_document_by_id(self, document_id: int, get_chunks: bool = False):
+    async def get_document_by_id(self, document_id: int, get_chunks: bool = False, get_roles: bool = False, get_users: bool = False):
         stmt = select(Document).where(Document.id == document_id)
-        
+
+        options = []
+        if get_roles:
+            options.append(selectinload(Document.role_accesses).selectinload(DocumentRoleAccess.role))
+        if get_users:
+            options.append(selectinload(Document.user_accesses).selectinload(DocumentUserAccess.user))
         if get_chunks:
-            stmt = stmt.options(selectinload(Document.document_chunks))
+            options.append(selectinload(Document.document_chunks))
+
+        stmt = stmt.options(*options)
 
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
@@ -62,11 +69,13 @@ class DocumentRepository:
             await self.db.rollback()
             raise e
 
-    async def get_documents(self, is_deleted: bool = False, get_chunks: bool = False):
+    async def get_documents(self, is_deleted: bool = False, get_chunks: bool = True):
         stmt = select(Document).where(Document.is_deleted == is_deleted)
-        
-        if get_chunks:
-            stmt = stmt.options(selectinload(Document.document_chunks))
+        stmt = stmt.options(
+            selectinload(Document.role_accesses).selectinload(DocumentRoleAccess.role),
+            selectinload(Document.user_accesses).selectinload(DocumentUserAccess.user),
+            selectinload(Document.document_chunks)
+        )
 
         result = await self.db.execute(stmt)
         return result.scalars().all()
@@ -74,7 +83,6 @@ class DocumentRepository:
     async def save_document(self, document: Document):
         try:
             await self.db.commit()
-            await self.db.refresh(document)
         except Exception as e:
             await self.db.rollback()
             raise e

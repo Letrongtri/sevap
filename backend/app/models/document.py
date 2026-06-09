@@ -2,7 +2,10 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.ext.associationproxy import association_proxy
 from app.db.base_class import Base
+from app.models.document_user_access import DocumentUserAccess
+from app.models.document_role_access import DocumentRoleAccess
 
 class Document(Base):
     __tablename__ = "documents"
@@ -27,6 +30,10 @@ class Document(Base):
 
     document_chunks = relationship("DocumentChunk", back_populates="document", cascade="all, delete-orphan")
     uploader = relationship("User", back_populates="documents")
-    roles = relationship("Role", secondary="document_role_access", back_populates="documents")
+    role_accesses = relationship("DocumentRoleAccess", back_populates="document", cascade="all, delete-orphan")
     embedding_jobs = relationship("EmbeddingJob", back_populates="document", cascade="all, delete-orphan")
+    user_accesses = relationship("DocumentUserAccess", back_populates="document", cascade="all, delete-orphan")
+    
+    target_users = association_proxy("user_accesses", "user", creator=lambda u: DocumentUserAccess(user=u))
+    roles = association_proxy("role_accesses", "role", creator=lambda r: DocumentRoleAccess(role=r))
     
