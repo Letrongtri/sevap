@@ -10,6 +10,7 @@ from app.schemas import (
     RoleCreate, 
     RoleResponse, 
     RoleUpdate,
+    RoleSimple
 )
 from app.dependencies import get_role_service
 from app.core.logging import logger
@@ -83,6 +84,22 @@ async def create_role(
             exc_info=True
         )
         raise HTTPException(status_code=422, detail="Failed to create role")
+
+@router.get("/simple", response_model=List[RoleSimple])
+# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+async def get_all_simple_roles(
+    request: Request,
+    role_service: RoleService = Depends(get_role_service),
+):
+    try:
+        return await role_service.get_all_simple_roles()
+    except Exception:
+        logger.error(
+            "get_all_simple_roles_failed",
+            exc_info=True
+        )
+        raise HTTPException(status_code=422, detail="Failed to get all roles")
+
 
 @router.get("/{role_id}", response_model=RoleResponse)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])

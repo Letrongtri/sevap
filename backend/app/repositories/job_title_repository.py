@@ -12,6 +12,11 @@ class JobTitleRepository:
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
+    async def get_all_simple_job_titles(self):
+        stmt = select(JobTitle.id, JobTitle.title_name, JobTitle.code)
+        result = await self.db.execute(stmt)
+        return result.all()
+
     async def get_job_title_by_id(self, job_title_id: int):
         stmt = select(JobTitle).where(JobTitle.id == job_title_id)
         result = await self.db.execute(stmt)

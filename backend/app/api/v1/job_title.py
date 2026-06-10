@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.dependencies import get_job_title_service
-from app.schemas import JobTitleCreate, JobTitleResponse, JobTitleUpdate
+from app.schemas import JobTitleCreate, JobTitleResponse, JobTitleUpdate, JobTitleSimple
 from app.services import JobTitleService, NotFoundError, JobTitleAlreadyExistsError
 from app.core.logging import logger
 
@@ -55,6 +55,21 @@ async def create_job_title(
             exc_info=True
         )
         raise HTTPException(status_code=422, detail="Failed to create job title")
+
+@router.get("/simple", response_model=List[JobTitleSimple])
+# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+async def get_all_simple_job_titles(
+    request: Request,
+    job_title_service: JobTitleService = Depends(get_job_title_service),
+):
+    try:
+        return await job_title_service.get_all_simple_job_titles()
+    except Exception:
+        logger.error(
+            "get_all_simple_job_titles_failed",
+            exc_info=True
+        )
+        raise HTTPException(status_code=422, detail="Failed to get all job_titles")
 
 @router.get("/{job_title_id}", response_model=JobTitleResponse)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])

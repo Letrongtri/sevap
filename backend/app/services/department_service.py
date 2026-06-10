@@ -6,6 +6,7 @@ from app.services.exceptions import (
     DepartmentAlreadyExistsError, 
     NotFoundError,
 )
+from app.schemas import DepartmentSimple
 
 class DepartmentService:
     def __init__(self, repo: DepartmentRepository):
@@ -13,6 +14,16 @@ class DepartmentService:
     
     async def get_all_departments(self) -> List[Department]:
         return await self.repo.get_all_departments()
+
+    async def get_all_simple_departments(self) -> List[DepartmentSimple]:
+        departments = await self.repo.get_all_simple_departments()
+        return [
+            DepartmentSimple(
+                id=department.id,
+                name=department.name,
+                code=department.code
+            ) for department in departments
+        ]
 
     async def create_department(self, name: str, code: str, 
                                 description: str | None = None, parent_id: int | None = None, 

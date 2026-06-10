@@ -13,6 +13,11 @@ class RoleRepository:
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
+    async def get_all_simple_roles(self):
+        stmt = select(Role.id, Role.name)
+        result = await self.db.execute(stmt)
+        return result.all()
+
     async def get_role_by_id(self, role_id: int):
         stmt = select(Role).where(Role.id == role_id).options(selectinload(Role.permissions))
         result = await self.db.execute(stmt)

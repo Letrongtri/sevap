@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.dependencies import get_department_service, get_message_service
-from app.schemas import DepartmentCreate, DepartmentResponse, DepartmentUpdate
+from app.schemas import DepartmentCreate, DepartmentResponse, DepartmentUpdate, DepartmentSimple
 from app.services import DepartmentService, NotFoundError, DepartmentAlreadyExistsError
 from app.core.logging import logger
 
@@ -58,6 +58,21 @@ async def create_department(
             exc_info=True
         )
         raise HTTPException(status_code=422, detail="Failed to create department")
+
+@router.get("/simple", response_model=List[DepartmentSimple])
+# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+async def get_all_simple_departments(
+    request: Request,
+    department_service: DepartmentService = Depends(get_department_service),
+):
+    try:
+        return await department_service.get_all_simple_departments()
+    except Exception:
+        logger.error(
+            "get_all_simple_departments_failed",
+            exc_info=True
+        )
+        raise HTTPException(status_code=422, detail="Failed to get all departments")
 
 @router.get("/{department_id}", response_model=DepartmentResponse)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])

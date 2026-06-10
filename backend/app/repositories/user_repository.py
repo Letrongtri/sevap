@@ -127,7 +127,8 @@ class UserRepository:
             
             stmt = select(User).where(User.id == user.id).options(
                 joinedload(User.department),
-                selectinload(User.role_associations).joinedload(UserRole.role)
+                joinedload(User.job_title),
+                selectinload(User.role_associations).joinedload(UserRole.role),
             )
             
             result = await self.db.execute(stmt)

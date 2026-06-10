@@ -6,6 +6,7 @@ from app.services.exceptions import (
     RoleAlreadyExistsError, 
     NotFoundError,
 )
+from app.schemas import RoleSimple
 
 class RoleService:
     def __init__(self, repo: RoleRepository, permission_repo: PermissionRepository):
@@ -14,6 +15,13 @@ class RoleService:
     
     async def get_all_roles(self) -> List[Role]:
         return await self.repo.get_all_roles()
+
+    async def get_all_simple_roles(self) -> List[RoleSimple]:
+        roles = await self.repo.get_all_simple_roles()
+        return [
+            RoleSimple(id=role.id, name=role.name) 
+            for role in roles
+        ]
 
     async def create_role(self, name: str, description: str | None = None, 
                           access_level: int | None = None, 

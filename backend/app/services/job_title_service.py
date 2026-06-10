@@ -6,6 +6,7 @@ from app.services.exceptions import (
     JobTitleAlreadyExistsError, 
     NotFoundError,
 )
+from app.schemas import JobTitleSimple
 
 class JobTitleService:
     def __init__(self, repo: JobTitleRepository):
@@ -13,6 +14,16 @@ class JobTitleService:
     
     async def get_all_job_titles(self) -> List[JobTitle]:
         return await self.repo.get_all_job_titles()
+
+    async def get_all_simple_job_titles(self) -> List[JobTitleSimple]:
+        job_titles = await self.repo.get_all_simple_job_titles()
+        return [
+            JobTitleSimple(
+                id=job_title.id, 
+                title_name=job_title.title_name,
+                code=job_title.code,
+            ) for job_title in job_titles
+        ]
 
     async def create_job_title(self, title_name: str, code: str, 
                                 description: str | None = None) -> JobTitle:

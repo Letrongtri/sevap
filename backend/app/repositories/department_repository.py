@@ -12,6 +12,11 @@ class DepartmentRepository:
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
+    async def get_all_simple_departments(self):
+        stmt = select(Department.id, Department.name, Department.code)
+        result = await self.db.execute(stmt)
+        return result.all()
+
     async def get_department_by_id(self, department_id: int):
         stmt = select(Department).where(Department.id == department_id)
         result = await self.db.execute(stmt)
