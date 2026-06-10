@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
-from typing import List
+from typing import Annotated
 
 from app.services import (
     UserService,
@@ -12,37 +12,40 @@ from app.schemas import (
     UserResponse, 
     UserUpdate, 
     UserUpdatePassword,
+    PaginationQuery,
+    UserQuery,
+    UserPaginatedResponse
 )
 from app.dependencies import get_user_service
 from app.core.logging import logger
 
 router = APIRouter()
 
-@router.get("", response_model=List[UserResponse])
+@router.get("", response_model=UserPaginatedResponse)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_users(
     request: Request,
+    query: Annotated[UserQuery, Depends()],
+    pagination: Annotated[PaginationQuery, Depends()],
     user_service: UserService = Depends(get_user_service),
 ):
     """ Get all system users.
 
     Args:
         request: The FastAPI request object for rate limiting.
+        query: Query parameters for filtering and pagination
         user_service: User service
 
     Returns:
-        UserResponse: User information
+        UserPaginatedResponse: User information
     """
     try:
-        users = await user_service.get_all_users()
-        
-        return [
-            UserResponse.model_validate(user) 
-            for user in users
-        ]
-    except Exception:
+        return await user_service.get_all_users(query, pagination)
+    except Exception as exc:
         logger.error(
             "get_all_users_failed",
+            query=query, 
+            pagination=pagination, 
             exc_info=True
         )
         raise HTTPException(status_code=422, detail="Failed to get all users")
@@ -54,27 +57,8 @@ async def create_user(
     data: UserCreate,
     user_service: UserService = Depends(get_user_service),
 ):
-    """Create a user.
-
-    Args:
-        request: The FastAPI request object for rate limiting.
-        employee_code: User's employee code
-        full_name: User's full name
-        password: User's password
-        email: User's email
-
-    Returns:
-        UserResponse: User information
-    """
     try:
-        user = await user_service.create_user(
-            employee_code=data.employee_code, 
-            full_name=data.full_name, 
-            password=data.password,
-            email=data.email,
-        )
-        
-        return UserResponse.model_validate(user)
+        return await user_service.create_user(data)
     except UserAlreadyExistsError:
         logger.error("user_already_exists", employee_code=data.employee_code)
         raise HTTPException(status_code=409, detail="User already exists")
@@ -104,9 +88,7 @@ async def get_user(
         UserResponse: User information
     """
     try:
-        user = await user_service.get_user_by_id(user_id)
-        
-        return UserResponse.model_validate(user)
+        return await user_service.get_user_by_id(user_id)
     except NotFoundError:
         logger.error("user_not_found", user_id=user_id)
         raise HTTPException(status_code=404, detail="User not found")
@@ -126,27 +108,14 @@ async def update_user(
     data: UserUpdate,
     user_service: UserService = Depends(get_user_service),
 ):
-    """Update user information.
-
-    Args:
-        request: The FastAPI request object for rate limiting.
-        full_name: User's full name
-        email: User's email
-
-    Returns:
-        UserResponse: User information
-    """
     try:
-        user = await user_service.update_user(
-            user_id=user_id,
-            full_name=data.full_name, 
-            email=data.email,
-        )
-        
-        return UserResponse.model_validate(user)
+        return await user_service.update_user(user_id=user_id, data=data)
     except NotFoundError:
         logger.error("update_user_not_found", user_id=user_id)
         raise HTTPException(status_code=404, detail="User not found")
+    except UserAlreadyExistsError:
+        logger.error("update_user_already_exists", user_id=user_id)
+        raise HTTPException(status_code=409, detail="User already exists")
     except Exception:
         logger.error(
             "update_user_failed", 
@@ -172,9 +141,7 @@ async def delete_user(
         UserResponse: User information
     """
     try:
-        user = await user_service.delete_user(user_id=user_id)
-        
-        return UserResponse.model_validate(user)
+        return await user_service.delete_user(user_id=user_id)
     except NotFoundError:
         logger.error("delete_user_not_found", user_id=user_id)
         raise HTTPException(status_code=404, detail="User not found")
@@ -203,12 +170,7 @@ async def activate_user(
         UserResponse: User information
     """
     try:
-        user = await user_service.update_user(
-            user_id=user_id,
-            active=True
-        )
-        
-        return UserResponse.model_validate(user)
+        return await user_service.toggle_user_status(user_id=user_id, active=True)
     except NotFoundError:
         logger.error("activate_user_not_found", user_id=user_id)
         raise HTTPException(status_code=404, detail="User not found")
@@ -237,12 +199,7 @@ async def deactivate_user(
         UserResponse: User information
     """
     try:
-        user = await user_service.update_user(
-            user_id=user_id,
-            active=False
-        )
-        
-        return UserResponse.model_validate(user)
+        return await user_service.toggle_user_status(user_id=user_id, active=False)
     except NotFoundError:
         logger.error("deactivate_user_not_found", user_id=user_id)
         raise HTTPException(status_code=404, detail="User not found")
@@ -271,9 +228,7 @@ async def reset_user_password(
         UserResponse: User information
     """
     try:
-        user = await user_service.reset_user_password(user_id)
-        
-        return UserResponse.model_validate(user)
+        return await user_service.reset_user_password(user_id)
     except NotFoundError:
         logger.error("reset_password_user_not_found", user_id=user_id)
         raise HTTPException(status_code=404, detail="User not found")
@@ -304,13 +259,11 @@ async def change_user_password(
         UserResponse: User information
     """
     try:
-        user = await user_service.change_user_password(
+        return await user_service.change_user_password(
             user_id=user_id,
             old_password=data.old_password, 
             new_password=data.new_password, 
         )
-        
-        return UserResponse.model_validate(user)
     except NotFoundError:
         logger.error("change_password_user_not_found", user_id=user_id)
         raise HTTPException(status_code=404, detail="User not found")
@@ -324,3 +277,4 @@ async def change_user_password(
             exc_info=True
         )
         raise HTTPException(status_code=422, detail="Failed to change user password")
+

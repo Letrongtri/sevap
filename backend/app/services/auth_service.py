@@ -83,8 +83,35 @@ class AuthService:
 
     async def get_current_user(self, user_id: int):
         # Verify user exists in database
-        user = await self.user_repo.get_user_by_id(user_id)
+        user = await self.user_repo.get_user_by_id(
+            user_id,
+            get_user_roles=True,
+            get_user_department=True,
+            get_user_job_title=True
+        )
         if user is None:
             raise NotFoundError()
 
-        return user
+        from app.schemas import UserResponse, RoleSimple
+        roles = []
+        if user.role_associations and len(user.role_associations) > 0:
+            for role_association in user.role_associations:
+                roles.append(RoleSimple.model_validate(role_association.role))
+
+        return UserResponse(
+            id=user.id,
+            employee_code=user.employee_code,
+            full_name=user.full_name,
+            email=user.email,
+            is_active=user.is_active,
+            is_deleted=user.is_deleted,
+            last_login=user.last_login,
+            created_at=user.created_at,
+            updated_at=user.updated_at,
+            job_title_id=user.job_title_id,
+            department_id=user.department_id,
+            job_title=user.job_title,
+            department=user.department,
+            roles=roles
+        )
+

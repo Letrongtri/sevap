@@ -119,13 +119,14 @@ async def logout(
 async def get_current_user(
     current_user=Depends(get_current_user),
     auth_service: AuthService = Depends(get_auth_service),
-) -> User:
+):
     try:
         user_id = current_user.get("user_id")
         if user_id is None:
             raise InvalidTokenError
         
         return await auth_service.get_current_user(int(user_id))
+
     except ValueError as ve:
         logger.error("token_validation_failed", error=str(ve), exc_info=True)
         raise HTTPException(

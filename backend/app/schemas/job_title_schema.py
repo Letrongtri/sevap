@@ -1,7 +1,11 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from datetime import datetime
 
-from app.schemas.user_schema import UserResponse
+if TYPE_CHECKING:
+    from app.schemas.user_schema import UserResponse
 
 class JobTitleCreate(BaseModel):
     title_name: str
@@ -31,6 +35,13 @@ class JobTitleUpdate(BaseModel):
 
         return self
 
+class JobTitleSimple(BaseModel):
+    id: int
+    title_name: str
+    code: str
+
+    model_config = ConfigDict(from_attributes=True)
+
 class JobTitleResponse(BaseModel):
     id: int
     title_name: str
@@ -43,3 +54,5 @@ class JobTitleResponse(BaseModel):
     users: list[UserResponse] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
+
+from app.schemas.user_schema import UserResponse
