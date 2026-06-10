@@ -1,4 +1,4 @@
-import type { ID, Timestamp } from './common'
+import type { ID, PaginatedResponse, Timestamp } from './common'
 import type { DepartmentSimple } from './department'
 import type { JobTitleSimple } from './jobTitle'
 import type { RoleSimple } from './role'
@@ -41,12 +41,7 @@ export interface UpdateUserPayload {
 
 export interface UserPaginatedResponse {
     users: User[]
-    pagination: {
-        total: number
-        page: number
-        limit: number
-        total_pages: number
-    }
+    pagination: PaginatedResponse
 }
 
 export interface UserState {

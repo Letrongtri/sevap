@@ -20,12 +20,9 @@ const LoginPage = lazyPage(() => import('../pages/LoginPage'))
 
 // Private
 const HomePage = lazyPage(() => import('../pages/HomePage'))
-const DashboardPage = lazyPage(() => import('../pages/DashboardPage'))
 const ChatPage = lazyPage(() => import('../pages/ChatPage'))
 const DocumentsPage = lazyPage(() => import('../pages/DocumentsPage'))
-const AgentsPage = lazyPage(() => import('../pages/AgentsPage'))
-const ReportsPage = lazyPage(() => import('../pages/ReportsPage'))
-const SettingsPage = lazyPage(() => import('../pages/SettingsPage'))
+const RolesPage = lazyPage(() => import('../pages/RolesPage'))
 const AccountsPage = lazyPage(() => import('../pages/AccountsPage'))
 
 /* ============================================================
@@ -48,12 +45,6 @@ const homeRoute = createRoute({
     component: HomePage,
 })
 
-const dashboardRoute = createRoute({
-    getParentRoute: () => privateLayoutRoute,
-    path: PRIVATE_ROUTES.DASHBOARD,
-    component: DashboardPage,
-})
-
 const chatRoute = createRoute({
     getParentRoute: () => privateLayoutRoute,
     path: PRIVATE_ROUTES.CHAT,
@@ -72,22 +63,10 @@ const documentsRoute = createRoute({
     component: DocumentsPage,
 })
 
-const agentsRoute = createRoute({
+const rolesRoute = createRoute({
     getParentRoute: () => privateLayoutRoute,
-    path: PRIVATE_ROUTES.AGENTS,
-    component: AgentsPage,
-})
-
-const reportsRoute = createRoute({
-    getParentRoute: () => privateLayoutRoute,
-    path: PRIVATE_ROUTES.REPORTS,
-    component: ReportsPage,
-})
-
-const settingsRoute = createRoute({
-    getParentRoute: () => privateLayoutRoute,
-    path: PRIVATE_ROUTES.SETTINGS,
-    component: SettingsPage,
+    path: PRIVATE_ROUTES.ROLES,
+    component: RolesPage,
 })
 
 const accountsRoute = createRoute({
@@ -104,13 +83,10 @@ const routeTree = rootRoute.addChildren([
     publicLayoutRoute.addChildren([loginRoute]),
     privateLayoutRoute.addChildren([
         homeRoute,
-        dashboardRoute,
         chatRoute,
         chatDetailRoute,
         documentsRoute,
-        agentsRoute,
-        reportsRoute,
-        settingsRoute,
+        rolesRoute,
         accountsRoute,
     ]),
 ])

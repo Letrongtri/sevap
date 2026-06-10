@@ -7,14 +7,10 @@ export const PUBLIC_ROUTES = {
 // Private route paths (auth required)
 export const PRIVATE_ROUTES = {
     HOME: '/',
-    DASHBOARD: '/dashboard',
     CHAT: '/chat',
     CHAT_DETAIL: '/chat/$conversationId',
     DOCUMENTS: '/documents',
-    AGENTS: '/agents',
-    REPORTS: '/reports',
-    SETTINGS: '/settings',
-    SUPPORT: '/support',
+    ROLES: '/roles',
     ACCOUNTS: '/accounts',
 } as const
 

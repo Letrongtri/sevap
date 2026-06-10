@@ -8,12 +8,11 @@ export type Nullable<T> = T | null
 
 export type Timestamp = string // ISO-8601
 
-export interface PaginatedResponse<T> {
-    items: T[]
+export interface PaginatedResponse {
     total: number
     page: number
-    pageSize: number
-    hasNext: boolean
+    limit: number
+    total_pages: number
 }
 
 export interface ApiResponse<T = unknown> {

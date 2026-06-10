@@ -1,4 +1,4 @@
-import Header from '../components/account/Header'
+import Header from '../components/ui/Header'
 import UserTable from '../components/account/UserTable'
 import UserDetail from '../components/account/UserDetail'
 import { useUserStore } from '../store/usersStore'
@@ -7,12 +7,24 @@ export default function AccountsPage() {
     const activeUserId = useUserStore((s) => s.activeUserId)
     const isAddingUser = useUserStore((s) => s.isAddingUser)
     const showDetail = activeUserId !== null || isAddingUser
+    const setIsAddingUser = useUserStore((s) => s.setIsAddingUser)
+    const setActiveUserId = useUserStore((s) => s.setActiveUserId)
+
+    const handleStartAddUser = () => {
+        setActiveUserId(null)
+        setIsAddingUser(true)
+    }
 
     return (
         <div className="h-full flex flex-col gap-4 overflow-hidden">
             {/* Header section */}
             <div className="flex-shrink-0">
-                <Header />
+                <Header
+                    title="Account Management"
+                    isAdding={isAddingUser}
+                    onAdd={handleStartAddUser}
+                    btnTitle="Add User"
+                />
             </div>
 
             {/* Filter and Content layout */}

@@ -1,24 +1,19 @@
-import {
-    BarChart3,
-    FileText,
-    LayoutDashboard,
-    SquarePen,
-    Users,
-    UserCog,
-} from 'lucide-react'
+import { FileText, SquarePen, UserCog, ShieldCheck } from 'lucide-react'
 import { PRIVATE_ROUTES } from '../../routes/paths'
 import { NavItem } from './NavItem'
 
 const allUserNav = [
     { label: 'New Chat', icon: SquarePen, to: PRIVATE_ROUTES.HOME },
-    { label: 'Documents', icon: FileText, to: PRIVATE_ROUTES.DOCUMENTS },
 ] as const
 
 const managerNav = [
-    { label: 'Dashboard', icon: LayoutDashboard, to: PRIVATE_ROUTES.DASHBOARD },
-    { label: 'Employees', icon: Users, to: PRIVATE_ROUTES.AGENTS },
+    { label: 'Documents', icon: FileText, to: PRIVATE_ROUTES.DOCUMENTS },
     { label: 'Accounts', icon: UserCog, to: PRIVATE_ROUTES.ACCOUNTS },
-    { label: 'Reports', icon: BarChart3, to: PRIVATE_ROUTES.REPORTS },
+    {
+        label: 'Roles & Permissions',
+        icon: ShieldCheck,
+        to: PRIVATE_ROUTES.ROLES,
+    },
 ] as const
 
 const MainNavigation = ({
