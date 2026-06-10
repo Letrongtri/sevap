@@ -15,6 +15,7 @@ export const PRIVATE_ROUTES = {
     REPORTS: '/reports',
     SETTINGS: '/settings',
     SUPPORT: '/support',
+    ACCOUNTS: '/accounts',
 } as const
 
 // Route that users are redirected to after login

@@ -4,6 +4,7 @@ import {
     LayoutDashboard,
     SquarePen,
     Users,
+    UserCog,
 } from 'lucide-react'
 import { PRIVATE_ROUTES } from '../../routes/paths'
 import { NavItem } from './NavItem'
@@ -16,6 +17,7 @@ const allUserNav = [
 const managerNav = [
     { label: 'Dashboard', icon: LayoutDashboard, to: PRIVATE_ROUTES.DASHBOARD },
     { label: 'Employees', icon: Users, to: PRIVATE_ROUTES.AGENTS },
+    { label: 'Accounts', icon: UserCog, to: PRIVATE_ROUTES.ACCOUNTS },
     { label: 'Reports', icon: BarChart3, to: PRIVATE_ROUTES.REPORTS },
 ] as const
 

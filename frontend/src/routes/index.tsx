@@ -26,6 +26,7 @@ const DocumentsPage = lazyPage(() => import('../pages/DocumentsPage'))
 const AgentsPage = lazyPage(() => import('../pages/AgentsPage'))
 const ReportsPage = lazyPage(() => import('../pages/ReportsPage'))
 const SettingsPage = lazyPage(() => import('../pages/SettingsPage'))
+const AccountsPage = lazyPage(() => import('../pages/AccountsPage'))
 
 /* ============================================================
    Public route leaves
@@ -89,6 +90,12 @@ const settingsRoute = createRoute({
     component: SettingsPage,
 })
 
+const accountsRoute = createRoute({
+    getParentRoute: () => privateLayoutRoute,
+    path: PRIVATE_ROUTES.ACCOUNTS,
+    component: AccountsPage,
+})
+
 /* ============================================================
    Assemble the full route tree
    ============================================================ */
@@ -104,6 +111,7 @@ const routeTree = rootRoute.addChildren([
         agentsRoute,
         reportsRoute,
         settingsRoute,
+        accountsRoute,
     ]),
 ])
 
