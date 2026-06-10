@@ -1,3 +1,4 @@
+import math
 from typing import List
 
 from app.models import Role
@@ -6,15 +7,46 @@ from app.services.exceptions import (
     RoleAlreadyExistsError, 
     NotFoundError,
 )
-from app.schemas import RoleSimple
+from app.schemas import (
+    RoleSimple, RoleQuery, PaginationQuery, 
+    RolePaginatedResponse, RoleResponse, PaginationResponse
+)
 
 class RoleService:
-    def __init__(self, repo: RoleRepository, permission_repo: PermissionRepository):
+    def __init__(self, 
+        repo: RoleRepository, 
+        permission_repo: PermissionRepository
+    ):
         self.repo = repo
         self.permission_repo = permission_repo
     
-    async def get_all_roles(self) -> List[Role]:
-        return await self.repo.get_all_roles()
+    async def get_all_roles(
+        self,
+        query: RoleQuery,
+        pagination: PaginationQuery
+    ) -> RolePaginatedResponse:
+        skip = (pagination.page - 1) * pagination.limit
+
+        roles, total = await self.repo.get_all_roles(
+            query=query.query,
+            is_system=query.is_system,
+            skip=skip,
+            limit=pagination.limit
+        )
+
+        total_pages = math.ceil(total / pagination.limit) if total > 0 else 0
+        return RolePaginatedResponse(
+            roles=[
+                RoleResponse.model_validate(role)
+                for role in roles
+            ],
+            pagination=PaginationResponse(
+                total=total,
+                page=pagination.page,
+                limit=pagination.limit,
+                total_pages=total_pages
+            )
+        )
 
     async def get_all_simple_roles(self) -> List[RoleSimple]:
         roles = await self.repo.get_all_simple_roles()

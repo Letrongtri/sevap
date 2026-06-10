@@ -2,6 +2,7 @@ from pydantic import BaseModel, ConfigDict, model_validator
 from datetime import datetime
 
 from app.schemas.permission_schema import PermissionResponse
+from app.schemas.base_schema import PaginationResponse
 
 # Schema cho dữ liệu gửi lên khi tạo Role
 class RoleCreate(BaseModel):
@@ -43,6 +44,10 @@ class RoleSimple(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class RoleQuery(BaseModel):
+    query: str | None = None
+    is_system: bool | None = None
+
 class RoleResponse(BaseModel):
     id: int
     name: str
@@ -56,4 +61,6 @@ class RoleResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    
+class RolePaginatedResponse(BaseModel):
+    roles: list[RoleResponse]
+    pagination: PaginationResponse

@@ -1,3 +1,4 @@
+from typing import Annotated
 from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import List
 
@@ -10,17 +11,22 @@ from app.schemas import (
     RoleCreate, 
     RoleResponse, 
     RoleUpdate,
-    RoleSimple
+    RoleSimple,
+    RoleQuery,
+    RolePaginatedResponse,
+    PaginationQuery
 )
 from app.dependencies import get_role_service
 from app.core.logging import logger
 
 router = APIRouter()
 
-@router.get("", response_model=List[RoleResponse])
+@router.get("", response_model=RolePaginatedResponse)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_roles(
     request: Request,
+    query: Annotated[RoleQuery, Depends()],
+    pagination: Annotated[PaginationQuery, Depends()],
     role_service: RoleService = Depends(get_role_service),
 ):
     """ Get all system roles.
@@ -33,12 +39,10 @@ async def get_all_roles(
         List[RoleResponse]: List of role information
     """
     try:
-        roles = await role_service.get_all_roles()
-        
-        return [
-            RoleResponse.model_validate(role) 
-            for role in roles
-        ]
+        return await role_service.get_all_roles(
+            query,
+            pagination
+        )
     except Exception:
         logger.error(
             "get_all_roles_failed",

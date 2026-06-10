@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
+from sqlalchemy import func
 
 from app.models import Role
 
@@ -8,10 +9,36 @@ class RoleRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
     
-    async def get_all_roles(self):
-        stmt = select(Role).options(selectinload(Role.permissions))
+    async def get_all_roles(
+        self,
+        query: str | None = None,
+        is_system: bool | None = None,
+        skip: int = 0,
+        limit: int = 20
+    ):
+        stmt = select(Role)
+
+        if query is not None:
+            stmt = stmt.where(Role.name.ilike(f"%{query}%"))
+
+        if is_system is not None:
+            stmt = stmt.where(Role.is_system == is_system)
+
+        count_stmt = select(func.count()).select_from(stmt.subquery())
+        total_records = await self.db.scalar(count_stmt)
+
+        stmt = (
+            stmt
+            .options(selectinload(Role.permissions))
+            .order_by(Role.id.desc())
+            .offset(skip)
+            .limit(limit)
+        )
+
         result = await self.db.execute(stmt)
-        return result.scalars().all()
+        roles = result.unique().scalars().all()
+
+        return list(roles), total_records
 
     async def get_all_simple_roles(self):
         stmt = select(Role.id, Role.name)
