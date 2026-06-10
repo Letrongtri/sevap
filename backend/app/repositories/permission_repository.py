@@ -17,3 +17,10 @@ class PermissionRepository:
         result = await self.db.execute(stmt)
 
         return list(result.scalars().all())
+
+    async def get_all_permissions(self) -> list[Permission]:
+        stmt = select(Permission).order_by(Permission.id.asc())
+
+        result = await self.db.execute(stmt)
+
+        return list(result.scalars().all())

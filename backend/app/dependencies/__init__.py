@@ -8,3 +8,4 @@ from .auth import get_auth_service
 from .message import get_message_service
 from .department import get_department_service
 from .job_title import get_job_title_service
+from .permission import get_permission_service
