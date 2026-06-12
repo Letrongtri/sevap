@@ -3,6 +3,13 @@ import type { DepartmentSimple } from './department'
 import type { JobTitleSimple } from './jobTitle'
 import type { RoleSimple } from './role'
 
+export interface UserSimple {
+    id: ID
+    employee_code: string
+    full_name: string
+    email: string | null
+}
+
 export interface User {
     id: ID
     employee_code: string
@@ -41,6 +48,11 @@ export interface UpdateUserPayload {
 
 export interface UserPaginatedResponse {
     users: User[]
+    pagination: PaginatedResponse
+}
+
+export interface UserSimplePaginatedResponse {
+    users: UserSimple[]
     pagination: PaginatedResponse
 }
 

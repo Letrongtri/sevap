@@ -1,5 +1,5 @@
 import axiosClient from './axios'
-import type { User, UserPaginatedResponse } from '../types/user'
+import type { User, UserPaginatedResponse, UserSimplePaginatedResponse } from '../types/user'
 
 /** Lấy danh sách tất cả người dùng */
 export const fetchUsers = async (
@@ -81,5 +81,21 @@ export const deactivateUser = async (id: number): Promise<User> => {
 /** Đặt lại mật khẩu người dùng về mặc định */
 export const resetUserPassword = async (id: number): Promise<User> => {
     const res = await axiosClient.patch(`/users/${id}/reset-password`)
+    return res.data
+}
+
+/** Lấy danh sách options rút gọn của người dùng hoạt động phục vụ tìm kiếm/chọn */
+export const fetchUserOptions = async (
+    query?: string | null,
+    page?: number | null,
+    limit: number = 10
+): Promise<UserSimplePaginatedResponse> => {
+    const res = await axiosClient.get('/users/options', {
+        params: {
+            query,
+            page,
+            limit,
+        },
+    })
     return res.data
 }

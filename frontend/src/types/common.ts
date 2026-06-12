@@ -34,4 +34,6 @@ export type LoadingState = 'idle' | 'loading' | 'success' | 'error'
 
 export type UserRole = 'Admin' | 'HR Manager' | 'Employee'
 
-export type AccessLevel = 'Public' | 'Private' | 'Managerial'
+export const ACCESS_LEVELS = ['Public', 'Private', 'Managerial'] as const
+
+export type AccessLevel = (typeof ACCESS_LEVELS)[number]
