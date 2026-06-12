@@ -66,7 +66,7 @@ class AuthService:
         for role in user.role_associations:
             roles.append(role.role.name)
         
-        new_access_token = create_access_token(user_id=session.user_id, user_roles=roles)
+        new_access_token = create_access_token(user_id=str(session.user_id), user_roles=roles)
 
         return new_access_token
         

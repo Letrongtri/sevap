@@ -6,11 +6,13 @@ const axiosClient = axios.create({
     headers: { 'Content-Type': 'application/json' },
 })
 
-// 1. Request Interceptor: Tự động đính kèm access_token hiện tại vào Header
+// 1. Request Interceptor: Tự động đính kèm access_token hiện tại vào Header (trừ login và refresh)
 axiosClient.interceptors.request.use(
     (config) => {
         const { accessToken } = useAuthStore.getState()
-        if (accessToken && config.headers) {
+        const isPublic = config.url?.includes('/auth/login') || config.url?.includes('/auth/refresh')
+        
+        if (accessToken && config.headers && !isPublic) {
             config.headers.Authorization = `Bearer ${accessToken}`
         }
         return config
