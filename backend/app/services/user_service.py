@@ -5,7 +5,8 @@ from app.models import User
 from app.repositories import UserRepository
 from app.schemas import (
     UserCreate, RoleSimple, PaginationQuery, UserQuery, 
-    UserResponse, UserPaginatedResponse, PaginationResponse
+    UserResponse, UserPaginatedResponse, PaginationResponse,
+    UserSimple, UserSimplePaginatedResponse
 )
 from app.services.exceptions import (
     UserAlreadyExistsError, 
@@ -145,6 +146,31 @@ class UserService:
 
         # 5. Đóng gói kết quả trả về
         return UserPaginatedResponse(
+            users=user_responses,
+            pagination=PaginationResponse(
+                total=total_records,
+                page=pagination.page,
+                limit=pagination.limit,
+                total_pages=total_pages
+            )
+        )
+
+    async def get_user_options(self, query: str | None, pagination: PaginationQuery) -> UserSimplePaginatedResponse:
+        skip = (pagination.page - 1) * pagination.limit
+
+        users_data, total_records = await self.repo.get_user_options(
+            query=query,
+            skip=skip,
+            limit=pagination.limit
+        )
+
+        total_pages = math.ceil(total_records / pagination.limit) if total_records > 0 else 0
+
+        user_responses = [
+            UserSimple.model_validate(user) for user in users_data
+        ]
+
+        return UserSimplePaginatedResponse(
             users=user_responses,
             pagination=PaginationResponse(
                 total=total_records,

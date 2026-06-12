@@ -110,6 +110,30 @@ class UserRepository:
         users = result.unique().scalars().all()
 
         return list(users), total_records
+
+    async def get_user_options(
+        self, query: str | None = None, skip: int = 0, limit: int = 10
+    ) -> tuple[list[User], int]:
+        stmt = select(User).where(User.is_deleted == False, User.is_active == True)
+
+        if query is not None and query.strip() != '':
+            stmt = stmt.filter(
+                or_(
+                    User.full_name.ilike(f"%{query}%"),
+                    User.email.ilike(f"%{query}%"),
+                    User.employee_code.ilike(f"%{query}%")
+                )
+            )
+
+        count_stmt = select(func.count()).select_from(stmt.subquery())
+        total_records = await self.db.scalar(count_stmt)
+
+        stmt = stmt.order_by(User.full_name.asc()).offset(skip).limit(limit)
+
+        result = await self.db.execute(stmt)
+        users = result.scalars().all()
+
+        return list(users), total_records
     
     async def create_user(self, user: User, role_ids: list[int] | None = None):
         try:

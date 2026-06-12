@@ -14,12 +14,32 @@ from app.schemas import (
     UserUpdatePassword,
     PaginationQuery,
     UserQuery,
-    UserPaginatedResponse
+    UserPaginatedResponse,
+    UserSimplePaginatedResponse
 )
 from app.dependencies import get_user_service
 from app.core.logging import logger
 
 router = APIRouter()
+
+@router.get("/options", response_model=UserSimplePaginatedResponse)
+async def get_user_options(
+    request: Request,
+    pagination: Annotated[PaginationQuery, Depends()],
+    query: str | None = None,
+    user_service: UserService = Depends(get_user_service),
+):
+    """ Get lightweight search options for users. """
+    try:
+        return await user_service.get_user_options(query, pagination)
+    except Exception as exc:
+        logger.error(
+            "get_user_options_failed",
+            query=query, 
+            pagination=pagination, 
+            exc_info=True
+        )
+        raise HTTPException(status_code=422, detail="Failed to get user options")
 
 @router.get("", response_model=UserPaginatedResponse)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])

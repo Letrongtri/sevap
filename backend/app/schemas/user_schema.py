@@ -45,6 +45,14 @@ class UserUpdatePassword(BaseModel):
         validate_password_strength(v)
         return v
 
+class UserSimple(BaseModel):
+    id: int
+    employee_code: str
+    full_name: str
+    email: str | None
+
+    model_config = ConfigDict(from_attributes=True)
+
 class UserQuery(BaseModel):
     query: str | None = None
     department_id: int | None = None
@@ -76,6 +84,10 @@ class UserPaginatedResponse(BaseModel):
     users: list[UserResponse]
     pagination: PaginationResponse
 
+class UserSimplePaginatedResponse(BaseModel):
+    users: list[UserSimple]
+    pagination: PaginationResponse
+
 from app.schemas.role_schema import RoleSimple
 from app.schemas.department_schema import DepartmentSimple
-from app.schemas.job_title_schema import JobTitleSimple
+from app.schemas.job_title_schema import JobTitleSimple

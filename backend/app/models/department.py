@@ -54,3 +54,5 @@ class Department(Base):
         foreign_keys=[manager_id], 
         back_populates="managed_department"
     )
+    document_accesses = relationship("DocumentDepartmentAccess", back_populates="department")
+    

@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from app.ai_brain.retrieval.schemas import ACCESS_LEVEL_HIERARCHY, PARContext, RetrievalResult
 from app.core.enum import AccessLevel, DocumentStatus
-from app.models import Document, DocumentRoleAccess, DocumentUserAccess, Department, User, UserRole
+from app.models import Document, DocumentRoleAccess, DocumentUserAccess, Department, User, UserRole, DocumentDepartmentAccess
 from sqlalchemy import cast
 from sqlalchemy.dialects.postgresql import JSONB
 
@@ -129,7 +129,7 @@ class PARRepository:
         
         ## Điều kiện 2: Là Quản lý của phòng ban sở hữu tài liệu đó
         if ctx.managed_department_ids:
-            private_conds.append(Document.department_id.in_(ctx.managed_department_ids))
+            private_conds.append(Document.department_accesses.any(DocumentDepartmentAccess.department_id.in_(ctx.managed_department_ids)))
             
         stmt_private_base = select(Document.id).where(
             and_(

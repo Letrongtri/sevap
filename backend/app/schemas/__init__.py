@@ -1,11 +1,11 @@
 from .user_schema import (
     UserCreate, UserUpdate, UserUpdatePassword, UserResponse, 
-    UserQuery, UserPaginatedResponse
+    UserQuery, UserPaginatedResponse, UserSimple, UserSimplePaginatedResponse
 )
 from .role_schema import RoleCreate, RoleUpdate, RoleQuery, RoleResponse, RoleSimple, RolePaginatedResponse
 from .permission_schema import PermissionResponse
 from .document_schema import (
-    DocumentUpdate, DocumentChunkResponse, DocumentResponse
+    DocumentQuery, DocumentUpdate, DocumentChunkResponse, DocumentResponse, DocumentPaginatedResponse
 )
 from .conversation_schema import (
     ConversationUpdate, ConversationResponse, ConversationDetailResponse
