@@ -21,6 +21,9 @@ from .department_schema import (
 from .job_title_schema import (
     JobTitleCreate, JobTitleUpdate, JobTitleResponse, JobTitleSimple
 )
+from .tenant_schema import (
+    TenantCreate, TenantUpdate, TenantResponse, TenantSimple
+)
 from .base_schema import PaginationQuery, PaginationResponse
 
 UserResponse.model_rebuild()

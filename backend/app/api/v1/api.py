@@ -14,6 +14,7 @@ from app.api.v1.conversation import router as conversation_router
 from app.api.v1.department import router as department_router
 from app.api.v1.job_title import router as job_title_router
 from app.api.v1.permission import router as permission_router
+from app.api.v1.tenant import router as tenant_router
 
 from app.core.logging import logger
 from app.dependencies import get_current_user
@@ -22,6 +23,7 @@ api_router = APIRouter()
 
 # Include routers
 api_router.include_router(auth_router, prefix="/auth", tags=["auth"])
+api_router.include_router(tenant_router, prefix="/tenants", tags=["tenants"])
 api_router.include_router(user_router, prefix="/users", tags=["users"], dependencies=[Depends(get_current_user)])
 api_router.include_router(role_router, prefix="/roles", tags=["roles"], dependencies=[Depends(get_current_user)])
 api_router.include_router(document_router, prefix="/documents", tags=["documents"], dependencies=[Depends(get_current_user)])

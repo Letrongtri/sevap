@@ -7,3 +7,4 @@ from .conversation_repository import ConversationRepository
 from .message_repository import MessageRepository
 from .department_repository import DepartmentRepository
 from .job_title_repository import JobTitleRepository
+from .tenant_repository import TenantRepository

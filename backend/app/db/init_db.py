@@ -1,41 +1,58 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from app.models import User, Role, UserRole, Permission, RolePermission
+from app.models import User, Role, UserRole, Permission, RolePermission, Tenants
 from app.utils.auth import hash_password
 from app.core.logging import logger
 
 async def add_system_default_data(db: AsyncSession):
-    # 1. Kiểm tra xem dữ liệu Role đã tồn tại chưa
-    result = await db.execute(select(Role).limit(1))
-    first_role = result.scalars().first()
+    # 1. Kiểm tra xem dữ liệu Tenant đã tồn tại chưa
+    result = await db.execute(select(Tenants).limit(1))
+    first_tenant = result.scalars().first()
     
-    if first_role is not None:
+    if first_tenant is not None:
         print("Dữ liệu mặc định đã tồn tại. Bỏ qua bước Seeding.")
         return
 
     logger.info("Bắt đầu khởi tạo dữ liệu mặc định")
 
-    # 2. Khởi tạo danh sách Roles cốt lõi cho hệ thống
+    # 2. Khởi tạo default Tenant
+    tenant = Tenants(
+        company_name="System Default",
+        company_description="Hệ thống mặc định cho doanh nghiệp",
+        company_email="system@company.local",
+        company_phone="0123456789",
+        company_address="Trụ sở chính",
+        tenant_domain="system.local",
+        status="active"
+    )
+    db.add(tenant)
+    await db.flush() # Lấy ID của tenant
+
+    # 3. Khởi tạo danh sách Roles cốt lõi cho hệ thống scoped theo default Tenant
     roles = [
         Role(
+            tenant_id=tenant.id,
             name="admin", 
             description="Quản trị viên hệ thống, toàn quyền truy cập", 
             access_level="managerial", 
             is_system=True
         ),
         Role(
+            tenant_id=tenant.id,
             name="manager", 
             description="Quản lý Nhân sự", 
             access_level="managerial", 
             is_system=True
         ),
         Role(
+            tenant_id=tenant.id,
             name="employee", 
             description="Nhân viên tiêu chuẩn, truy cập dữ liệu public/private", 
             access_level="private", 
             is_system=True
         ),
         Role(
+            tenant_id=tenant.id,
             name="guest", 
             description="Khách hoặc Thực tập sinh, chỉ đọc dữ liệu public", 
             access_level="public", 
@@ -45,7 +62,7 @@ async def add_system_default_data(db: AsyncSession):
     db.add_all(roles)
     await db.flush() # Đẩy roles vào session để lấy được ID
 
-    # 3. Khởi tạo danh sách Permissions cốt lõi cho hệ thống
+    # 4. Khởi tạo danh sách Permissions cốt lõi cho hệ thống (toàn cục)
     permissions_data = [
         # Module: System's User Management
         Permission(resource="users", action="read", description="Xem tài khoản người dùng"),
@@ -76,10 +93,8 @@ async def add_system_default_data(db: AsyncSession):
     db.add_all(permissions_data)
     await db.flush()
 
-    # 4. Khởi tạo RolePermissions cốt lõi cho hệ thống
-    role_result = await db.execute(select(Role))
-    roles_data = role_result.scalars().all()
-    role_map = {r.name: r for r in roles_data}
+    # 5. Khởi tạo RolePermissions cốt lõi cho hệ thống
+    role_map = {r.name: r for r in roles}
     
     admin_perms = permissions_data # Admin có tất cả quyền
     manager_perms = [p for p in permissions_data if p.resource in ["users", "documents", "reports", "chat", "tasks"] and p.action != "delete"]
@@ -103,24 +118,26 @@ async def add_system_default_data(db: AsyncSession):
     db.add_all(role_permissions)
     await db.flush()
 
-    # 5. Khởi tạo tài khoản System Admin
+    # 6. Khởi tạo tài khoản System Admin thuộc default Tenant
     admin_user = User(
         employee_code="admin",
         email="admin@company.local",
         full_name="System Administrator",
         password=hash_password("Admin@1234"),
-        is_active=True
+        is_active=True,
+        tenant_id=tenant.id
     )
     db.add(admin_user)
     await db.flush()
 
-    # 6. Gán quyền 'admin' cho tài khoản Admin vừa tạo
+    # 7. Gán quyền 'admin' cho tài khoản Admin vừa tạo
     admin_role_mapping = UserRole(
         user_id=admin_user.id,
-        role_id=role_map["admin"].id
+        role_id=role_map["admin"].id,
+        assigned_by=admin_user.id
     )
     db.add(admin_role_mapping)
 
-    # 7. Lưu toàn bộ thay đổi vào CSDL vật lý
+    # 8. Lưu toàn bộ thay đổi vào CSDL vật lý
     await db.commit()
     logger.info("Khởi tạo dữ liệu mặc định thành công!")

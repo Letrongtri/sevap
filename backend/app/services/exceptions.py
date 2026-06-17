@@ -28,5 +28,8 @@ class DepartmentAlreadyExistsError(Exception):
 class JobTitleAlreadyExistsError(Exception):
     pass
 
+class TenantAlreadyExistsError(Exception):
+    pass
+
 class InternalError(Exception):
     pass

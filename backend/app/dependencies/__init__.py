@@ -9,3 +9,4 @@ from .message import get_message_service
 from .department import get_department_service
 from .job_title import get_job_title_service
 from .permission import get_permission_service
+from .tenant import get_tenant_service
