@@ -16,5 +16,8 @@ from app.models import (
     UserSession, 
     User, 
     VectorEmbedding,
-    DocumentUserAccess
+    DocumentUserAccess,
+    DocumentDepartmentAccess,
+    Tenants,
+    PromptTemplate
 )

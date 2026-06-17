@@ -1,18 +1,20 @@
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, func
+import uuid_utils
+from sqlalchemy import Column, DateTime, ForeignKey, String, func
 from sqlalchemy.orm import relationship
-
 from app.db.base_class import Base
-
 
 class UserSession(Base):
     __tablename__ = "user_sessions"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
-    jti = Column(String, nullable=False)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid_utils.uuid7()), index=True)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id = Column(String(36), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    
+    jti = Column(String(256), nullable=False)
     ip_address = Column(String(64))
     expires_at = Column(DateTime(timezone=True), nullable=False)
     revoked_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
+    tenant = relationship("Tenants", back_populates="user_sessions")
     user = relationship("User", back_populates="user_sessions")

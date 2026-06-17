@@ -16,6 +16,8 @@ from app.models.user import User
 from app.models.vector_embedding import VectorEmbedding
 from app.models.document_user_access import DocumentUserAccess
 from app.models.document_department_access import DocumentDepartmentAccess
+from app.models.tenants import Tenants
+from app.models.prompt_template import PromptTemplate
 
 __all__ = [
     "ActivityLog",
@@ -35,5 +37,7 @@ __all__ = [
     "User",
     "VectorEmbedding",
     "DocumentUserAccess",
-    "DocumentDepartmentAccess"
+    "DocumentDepartmentAccess",
+    "Tenants",
+    "PromptTemplate"
 ]

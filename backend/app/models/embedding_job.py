@@ -7,8 +7,8 @@ class EmbeddingJob(Base):
     __tablename__ = "embedding_jobs"
 
     id = Column(Integer, primary_key=True, index=True)
-    document_id = Column(Integer, ForeignKey("documents.id", ondelete="CASCADE"), nullable=False)
-    triggered_by = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    document_id = Column(String(36), ForeignKey("documents.id", ondelete="CASCADE"), nullable=False)
+    triggered_by = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     status = Column(String(32))
     total_chunks = Column(Integer, default=0)
     processed_chunks = Column(Integer, default=0)
