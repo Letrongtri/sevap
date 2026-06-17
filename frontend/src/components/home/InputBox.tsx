@@ -2,7 +2,6 @@ import { useNavigate } from '@tanstack/react-router'
 import { ClipboardList, FileText, Mic, PenLine, Send } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useChatStore } from '../../store/chatStore'
-import { useSendMessage } from '../../hooks/useSendMessage'
 import { PRIVATE_ROUTES } from '../../routes/paths'
 
 const SUGGESTION_CHIPS = [
@@ -21,9 +20,9 @@ const InputBox = () => {
     const navigate = useNavigate()
 
     const setActiveChat = useChatStore((s) => s.setActiveChat)
+    const setInitialMessage = useChatStore((s) => s.setInitialMessage)
 
-    const { sendMessage, streamingState } = useSendMessage()
-    const isStreaming = streamingState.isStreaming
+    const isStreaming = false
 
     // Auto-resize textarea
     useEffect(() => {
@@ -35,20 +34,16 @@ const InputBox = () => {
 
     const handleSubmit = async (text: string = inputValue) => {
         const content = text.trim()
-        if (!content || isStreaming) return
+        if (!content) return
 
         setInputValue('')
 
-        // Start streaming — single endpoint creates conv if needed
-        const convIdPromise = sendMessage(content)
+        // Lưu tin nhắn ban đầu vào store và reset activeChatId
+        setInitialMessage(content)
+        setActiveChat(null)
 
-        // Navigate immediately — the streaming hook will update activeChatId
-        // once the metadata event arrives via the invalidateQueries + store updates
+        // Chuyển hướng sang trang chat để thực hiện gửi tin nhắn và streaming
         navigate({ to: PRIVATE_ROUTES.CHAT })
-
-        // When we get back the resolved conversation ID, set it as active
-        const resolvedId = await convIdPromise
-        if (resolvedId) setActiveChat(resolvedId)
     }
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

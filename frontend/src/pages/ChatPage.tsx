@@ -23,7 +23,7 @@ export default function ChatPage() {
         : null
 
     // ── Client state (Zustand) ─────────────────────────────────────────
-    const { activeChatId, setActiveChat } = useChatStore()
+    const { activeChatId, setActiveChat, initialMessage, setInitialMessage } = useChatStore()
 
     // Đồng bộ URL → Zustand khi trang load lần đầu hoặc URL thay đổi
     useEffect(() => {
@@ -54,6 +54,20 @@ export default function ChatPage() {
     const { sendMessage, streamingState } = useSendMessage()
     const { isStreaming, streamingContent, streamingConversationId } = streamingState
 
+    // Điều hướng ngay lập tức khi nhận được conversationId mới từ API/stream metadata
+    useEffect(() => {
+        if (
+            streamingConversationId &&
+            streamingConversationId !== urlConversationId
+        ) {
+            setActiveChat(streamingConversationId)
+            navigate({
+                to: '/chat/$conversationId',
+                params: { conversationId: String(streamingConversationId) },
+            })
+        }
+    }, [streamingConversationId, urlConversationId, navigate, setActiveChat])
+
     // Theo dõi xem stream vừa kết thúc chưa
     const prevIsStreamingRef = useRef(false)
 
@@ -64,17 +78,6 @@ export default function ChatPage() {
         if (wasStreaming && !isStreaming) {
             // Stream vừa hoàn tất → fetch lại messages thật từ server
             invalidate()
-
-            // Nếu đây là conversation mới (chưa có trên URL) → điều hướng
-            if (
-                streamingConversationId &&
-                streamingConversationId !== conversationId
-            ) {
-                navigate({
-                    to: '/chat/$conversationId',
-                    params: { conversationId: String(streamingConversationId) },
-                })
-            }
         }
     }, [isStreaming]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -97,6 +100,23 @@ export default function ChatPage() {
         [sendMessage, conversationId, appendOptimistic]
     )
 
+    const initialMessageRef = useRef<string | null>(null)
+
+    // Xử lý tin nhắn ban đầu được truyền từ Home page sang
+    useEffect(() => {
+        if (
+            initialMessage &&
+            urlConversationId === null &&
+            initialMessageRef.current !== initialMessage
+        ) {
+            initialMessageRef.current = initialMessage
+            // Clear tin nhắn trong store
+            setInitialMessage(null)
+            // Gửi tin nhắn
+            handleSend(initialMessage)
+        }
+    }, [initialMessage, urlConversationId, handleSend, setInitialMessage])
+
     return (
         <div className="chat-page">
             <div className="chat-container">
@@ -111,7 +131,7 @@ export default function ChatPage() {
                     ) : (
                         <MessageList
                             messages={messages}
-                            isLoading={isLoading}
+                            isLoading={isLoading && !isStreaming}
                             isFetchingMore={isFetchingMore}
                             hasMore={hasMore}
                             onLoadMore={fetchMore}

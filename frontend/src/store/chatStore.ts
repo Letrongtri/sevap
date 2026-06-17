@@ -12,6 +12,7 @@ export const useChatStore = create<ChatStore>((set) => ({
     // ── State ──────────────────────────────────────────────────────────
     activeChatId: null,
     searchKeyword: '',
+    initialMessage: null,
 
     // ── Actions ────────────────────────────────────────────────────────
 
@@ -23,4 +24,7 @@ export const useChatStore = create<ChatStore>((set) => ({
 
     /** Bỏ chọn conversation hiện tại */
     clearActiveChat: () => set({ activeChatId: null }),
+
+    /** Lưu tin nhắn đầu tiên khi chuyển từ Home sang Chat */
+    setInitialMessage: (message) => set({ initialMessage: message }),
 }))

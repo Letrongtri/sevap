@@ -18,7 +18,13 @@ const API_BASE = 'http://localhost:8000/api/v1'
 /** Lấy danh sách tất cả conversations của user hiện tại */
 export const fetchConversations = async (): Promise<Conversation[]> => {
     const res = await axiosClient.get('/conversations')
-    return res.data
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (res.data ?? []).map((d: any) => ({
+        id: d.id,
+        title: d.title,
+        createdAt: d.created_at,
+        updatedAt: d.updated_at,
+    }))
 }
 
 /** Tạo conversation mới */
@@ -26,14 +32,19 @@ export const createConversation = async (
     payload: CreateConversationPayload
 ): Promise<Conversation> => {
     const res = await axiosClient.post('/conversations', payload)
-    return res.data
+    const d = res.data
+    return {
+        id: d.id,
+        title: d.title,
+        createdAt: d.created_at,
+        updatedAt: d.updated_at,
+    }
 }
 
 /** Xoá một conversation */
 export const deleteConversation = async (id: number): Promise<void> => {
     await axiosClient.delete(`/conversations/${id}`)
 }
-
 
 /**
  * Lấy chi tiết conversation + 10 messages cuối.
@@ -183,13 +194,17 @@ export async function* streamMessage(payload: {
                     case 'done':
                         yield {
                             type: 'done',
-                            assistantMessageId: parsed.assistant_message_id as number,
+                            assistantMessageId:
+                                parsed.assistant_message_id as number,
                             sources: parsed.sources ?? [],
                             agentType: parsed.agent_type as string,
                         }
                         break
                     case 'error':
-                        yield { type: 'error', message: parsed.message as string }
+                        yield {
+                            type: 'error',
+                            message: parsed.message as string,
+                        }
                         break
                 }
             }

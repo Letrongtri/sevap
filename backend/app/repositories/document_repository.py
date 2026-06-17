@@ -14,7 +14,7 @@ class DocumentRepository:
         try:
             self.db.add(document)
             await self.db.commit()
-            return await self.get_document_by_id(document.id, get_roles=True, get_users=True)
+            return await self.get_document_by_id(document.id, get_roles=True, get_users=True, get_departments=True)
         except Exception as e:
             await self.db.rollback()
             raise e

@@ -19,12 +19,19 @@ export function useConversations() {
         queryFn: fetchConversations,
     })
 
+    // Sắp xếp theo thứ tự mới nhất trước, dựa trên updatedAt hoặc createdAt
+    const sortedConversations = [...(query.data ?? [])].sort((a, b) => {
+        const timeA = new Date(a.updatedAt || a.createdAt).getTime()
+        const timeB = new Date(b.updatedAt || b.createdAt).getTime()
+        return timeB - timeA
+    })
+
     // Filter phía client theo keyword (không cần gọi API lại)
     const filteredConversations = searchKeyword
-        ? (query.data ?? []).filter((c) =>
+        ? sortedConversations.filter((c) =>
               c.title.toLowerCase().includes(searchKeyword.toLowerCase())
           )
-        : (query.data ?? [])
+        : sortedConversations
 
     return {
         ...query,

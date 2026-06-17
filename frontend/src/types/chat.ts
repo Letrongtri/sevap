@@ -46,12 +46,15 @@ export interface ChatClientState {
     activeChatId: number | null
     /** Từ khoá tìm kiếm trong sidebar history */
     searchKeyword: string
+    /** Tin nhắn ban đầu truyền từ Home page sang Chat page */
+    initialMessage: string | null
 }
 
 export interface ChatClientActions {
     setActiveChat: (id: number | null) => void
     setSearchKeyword: (keyword: string) => void
     clearActiveChat: () => void
+    setInitialMessage: (message: string | null) => void
 }
 
 export type ChatStore = ChatClientState & ChatClientActions

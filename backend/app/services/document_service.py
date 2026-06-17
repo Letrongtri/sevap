@@ -71,8 +71,8 @@ class DocumentService:
         if existing and existing.is_deleted is False:
             raise NotFoundError()
         elif existing and existing.is_deleted is True:
-            await self.repo.restore_document(existing)
-            return existing
+            await self.repo.restore_document(existing.id)
+            return await self.repo.get_document_by_id(existing.id, get_roles=True, get_users=True, get_departments=True)
         
         # check roles
         roles = []
@@ -229,7 +229,7 @@ class DocumentService:
         )
     
     async def get_document_by_id(self, document_id: int):
-        document = await self.repo.get_document_by_id(document_id, get_chunks=True, get_roles=True, get_users=True)
+        document = await self.repo.get_document_by_id(document_id, get_chunks=True, get_roles=True, get_users=True, get_departments=True)
 
         if document is None or document.is_deleted is True:
             raise NotFoundError()
@@ -240,10 +240,10 @@ class DocumentService:
                               department_ids: List[int] = None, title: str = None, 
                               category: str = None, effective_date: datetime = None,
                               role_access: List[int] = None, target_user_ids: List[int] = None) -> Document:
-        existing = await self.repo.get_document_by_id(document_id, get_roles=True, get_users=True)
+        existing = await self.repo.get_document_by_id(document_id, get_roles=True, get_users=True, get_departments=True)
         
         if existing is None or existing.is_deleted is True:
-            raise DocumentAlreadyExistsError()
+            raise NotFoundError()
 
         if access_level is not None:
             existing.access_level = access_level
@@ -285,10 +285,10 @@ class DocumentService:
 
         await self.repo.save_document(existing)
 
-        return existing
+        return await self.repo.get_document_by_id(document_id, get_roles=True, get_users=True, get_departments=True)
 
     async def delete_document(self, document_id: int):
-        existing = await self.repo.get_document_by_id(document_id, get_roles=True, get_users=True)
+        existing = await self.repo.get_document_by_id(document_id, get_roles=True, get_users=True, get_departments=True)
 
         if existing is None or existing.is_deleted is True:
             raise NotFoundError()
@@ -296,5 +296,5 @@ class DocumentService:
         existing.is_deleted = True
         
         await self.repo.save_document(existing)
-        return existing
+        return await self.repo.get_document_by_id(document_id, get_roles=True, get_users=True, get_departments=True)
     

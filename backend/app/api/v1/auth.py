@@ -57,7 +57,7 @@ async def login(
             employee_code=user.employee_code,
             roles=user_roles,
             department=user.department.name if user.department else "",
-            job_title=user.job_title.name if user.job_title else "",
+            job_title=user.job_title.title_name if user.job_title else "",
             last_login=user.last_login,
         )
 
