@@ -13,7 +13,8 @@ class UserRepository:
     async def get_user_by_employee_code(self, tenant_id: str, employee_code: str, 
                                         get_user_roles: bool = False, 
                                         get_user_department: bool = False, 
-                                        get_user_job_title: bool = False
+                                        get_user_job_title: bool = False,
+                                        get_user_tenant: bool = False
     ):
         stmt = select(User).where(
             User.tenant_id == tenant_id, 
@@ -27,6 +28,8 @@ class UserRepository:
             stmt = stmt.options(selectinload(User.department))
         if get_user_job_title:
             stmt = stmt.options(selectinload(User.job_title))
+        if get_user_tenant:
+            stmt = stmt.options(selectinload(User.tenant))
 
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
@@ -34,7 +37,8 @@ class UserRepository:
     async def get_user_by_email(self, email: str, 
                                         get_user_roles: bool = False, 
                                         get_user_department: bool = False, 
-                                        get_user_job_title: bool = False
+                                        get_user_job_title: bool = False,
+                                        get_user_tenant: bool = False
     ):
         stmt = select(User).where(User.email == email, User.is_deleted == False)
 
@@ -44,6 +48,8 @@ class UserRepository:
             stmt = stmt.options(selectinload(User.department))
         if get_user_job_title:
             stmt = stmt.options(selectinload(User.job_title))
+        if get_user_tenant:
+            stmt = stmt.options(selectinload(User.tenant))
 
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
@@ -52,7 +58,8 @@ class UserRepository:
     async def get_user_by_id(self, user_id: int, 
                              get_user_roles: bool = False,
                              get_user_department: bool = False,
-                             get_user_job_title: bool = False
+                             get_user_job_title: bool = False,
+                             get_user_tenant: bool = False
     ):
         stmt = select(User).where(User.id == user_id, User.is_deleted == False)
 
@@ -62,6 +69,8 @@ class UserRepository:
             stmt = stmt.options(selectinload(User.department))
         if get_user_job_title:
             stmt = stmt.options(selectinload(User.job_title))
+        if get_user_tenant:
+            stmt = stmt.options(selectinload(User.tenant))
             
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()

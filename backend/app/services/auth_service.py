@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from app.repositories import UserRepository, UserSessionRepository
+from app.repositories import UserRepository, UserSessionRepository, TenantRepository
 from app.services import (
     InvalidCredentialsError,
     InvalidTokenError, 
@@ -9,17 +9,29 @@ from app.services import (
 from app.models import User, UserSession
 from app.utils.auth import create_access_token, create_refresh_token, verify_password, verify_token
 from app.core.logging import logger
+from app.schemas import UserResponse, RoleSimple
 
 class AuthService:
-    def __init__(self, user_repo: UserRepository, session_repo: UserSessionRepository):
+    def __init__(
+        self, 
+        user_repo: UserRepository, 
+        session_repo: UserSessionRepository, 
+        tenant_repo: TenantRepository
+    ):
         self.user_repo = user_repo
         self.session_repo = session_repo
+        self.tenant_repo = tenant_repo
 
-    async def login(self, employee_code: str, password: str, client_ip: str | None = None) -> User:
+    async def login(self, tenant_domain: str, employee_code: str, password: str, client_ip: str | None = None) -> User:
+        tenant = await self.tenant_repo.get_tenant_by_domain(tenant_domain)
+        if not tenant:
+            raise NotFoundError("Tenant not found")
+
         user = await self.user_repo.get_user_by_employee_code(
-            employee_code, get_user_roles=True, 
+            tenant.id, employee_code, get_user_roles=True, 
             get_user_department=True, 
-            get_user_job_title=True
+            get_user_job_title=True,
+            get_user_tenant=True
             )
         if not user or not verify_password(password, user.password):
             raise InvalidCredentialsError()
@@ -28,11 +40,12 @@ class AuthService:
         for role in user.role_associations:
             user_roles.append(role.role.name)
         
-        access_token = create_access_token(str(user.id), user_roles)
+        access_token = create_access_token(str(user.id), str(user.tenant_id), user_roles)
         refresh_token = create_refresh_token(str(user.id))
 
         user_session = UserSession(
             user_id=user.id,
+            tenant_id=user.tenant_id,
             jti=refresh_token.jti,
             ip_address=client_ip,
             expires_at=refresh_token.expires_at
@@ -66,7 +79,11 @@ class AuthService:
         for role in user.role_associations:
             roles.append(role.role.name)
         
-        new_access_token = create_access_token(user_id=str(session.user_id), user_roles=roles)
+        new_access_token = create_access_token(
+            user_id=session.user_id, 
+            tenant_id=user.tenant_id, 
+            user_roles=roles
+        )
 
         return new_access_token
         
@@ -81,18 +98,18 @@ class AuthService:
         
         await self.session_repo.save(session)
 
-    async def get_current_user(self, user_id: int):
+    async def get_current_user(self, user_id: str):
         # Verify user exists in database
         user = await self.user_repo.get_user_by_id(
             user_id,
             get_user_roles=True,
             get_user_department=True,
-            get_user_job_title=True
+            get_user_job_title=True,
+            get_user_tenant=True
         )
         if user is None:
             raise NotFoundError()
 
-        from app.schemas import UserResponse, RoleSimple
         roles = []
         if user.role_associations and len(user.role_associations) > 0:
             for role_association in user.role_associations:
@@ -100,6 +117,7 @@ class AuthService:
 
         return UserResponse(
             id=user.id,
+            tenant_id=user.tenant_id,
             employee_code=user.employee_code,
             full_name=user.full_name,
             email=user.email,

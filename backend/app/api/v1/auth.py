@@ -42,6 +42,7 @@ async def login(
     try:
         client_ip = request.client.host if request.client else None
         user, access_token, refresh_token = await auth_service.login(
+            data.tenant_domain,
             data.employee_code, 
             data.password,
             client_ip
@@ -58,6 +59,9 @@ async def login(
             roles=user_roles,
             department=user.department.name if user.department else "",
             job_title=user.job_title.title_name if user.job_title else "",
+            tenant_id=user.tenant_id,
+            tenant_domain=user.tenant.tenant_domain,
+            company_name=user.tenant.company_name,
             last_login=user.last_login,
         )
 
@@ -125,7 +129,7 @@ async def get_current_user(
         if user_id is None:
             raise InvalidTokenError
         
-        return await auth_service.get_current_user(int(user_id))
+        return await auth_service.get_current_user(user_id)
 
     except ValueError as ve:
         logger.error("token_validation_failed", error=str(ve), exc_info=True)

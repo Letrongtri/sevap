@@ -21,7 +21,7 @@ def verify_password(password: str, hashed_password: str) -> bool:
 def hash_password(password: str) -> str:
     return password_hash.hash(password)
 
-def create_access_token(user_id: str, user_roles: List[int], expires_delta: Optional[timedelta] = None) -> Token:
+def create_access_token(user_id: str, tenant_id: str, user_roles: List[int], expires_delta: Optional[timedelta] = None) -> Token:
     """Create a new access token for a thread.
 
     Args:
@@ -40,6 +40,7 @@ def create_access_token(user_id: str, user_roles: List[int], expires_delta: Opti
 
     to_encode = {
         "sub": user_id, # User ID
+        "tenant_id": tenant_id,
         "roles": user_roles,
         "exp": expire,
         "iat": datetime.now(UTC),
