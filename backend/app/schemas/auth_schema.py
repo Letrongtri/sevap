@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from app.utils.sanitization import validate_password_strength
 from datetime import datetime
 
@@ -29,8 +29,7 @@ class LoginResponse(BaseModel):
     refresh_token_expires_at: datetime = Field(..., description="The expiration date of the token")
     user: UserInfoResponse = Field(..., description="The information of the user")
 
-    class Config:
-        from_attributes = True # Cho phép ánh xạ trực tiếp từ SQLAlchemy Model sang Pydantic
+    model_config = ConfigDict(from_attributes=True)
 
 
 class LoginForm(BaseModel):

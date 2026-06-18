@@ -88,7 +88,7 @@ def get_structlog_processors(include_file_info: bool = True) -> List[Any]:
         structlog.stdlib.PositionalArgumentsFormatter(),
         structlog.processors.TimeStamper(fmt="iso"),
         structlog.processors.StackInfoRenderer(),
-        structlog.processors.format_exc_info,
+        # structlog.processors.format_exc_info,
         structlog.processors.UnicodeDecoder(),
     ]
 
@@ -158,6 +158,7 @@ def setup_logging() -> None:
         structlog.configure(
             processors=[
                 *shared_processors,
+                structlog.processors.format_exc_info,
                 structlog.processors.JSONRenderer(),
             ],
             wrapper_class=structlog.stdlib.BoundLogger,

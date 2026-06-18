@@ -19,7 +19,7 @@ async def register_tenant(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         logger.error("tenant_registration_failed_internal", error=str(e), exc_info=True)
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Failed to register tenant")
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Failed to register tenant")
 
 @router.put("/{tenant_id}", response_model=TenantResponse)
 async def update_tenant(
@@ -38,7 +38,7 @@ async def update_tenant(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         logger.error("tenant_update_failed", tenant_id=tenant_id, error=str(e), exc_info=True)
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Failed to update tenant")
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Failed to update tenant")
 
 @router.delete("/{tenant_id}", response_model=TenantResponse)
 async def soft_delete_tenant(
@@ -53,4 +53,4 @@ async def soft_delete_tenant(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception as e:
         logger.error("tenant_delete_failed", tenant_id=tenant_id, error=str(e), exc_info=True)
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Failed to delete tenant")
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Failed to delete tenant")
