@@ -10,20 +10,20 @@ from app.schemas.base_schema import PaginationResponse
 
 class DocumentQuery(BaseModel):
     query: str | None = None
-    department_id: int | None = None
+    department_id: str | None = None
     access_level: str | None = None
     effective_date: datetime | None = None
-    role_id: int | None = None
-    user_id: int | None = None
+    role_id: str | None = None
+    user_id: str | None = None
 
 class DocumentUpdate(BaseModel):
     access_level: AccessLevel | None = None
-    department_ids: list[int] | None = None
+    department_ids: list[str] | None = None
     title: str | None = None
     category: str | None = None
     effective_date: datetime | None = None
-    role_access: list[int] | None = None
-    target_user_ids: list[int] | None = None
+    role_access: list[str] | None = None
+    target_user_ids: list[str] | None = None
 
     @model_validator(mode="after")
     def validate_at_least_one_field(self):
@@ -56,8 +56,8 @@ class DocumentUpdate(BaseModel):
         return v
 
 class DocumentChunkResponse(BaseModel):
-    id: int
-    document_id: int
+    id: str
+    document_id: str
     chunk_index: int
     content: str
     context_content: str | None = None
@@ -70,8 +70,8 @@ class DocumentChunkResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class DocumentResponse(BaseModel):
-    id: int
-    uploader_id: int
+    id: str
+    uploader_id: str
     title: str
     access_level: str
     file_name: str

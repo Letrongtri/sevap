@@ -6,6 +6,7 @@ from datetime import datetime
 
 from app.utils.sanitization import validate_password_strength
 from app.schemas.base_schema import PaginationResponse
+from app.schemas.tenant_schema import TenantSimple
 
 if TYPE_CHECKING:
     from app.schemas.role_schema import RoleSimple
@@ -18,9 +19,9 @@ class UserCreate(BaseModel):
     full_name: str
     password: str
     email: str | None = None
-    job_title_id: int | None = None
-    department_id: int | None = None
-    role_ids: list[int] | None = None
+    job_title_id: str | None = None
+    department_id: str | None = None
+    role_ids: list[str] | None = None
 
     @field_validator("password")
     @classmethod
@@ -31,9 +32,9 @@ class UserCreate(BaseModel):
 class UserUpdate(BaseModel):
     full_name: str | None = None
     email: str | None = None
-    job_title_id: int | None = None
-    department_id: int | None = None
-    role_ids: list[int] | None = None
+    job_title_id: str | None = None
+    department_id: str | None = None
+    role_ids: list[str] | None = None
 
 class UserUpdatePassword(BaseModel):
     new_password: str
@@ -46,7 +47,7 @@ class UserUpdatePassword(BaseModel):
         return v
 
 class UserSimple(BaseModel):
-    id: int
+    id: str
     employee_code: str
     full_name: str
     email: str | None
@@ -55,19 +56,20 @@ class UserSimple(BaseModel):
 
 class UserQuery(BaseModel):
     query: str | None = None
-    department_id: int | None = None
-    job_title_id: int | None = None
-    role_id: int | None = None
+    department_id: str | None = None
+    job_title_id: str | None = None
+    role_id: str | None = None
     status: str | None = None
 
 # Schema cho dữ liệu trả về (ẨN MẬT KHẨU)
 class UserResponse(BaseModel):
-    id: int
+    id: str
     employee_code: str
     full_name: str
     email: str | None
-    job_title_id: int | None
-    department_id: int | None
+    tenant_id: str
+    job_title_id: str | None
+    department_id: str | None
     is_active: bool
     is_deleted: bool
     last_login: datetime | None
@@ -77,6 +79,7 @@ class UserResponse(BaseModel):
     job_title: JobTitleSimple | None = None
     department: DepartmentSimple | None = None
     roles: list[RoleSimple] | None = None
+    tenant: TenantSimple | None = None
 
     model_config = ConfigDict(from_attributes=True) # Cho phép ánh xạ trực tiếp từ SQLAlchemy Model sang Pydantic
 

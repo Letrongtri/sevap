@@ -11,14 +11,10 @@ class DepartmentCreate(BaseModel):
     name: str
     code: str
     description: str | None = None
-    parent_id: int | None = None
-    manager_id: int | None = None
 
 class DepartmentUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
-    parent_id: int | None = None
-    manager_id: int | None = None
 
     @model_validator(mode="after")
     def validate_at_least_one_field(self):
@@ -42,20 +38,17 @@ class DepartmentUpdate(BaseModel):
         return self
 
 class DepartmentSimple(BaseModel):
-    id: int
+    id: str
     name: str
     code: str
 
     model_config = ConfigDict(from_attributes=True)
 
 class DepartmentResponse(BaseModel):
-    id: int
+    id: str
     name: str
     code: str
     description: str | None = None
-
-    parent_id: int | None = None
-    manager_id: int | None = None
 
     created_at: datetime
     updated_at: datetime
@@ -68,4 +61,4 @@ class DepartmentResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-from app.schemas.user_schema import UserResponse
+from app.schemas.user_schema import UserResponse

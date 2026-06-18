@@ -11,8 +11,8 @@ class ConversationUpdate(BaseModel):
 
 # Schema cho list endpoint — không bao gồm messages (tránh N+1 và MissingGreenlet)
 class ConversationResponse(BaseModel):
-    id: int
-    user_id: int
+    id: str
+    user_id: str
     title: str
     is_deleted: bool
     created_at: datetime

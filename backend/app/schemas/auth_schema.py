@@ -3,12 +3,15 @@ from app.utils.sanitization import validate_password_strength
 from datetime import datetime
 
 class UserInfoResponse(BaseModel):
-    id: int = Field(..., description="The unique identifier of the user")
+    id: str = Field(..., description="The unique identifier of the user")
     full_name: str = Field(..., description="The full name of the user")
     employee_code: str = Field(..., description="The employee code of the user")
     roles: list[str] = Field(..., description="The roles of the user")
     department: str = Field(..., description="The department of the user")
     job_title: str = Field(..., description="The job title of the user")
+    tenant_id: str = Field(..., description="The tenant id of the user")
+    tenant_domain: str = Field(..., description="The tenant domain of the user")
+    company_name: str = Field(..., description="The company name of the user")
     last_login: datetime = Field(..., description="The last login date of the user")
 
 # Schema cho JWT Token
@@ -31,6 +34,7 @@ class LoginResponse(BaseModel):
 
 
 class LoginForm(BaseModel):
+    tenant_domain: str = Field(..., description="The tenant domain of the user")
     employee_code: str = Field(..., description="The employee code of the user")
     password: str = Field(..., description="The password of the user")
 
@@ -41,6 +45,7 @@ class LoginForm(BaseModel):
         return v
 
 class RefreshTokenRequest(BaseModel):
+    tenant_domain: str = Field(..., description="The tenant domain of the user")
     refresh_token: str = Field(..., description="The JWT refresh token")
 
 class RefreshTokenResponse(BaseModel):

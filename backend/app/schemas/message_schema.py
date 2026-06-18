@@ -2,12 +2,12 @@ from pydantic import ConfigDict, BaseModel
 from datetime import datetime
 
 class MessageSend(BaseModel):
-    conversation_id: int | None = None
+    conversation_id: str | None = None
     content: str
 
 class MessageResponse(BaseModel):
-    id: int
-    conversation_id: int
+    id: str
+    conversation_id: str
     actor: str
     agent_type: str | None = None
     content: str

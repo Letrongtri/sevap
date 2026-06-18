@@ -36,14 +36,14 @@ class JobTitleUpdate(BaseModel):
         return self
 
 class JobTitleSimple(BaseModel):
-    id: int
+    id: str
     title_name: str
     code: str
 
     model_config = ConfigDict(from_attributes=True)
 
 class JobTitleResponse(BaseModel):
-    id: int
+    id: str
     title_name: str
     code: str
     description: str | None = None
