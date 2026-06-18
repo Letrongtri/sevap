@@ -17,12 +17,8 @@ async def get_all_job_titles(
     job_title_service: JobTitleService = Depends(get_job_title_service),
 ):
     try:
-        job_titles = await job_title_service.get_all_job_titles()
-        
-        return [
-            JobTitleResponse.model_validate(job_title) 
-            for job_title in job_titles
-        ]
+        tenant_id = request.state.tenant_id
+        return await job_title_service.get_all_job_titles(tenant_id)
     except Exception:
         logger.error(
             "get_all_job_titles_failed",
@@ -38,13 +34,8 @@ async def create_job_title(
     job_title_service: JobTitleService = Depends(get_job_title_service),
 ):
     try:
-        job_title = await job_title_service.create_job_title(
-            title_name=data.title_name, 
-            code=data.code, 
-            description=data.description
-        )
-        
-        return JobTitleResponse.model_validate(job_title)
+        tenant_id = request.state.tenant_id
+        return await job_title_service.create_job_title(tenant_id, data)
     except JobTitleAlreadyExistsError:
         logger.error("job_title_already_exists", job_title_name=data.title_name)
         raise HTTPException(status_code=409, detail="Job title already exists")
@@ -63,7 +54,8 @@ async def get_all_simple_job_titles(
     job_title_service: JobTitleService = Depends(get_job_title_service),
 ):
     try:
-        return await job_title_service.get_all_simple_job_titles()
+        tenant_id = request.state.tenant_id
+        return await job_title_service.get_all_simple_job_titles(tenant_id)
     except Exception:
         logger.error(
             "get_all_simple_job_titles_failed",
@@ -75,7 +67,7 @@ async def get_all_simple_job_titles(
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_job_title(
     request: Request, 
-    job_title_id: int,
+    job_title_id: str,
     job_title_service: JobTitleService = Depends(get_job_title_service),
 ):
     """ Get a job_title detail.
@@ -88,9 +80,8 @@ async def get_job_title(
         JobTitleResponse: job_title detail
     """
     try:
-        job_title = await job_title_service.get_job_title_by_id(job_title_id)
-        
-        return JobTitleResponse.model_validate(job_title)
+        tenant_id = request.state.tenant_id
+        return await job_title_service.get_job_title_by_id(tenant_id, job_title_id)
     except NotFoundError:
         logger.error("job_title_not_found", job_title_id=job_title_id)
         raise HTTPException(status_code=404, detail="job_title not found")
@@ -106,18 +97,17 @@ async def get_job_title(
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def update_job_title(
     request: Request,
-    job_title_id: int, 
+    job_title_id: str, 
     data: JobTitleUpdate,
     job_title_service: JobTitleService = Depends(get_job_title_service),
 ):
     try:
-        job_title = await job_title_service.update_job_title(
-            job_title_id=job_title_id,
-            title_name=data.title_name,
-            description=data.description
+        tenant_id = request.state.tenant_id
+        return await job_title_service.update_job_title(
+            tenant_id, 
+            job_title_id, 
+            data
         )
-        
-        return JobTitleResponse.model_validate(job_title)
     except NotFoundError:
         logger.error("updated_job_title_not_found", job_title_id=job_title_id)
         raise HTTPException(status_code=404, detail="Job title not found")
@@ -133,7 +123,7 @@ async def update_job_title(
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def delete_job_title(
     request: Request,
-    job_title_id: int,
+    job_title_id: str,
     job_title_service: JobTitleService = Depends(get_job_title_service),
 ):
     """Delete custom job_title.
@@ -146,9 +136,11 @@ async def delete_job_title(
         JobTitleResponse: Deleted job_title information
     """
     try:
-        job_title = await job_title_service.delete_job_title(job_title_id=job_title_id)
-        
-        return JobTitleResponse.model_validate(job_title)
+        tenant_id = request.state.tenant_id
+        return await job_title_service.delete_job_title(
+            tenant_id, 
+            job_title_id
+        )
     except NotFoundError:
         logger.error("deleted_job_title_not_found", job_title_id=job_title_id)
         raise HTTPException(status_code=404, detail="Job title not found")

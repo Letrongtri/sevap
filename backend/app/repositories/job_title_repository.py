@@ -7,23 +7,40 @@ class JobTitleRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
     
-    async def get_all_job_titles(self):
-        stmt = select(JobTitle).where(JobTitle.is_deleted == False)
+    async def get_all_job_titles(self, tenant_id: str):
+        stmt = select(JobTitle).where(
+            JobTitle.is_deleted == False, 
+            JobTitle.tenant_id == tenant_id
+        )
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
-    async def get_all_simple_job_titles(self):
-        stmt = select(JobTitle.id, JobTitle.title_name, JobTitle.code).where(JobTitle.is_deleted == False)
+    async def get_all_simple_job_titles(self, tenant_id: str):
+        stmt = select(
+            JobTitle.id, 
+            JobTitle.title_name, 
+            JobTitle.code
+        ).where(
+            JobTitle.is_deleted == False, 
+            JobTitle.tenant_id == tenant_id
+        )
         result = await self.db.execute(stmt)
-        return result.all()
+        return result.mappings().all()
 
-    async def get_job_title_by_id(self, job_title_id: int):
-        stmt = select(JobTitle).where(JobTitle.id == job_title_id, JobTitle.is_deleted == False)
+    async def get_job_title_by_id(self, job_title_id: str):
+        stmt = select(JobTitle).where(
+            JobTitle.id == job_title_id, 
+            JobTitle.is_deleted == False
+        )
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
     
-    async def get_job_title_by_code(self, code: str):
-        stmt = select(JobTitle).where(JobTitle.code == code, JobTitle.is_deleted == False)
+    async def get_job_title_by_code(self, code: str, tenant_id: str):
+        stmt = select(JobTitle).where(
+            JobTitle.code == code, 
+            JobTitle.is_deleted == False, 
+            JobTitle.tenant_id == tenant_id
+        )
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
