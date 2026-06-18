@@ -8,22 +8,22 @@ class JobTitleRepository:
         self.db = db
     
     async def get_all_job_titles(self):
-        stmt = select(JobTitle)
+        stmt = select(JobTitle).where(JobTitle.is_deleted == False)
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
     async def get_all_simple_job_titles(self):
-        stmt = select(JobTitle.id, JobTitle.title_name, JobTitle.code)
+        stmt = select(JobTitle.id, JobTitle.title_name, JobTitle.code).where(JobTitle.is_deleted == False)
         result = await self.db.execute(stmt)
         return result.all()
 
     async def get_job_title_by_id(self, job_title_id: int):
-        stmt = select(JobTitle).where(JobTitle.id == job_title_id)
+        stmt = select(JobTitle).where(JobTitle.id == job_title_id, JobTitle.is_deleted == False)
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
     
     async def get_job_title_by_code(self, code: str):
-        stmt = select(JobTitle).where(JobTitle.code == code)
+        stmt = select(JobTitle).where(JobTitle.code == code, JobTitle.is_deleted == False)
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -46,7 +46,7 @@ class JobTitleRepository:
 
     async def delete_job_title(self, job_title: JobTitle):
         try:
-            await self.db.delete(job_title)
+            job_title.is_deleted = True
             await self.db.commit()
         except Exception as e:
             await self.db.rollback()

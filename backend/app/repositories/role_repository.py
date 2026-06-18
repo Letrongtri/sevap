@@ -16,7 +16,7 @@ class RoleRepository:
         skip: int = 0,
         limit: int = 20
     ):
-        stmt = select(Role)
+        stmt = select(Role).where(Role.is_deleted == False)
 
         if query is not None:
             stmt = stmt.where(Role.name.ilike(f"%{query}%"))
@@ -41,17 +41,17 @@ class RoleRepository:
         return list(roles), total_records
 
     async def get_all_simple_roles(self):
-        stmt = select(Role.id, Role.name)
+        stmt = select(Role.id, Role.name).where(Role.is_deleted == False)
         result = await self.db.execute(stmt)
         return result.all()
 
     async def get_role_by_id(self, role_id: int):
-        stmt = select(Role).where(Role.id == role_id).options(selectinload(Role.permissions))
+        stmt = select(Role).where(Role.id == role_id, Role.is_deleted == False).options(selectinload(Role.permissions))
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
     
     async def get_role_by_name(self, name: str):
-        stmt = select(Role).where(Role.name == name)
+        stmt = select(Role).where(Role.name == name, Role.is_deleted == False)
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -74,7 +74,7 @@ class RoleRepository:
 
     async def delete_role(self, role: Role):
         try:
-            await self.db.delete(role)
+            role.is_deleted = True
             await self.db.commit()
         except Exception as e:
             await self.db.rollback()

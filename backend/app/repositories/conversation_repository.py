@@ -12,7 +12,7 @@ class ConversationRepository:
         self, 
         conversation_id: int
     ):
-        stmt = select(Conversation).where(Conversation.id == conversation_id)
+        stmt = select(Conversation).where(Conversation.id == conversation_id, Conversation.is_deleted == False)
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
     
@@ -26,7 +26,7 @@ class ConversationRepository:
             raise e
     
     async def get_all_conversations_by_user_id(self, user_id: int):
-        stmt = select(Conversation).where(Conversation.user_id == user_id)
+        stmt = select(Conversation).where(Conversation.user_id == user_id, Conversation.is_deleted == False)
         result = await self.db.execute(stmt)
         return result.scalars().all()
 

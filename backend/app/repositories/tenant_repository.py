@@ -7,22 +7,22 @@ class TenantRepository:
         self.db = db
     
     async def get_tenant_by_id(self, tenant_id: str) -> Tenants | None:
-        stmt = select(Tenants).where(Tenants.id == tenant_id)
-        result = await self.db.execute(stmt)
-        return result.scalar_one_or_none()
-        
-    async def get_tenant_by_name(self, name: str) -> Tenants | None:
-        stmt = select(Tenants).where(Tenants.company_name == name)
+        stmt = select(Tenants).where(Tenants.id == tenant_id, Tenants.status != "deleted")
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
         
     async def get_tenant_by_email(self, email: str) -> Tenants | None:
-        stmt = select(Tenants).where(Tenants.company_email == email)
+        stmt = select(Tenants).where(Tenants.company_email == email, Tenants.status != "deleted")
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
     async def get_tenant_by_domain(self, domain: str) -> Tenants | None:
-        stmt = select(Tenants).where(Tenants.tenant_domain == domain)
+        stmt = select(Tenants).where(Tenants.tenant_domain == domain, Tenants.status != "deleted")
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def get_tenant_by_name(self, name: str) -> Tenants | None:
+        stmt = select(Tenants).where(Tenants.company_name == name, Tenants.status != "deleted")
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 

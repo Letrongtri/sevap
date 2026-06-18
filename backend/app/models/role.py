@@ -1,5 +1,5 @@
 import uuid_utils
-from sqlalchemy import Column, String, Boolean, DateTime, Text, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, String, Boolean, DateTime, Text, ForeignKey, Index, text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.db.base_class import Base
@@ -13,6 +13,7 @@ class Role(Base):
     description = Column(Text)
     access_level = Column(String(32), nullable=False)
     is_system = Column(Boolean, default=False, nullable=False)
+    is_deleted = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -22,5 +23,5 @@ class Role(Base):
     document_accesses = relationship("DocumentRoleAccess", back_populates="role", cascade="all, delete-orphan")
 
     __table_args__ = (
-        UniqueConstraint('tenant_id', 'name', name='uq_role_tenant_name'),
+        Index("uq_role_tenant_name_active", "tenant_id", "name", unique=True, postgresql_where=text("is_deleted = false")),
     )

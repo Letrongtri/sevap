@@ -10,12 +10,16 @@ class UserRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_user_by_employee_code(self, employee_code: str, 
+    async def get_user_by_employee_code(self, tenant_id: str, employee_code: str, 
                                         get_user_roles: bool = False, 
                                         get_user_department: bool = False, 
                                         get_user_job_title: bool = False
     ):
-        stmt = select(User).where(User.employee_code == employee_code)
+        stmt = select(User).where(
+            User.tenant_id == tenant_id, 
+            User.employee_code == employee_code,
+            User.is_deleted == False
+        )
 
         if get_user_roles:
             stmt = stmt.options(selectinload(User.role_associations).selectinload(UserRole.role))
@@ -32,7 +36,7 @@ class UserRepository:
                                         get_user_department: bool = False, 
                                         get_user_job_title: bool = False
     ):
-        stmt = select(User).where(User.email == email)
+        stmt = select(User).where(User.email == email, User.is_deleted == False)
 
         if get_user_roles:
             stmt = stmt.options(selectinload(User.role_associations).selectinload(UserRole.role))
@@ -50,7 +54,7 @@ class UserRepository:
                              get_user_department: bool = False,
                              get_user_job_title: bool = False
     ):
-        stmt = select(User).where(User.id == user_id)
+        stmt = select(User).where(User.id == user_id, User.is_deleted == False)
 
         if get_user_roles:
             stmt = stmt.options(selectinload(User.role_associations).selectinload(UserRole.role))
@@ -185,7 +189,8 @@ class UserRepository:
 
     async def delete_user(self, user: User):
         try:
-            await self.db.delete(user)
+            user.is_deleted = True
+            user.is_active = False
             await self.db.commit()
         except Exception as e:
             await self.db.rollback()

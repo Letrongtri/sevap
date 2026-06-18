@@ -13,11 +13,7 @@ class TenantService:
         self.db = db
 
     async def register_tenant(self, data: TenantCreate) -> TenantResponse:
-        # Check if tenant already exists by name, email, or domain
-        existing_name = await self.tenant_repo.get_tenant_by_name(data.company_name)
-        if existing_name:
-            raise TenantAlreadyExistsError("Company name already registered")
-            
+        # Check if tenant already exists by email, or domain            
         existing_email = await self.tenant_repo.get_tenant_by_email(data.company_email)
         if existing_email:
             raise TenantAlreadyExistsError("Company email already registered")
@@ -30,12 +26,12 @@ class TenantService:
         try:
             # 1. Create the tenant
             tenant = Tenants(
+                tenant_domain=data.tenant_domain,
                 company_name=data.company_name,
                 company_description=data.company_description,
                 company_email=data.company_email,
                 company_phone=data.company_phone,
                 company_address=data.company_address,
-                tenant_domain=data.tenant_domain,
                 status=TenantStatus.ACTIVE.value
             )
             self.db.add(tenant)

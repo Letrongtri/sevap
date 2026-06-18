@@ -1,5 +1,5 @@
 import uuid_utils
-from sqlalchemy import Column, ForeignKey, String, Boolean, DateTime, Integer
+from sqlalchemy import Column, ForeignKey, String, Boolean, DateTime, Integer, Index, text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
@@ -42,4 +42,15 @@ class Document(Base):
     target_users = association_proxy("user_accesses", "user", creator=lambda u: DocumentUserAccess(user=u))
     roles = association_proxy("role_accesses", "role", creator=lambda r: DocumentRoleAccess(role=r))
     departments = association_proxy("department_accesses", "department", creator=lambda d: DocumentDepartmentAccess(department=d))
+
+    __table_args__ = (
+        Index(
+            "uq_document_tenant_file_hash_active", 
+            "tenant_id", 
+            "file_hash", 
+            unique=True, 
+            postgresql_where=text("is_deleted = false AND file_hash IS NOT NULL")
+        ),
+    )
+
     

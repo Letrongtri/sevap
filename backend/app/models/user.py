@@ -1,5 +1,5 @@
 import uuid_utils
-from sqlalchemy import Column, ForeignKey, String, Boolean, DateTime, UniqueConstraint
+from sqlalchemy import Column, ForeignKey, String, Boolean, DateTime, Index, text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.db.base_class import Base
@@ -42,6 +42,7 @@ class User(Base):
     document_accesses = relationship("DocumentUserAccess", back_populates="user", cascade="all, delete-orphan")
 
     __table_args__ = (
-        UniqueConstraint('tenant_id', 'employee_code', name='uq_user_tenant_employee_code'),
-        UniqueConstraint('tenant_id', 'email', name='uq_user_tenant_email'),
+        Index("uq_user_tenant_employee_code_active", "tenant_id", "employee_code", unique=True, postgresql_where=text("is_deleted = false")),
+        Index("uq_user_tenant_email_active", "tenant_id", "email", unique=True, postgresql_where=text("is_deleted = false")),
     )
+

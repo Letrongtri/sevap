@@ -6,12 +6,12 @@ from app.utils.sanitization import validate_password_strength
 
 class TenantCreate(BaseModel):
     # Tenant details
+    tenant_domain: str = Field(..., max_length=255)
     company_name: str = Field(..., max_length=255)
     company_description: str | None = None
     company_email: str = Field(..., max_length=255)
     company_phone: str = Field(..., max_length=16)
     company_address: str = Field(..., max_length=255)
-    tenant_domain: str | None = Field(None, max_length=255)
 
     # Tenant first Admin details
     admin_employee_code: str = Field(..., max_length=64)
@@ -67,12 +67,12 @@ class TenantSimple(BaseModel):
 
 class TenantResponse(BaseModel):
     id: str
+    tenant_domain: str
     company_name: str
     company_description: str | None = None
     company_email: str
     company_phone: str
     company_address: str
-    tenant_domain: str | None = None
     status: str
     created_at: datetime
     updated_at: datetime
