@@ -11,12 +11,16 @@ class RoleRepository:
     
     async def get_all_roles(
         self,
+        tenant_id: str,
         query: str | None = None,
         is_system: bool | None = None,
         skip: int = 0,
         limit: int = 20
     ):
-        stmt = select(Role).where(Role.is_deleted == False)
+        stmt = select(Role).where(
+            Role.tenant_id == tenant_id,
+            Role.is_deleted == False
+        )
 
         if query is not None:
             stmt = stmt.where(Role.name.ilike(f"%{query}%"))
@@ -40,18 +44,28 @@ class RoleRepository:
 
         return list(roles), total_records
 
-    async def get_all_simple_roles(self):
-        stmt = select(Role.id, Role.name).where(Role.is_deleted == False)
+    async def get_all_simple_roles(self, tenant_id: str):
+        stmt = select(Role.id, Role.name).where(
+            Role.tenant_id == tenant_id,
+            Role.is_deleted == False
+        )
         result = await self.db.execute(stmt)
         return result.all()
 
-    async def get_role_by_id(self, role_id: int):
-        stmt = select(Role).where(Role.id == role_id, Role.is_deleted == False).options(selectinload(Role.permissions))
+    async def get_role_by_id(self, role_id: str):
+        stmt = select(Role).where(
+            Role.id == role_id, Role.is_deleted == False
+        ).options(selectinload(Role.permissions))
+
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
     
-    async def get_role_by_name(self, name: str):
-        stmt = select(Role).where(Role.name == name, Role.is_deleted == False)
+    async def get_role_by_name(self, tenant_id: str, name: str):
+        stmt = select(Role).where(
+            Role.name == name, 
+            Role.tenant_id == tenant_id, 
+            Role.is_deleted == False
+        )
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 

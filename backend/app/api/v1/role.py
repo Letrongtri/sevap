@@ -39,7 +39,9 @@ async def get_all_roles(
         List[RoleResponse]: List of role information
     """
     try:
+        tenant_id = request.state.tenant_id
         return await role_service.get_all_roles(
+            tenant_id,
             query,
             pagination
         )
@@ -57,27 +59,9 @@ async def create_role(
     data: RoleCreate,
     role_service: RoleService = Depends(get_role_service),
 ):
-    """Create a custom role.
-
-    Args:
-        request: The FastAPI request object for rate limiting.
-        name: role's name
-        description: role's description
-        access_level: role's access level
-        permissions: role's permissions id list
-
-    Returns:
-        RoleResponse: role information
-    """
     try:
-        role = await role_service.create_role(
-            name=data.name, 
-            description=data.description, 
-            access_level=data.access_level,
-            permissions=data.permissions
-        )
-        
-        return RoleResponse.model_validate(role)
+        tenant_id = request.state.tenant_id
+        return await role_service.create_role(tenant_id, data)
     except RoleAlreadyExistsError:
         logger.error("role_already_exists", role_name=data.name)
         raise HTTPException(status_code=409, detail="Role already exists")
@@ -96,7 +80,8 @@ async def get_all_simple_roles(
     role_service: RoleService = Depends(get_role_service),
 ):
     try:
-        return await role_service.get_all_simple_roles()
+        tenant_id = request.state.tenant_id
+        return await role_service.get_all_simple_roles(tenant_id)
     except Exception:
         logger.error(
             "get_all_simple_roles_failed",
@@ -109,7 +94,7 @@ async def get_all_simple_roles(
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_role(
     request: Request, 
-    role_id: int,
+    role_id: str,
     role_service: RoleService = Depends(get_role_service),
 ):
     """ Get a role detail.
@@ -122,9 +107,8 @@ async def get_role(
         RoleResponse: Role detail
     """
     try:
-        role = await role_service.get_role_by_id(role_id)
-        
-        return RoleResponse.model_validate(role)
+        tenant_id = request.state.tenant_id
+        return await role_service.get_role_by_id(tenant_id, role_id)
     except NotFoundError:
         logger.error("role_not_found", role_id=role_id)
         raise HTTPException(status_code=404, detail="Role not found")
@@ -140,20 +124,13 @@ async def get_role(
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def update_role(
     request: Request,
-    role_id: int, 
+    role_id: str, 
     data: RoleUpdate,
     role_service: RoleService = Depends(get_role_service),
 ):
     try:
-        role = await role_service.update_role(
-            role_id=role_id,
-            name=data.name, 
-            description=data.description,
-            access_level=data.access_level,
-            permissions=data.permissions
-        )
-        
-        return RoleResponse.model_validate(role)
+        tenant_id = request.state.tenant_id
+        return await role_service.update_role(tenant_id, role_id, data)
     except NotFoundError:
         logger.error("updated_role_not_found", role_id=role_id)
         raise HTTPException(status_code=404, detail="Role not found")
@@ -169,7 +146,7 @@ async def update_role(
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def delete_role(
     request: Request,
-    role_id: int,
+    role_id: str,
     role_service: RoleService = Depends(get_role_service),
 ):
     """Delete custom role.
@@ -182,9 +159,8 @@ async def delete_role(
         RoleResponse: Deleted role information
     """
     try:
-        role = await role_service.delete_role(role_id=role_id)
-        
-        return RoleResponse.model_validate(role)
+        tenant_id = request.state.tenant_id
+        return await role_service.delete_role(tenant_id, role_id)
     except NotFoundError:
         logger.error("deleted_role_not_found", role_id=role_id)
         raise HTTPException(status_code=404, detail="Role not found")

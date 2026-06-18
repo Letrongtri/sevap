@@ -8,7 +8,7 @@ from app.services.exceptions import (
     NotFoundError,
 )
 from app.schemas import (
-    RoleSimple, RoleQuery, PaginationQuery, 
+    RoleSimple, RoleQuery, PaginationQuery, RoleCreate, RoleUpdate, 
     RolePaginatedResponse, RoleResponse, PaginationResponse
 )
 
@@ -22,12 +22,14 @@ class RoleService:
     
     async def get_all_roles(
         self,
+        tenant_id: str,
         query: RoleQuery,
         pagination: PaginationQuery
     ) -> RolePaginatedResponse:
         skip = (pagination.page - 1) * pagination.limit
 
         roles, total = await self.repo.get_all_roles(
+            tenant_id,
             query=query.query,
             is_system=query.is_system,
             skip=skip,
@@ -48,75 +50,74 @@ class RoleService:
             )
         )
 
-    async def get_all_simple_roles(self) -> List[RoleSimple]:
-        roles = await self.repo.get_all_simple_roles()
+    async def get_all_simple_roles(self, tenant_id: str) -> List[RoleSimple]:
+        roles = await self.repo.get_all_simple_roles(tenant_id)
         return [
             RoleSimple(id=role.id, name=role.name) 
             for role in roles
         ]
 
-    async def create_role(self, name: str, description: str | None = None, 
-                          access_level: int | None = None, 
-                          permissions: List[int] | None = None) -> Role:
-        existing = await self.repo.get_role_by_name(name)
+    async def create_role(self, tenant_id: str, data: RoleCreate) -> RoleResponse:
+        existing = await self.repo.get_role_by_name(tenant_id, data.name)
         if existing is not None:
             raise RoleAlreadyExistsError()
                 
         role = Role(
-            name=name, 
-            description=description, 
-            access_level=access_level, 
+            tenant_id=tenant_id,
+            name=data.name, 
+            description=data.description, 
+            access_level=data.access_level, 
             is_system=False
         )
 
-        if permissions is not None:
-            permission_objects = await self.permission_repo.get_permissions_by_ids(permissions)
+        if data.permissions is not None:
+            permission_objects = await self.permission_repo.get_permissions_by_ids(data.permissions)
 
-            if len(permission_objects) != len(set(permissions)):
+            if len(permission_objects) != len(set(data.permissions)):
                 raise Exception("Some permissions do not exist")
 
             role.permissions = permission_objects
 
-        return await self.repo.create_role(role)
+        created_role = await self.repo.create_role(role)
+        return RoleResponse.model_validate(created_role)
     
-    async def get_role_by_id(self, role_id: int) -> Role | None:
+    async def get_role_by_id(self, tenant_id: str, role_id: str) -> RoleResponse:
         role = await self.repo.get_role_by_id(role_id)
-        if role is None:
+        if role is None or role.tenant_id != tenant_id:
             raise NotFoundError()
-        return role
+        return RoleResponse.model_validate(role)
 
-    async def update_role(self, role_id: int, name: str | None = None, 
-                          description: str | None = None, access_level: str | None = None, 
-                          permissions: list[int] | None = None) -> Role:
+    async def update_role(self, tenant_id: str, role_id: str, data: RoleUpdate) -> RoleResponse:
         existing = await self.repo.get_role_by_id(role_id)
-        if existing is None:
+        if existing is None or existing.tenant_id != tenant_id:
             raise NotFoundError()
         
-        if name is not None and not existing.is_system:
-            existing.name = name
-        if description is not None:
-            existing.description = description
-        if access_level is not None:
-            existing.access_level = access_level
+        if data.name is not None and not existing.is_system:
+            existing.name = data.name
+        if data.description is not None:
+            existing.description = data.description
+        if data.access_level is not None:
+            existing.access_level = data.access_level
         
-        if permissions is not None:
-            permission_objects = await self.permission_repo.get_permissions_by_ids(permissions)
+        if data.permissions is not None:
+            permission_objects = await self.permission_repo.get_permissions_by_ids(data.permissions)
 
-            if len(permission_objects) != len(set(permissions)):
+            if len(permission_objects) != len(set(data.permissions)):
                 raise Exception("Some permissions do not exist")
 
             existing.permissions = permission_objects
 
-        await self.repo.save(role=existing)
-        return existing
+        updated = await self.repo.save(role=existing)
+        return RoleResponse.model_validate(updated)
     
-    async def delete_role(self, role_id: int) -> Role:
+    async def delete_role(self, tenant_id: str, role_id: str) -> RoleResponse:
         existing = await self.repo.get_role_by_id(role_id)
-        if existing is None:
+        if existing is None or existing.tenant_id != tenant_id:
             raise NotFoundError()
         
         if existing.is_system:
             raise Exception("Cannot delete system role")
         
+        response = RoleResponse.model_validate(existing)
         await self.repo.delete_role(existing)
-        return existing
+        return response

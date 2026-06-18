@@ -21,8 +21,9 @@ async def get_current_user(
 
         user_id = payload.get("sub")
         roles = payload.get("roles", [])
+        tenant_id = payload.get("tenant_id")
 
-        if user_id is None:
+        if user_id is None or tenant_id is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token",
@@ -32,10 +33,12 @@ async def get_current_user(
             "id": user_id,
             "roles": roles,
         }
+        request.state.tenant_id = tenant_id
 
         return {
             "user_id": user_id,
             "roles": roles,
+            "tenant_id": tenant_id,
         }
 
     except JWTError:

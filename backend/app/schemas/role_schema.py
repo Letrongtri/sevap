@@ -9,13 +9,13 @@ class RoleCreate(BaseModel):
     name: str
     description: str | None = None
     access_level: str
-    permissions: list[str]
+    permissions: list[int]
 
 class RoleUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
     access_level: str | None = None
-    permissions: list[str] | None = None
+    permissions: list[int] | None = None
 
     @model_validator(mode="after")
     def validate_at_least_one_field(self):
@@ -50,10 +50,12 @@ class RoleQuery(BaseModel):
 
 class RoleResponse(BaseModel):
     id: str
+    tenant_id: str
     name: str
     description: str | None
     access_level: str
     is_system: bool
+    is_deleted: bool
     created_at: datetime
     updated_at: datetime
 
