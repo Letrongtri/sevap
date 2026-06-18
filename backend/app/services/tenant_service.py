@@ -130,7 +130,9 @@ class TenantService:
         return TenantResponse.model_validate(tenant)
 
     async def update_tenant(self, tenant_id: str, data: TenantUpdate) -> TenantResponse:
-        tenant = await self.get_tenant_by_id(tenant_id)
+        tenant = await self.tenant_repo.get_tenant_by_id(tenant_id)
+        if not tenant:
+            raise NotFoundError("Tenant not found")
         
         if data.company_name is not None:
             # Check unique name
@@ -166,7 +168,9 @@ class TenantService:
         return TenantResponse.model_validate(updated_tenant)
 
     async def soft_delete_tenant(self, tenant_id: str) -> TenantResponse:
-        tenant = await self.get_tenant_by_id(tenant_id)
+        tenant = await self.tenant_repo.get_tenant_by_id(tenant_id)
+        if not tenant:
+            raise NotFoundError("Tenant not found")
         tenant.status = TenantStatus.DELETED.value
         updated_tenant = await self.tenant_repo.save(tenant)
         return TenantResponse.model_validate(updated_tenant)
