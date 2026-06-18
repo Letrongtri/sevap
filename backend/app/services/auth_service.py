@@ -65,6 +65,8 @@ class AuthService:
 
     async def refresh_token(self, refresh_token: str):
         token_payload = verify_token(refresh_token)
+        if not token_payload:
+            raise InvalidTokenError()
 
         session = await self.session_repo.get_user_session_by_jti(token_payload["jti"])
 

@@ -80,6 +80,9 @@ async def login(
             status_code=401,
             detail="Incorrect credentials",
         )
+    except NotFoundError as e:
+        logger.error("login_tenant_not_found", error=str(e), exc_info=True)
+        raise HTTPException(status_code=404, detail=str(e))
     except ValueError as ve:
         logger.error("login_validation_failed", error=str(ve), exc_info=True)
         raise HTTPException(status_code=422, detail=str(ve))
