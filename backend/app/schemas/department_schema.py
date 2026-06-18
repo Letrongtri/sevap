@@ -1,10 +1,5 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from datetime import datetime
-
-if TYPE_CHECKING:
-    from app.schemas.user_schema import UserResponse
 
 # Schema cho dữ liệu gửi lên khi tạo Department
 class DepartmentCreate(BaseModel):
@@ -21,8 +16,6 @@ class DepartmentUpdate(BaseModel):
         values = [
             self.name,
             self.description,
-            self.parent_id,
-            self.manager_id,
         ]
 
         has_value = any(
@@ -46,6 +39,7 @@ class DepartmentSimple(BaseModel):
 
 class DepartmentResponse(BaseModel):
     id: str
+    tenant_id: str
     name: str
     code: str
     description: str | None = None
@@ -53,12 +47,4 @@ class DepartmentResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    parent: DepartmentSimple | None = None
-    children: list[DepartmentSimple] = Field(default_factory=list)
-
-    manager: UserResponse | None = None
-    users: list[UserResponse] = Field(default_factory=list)
-
     model_config = ConfigDict(from_attributes=True)
-
-from app.schemas.user_schema import UserResponse

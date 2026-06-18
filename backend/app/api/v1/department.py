@@ -17,12 +17,8 @@ async def get_all_departments(
     department_service: DepartmentService = Depends(get_department_service),
 ):
     try:
-        departments = await department_service.get_all_departments()
-        
-        return [
-            DepartmentResponse.model_validate(department) 
-            for department in departments
-        ]
+        tenant_id = request.state.tenant_id
+        return await department_service.get_all_departments(tenant_id)
     except Exception:
         logger.error(
             "get_all_departments_failed",
@@ -37,17 +33,12 @@ async def create_department(
     data: DepartmentCreate,
     department_service: DepartmentService = Depends(get_department_service),
 ):
-    user_id = request.state.user["id"]
     try:
-        department = await department_service.create_department(
-            name=data.name, 
-            code=data.code, 
-            description=data.description, 
-            parent_id=data.parent_id, 
-            manager_id=data.manager_id
+        user_id = request.state.user["id"]
+        tenant_id = request.state.tenant_id
+        return await department_service.create_department(
+            tenant_id, user_id, data
         )
-        
-        return DepartmentResponse.model_validate(department)
     except DepartmentAlreadyExistsError:
         logger.error("department_already_exists", department_name=data.name)
         raise HTTPException(status_code=409, detail="Department already exists")
@@ -66,7 +57,8 @@ async def get_all_simple_departments(
     department_service: DepartmentService = Depends(get_department_service),
 ):
     try:
-        return await department_service.get_all_simple_departments()
+        tenant_id = request.state.tenant_id
+        return await department_service.get_all_simple_departments(tenant_id)
     except Exception:
         logger.error(
             "get_all_simple_departments_failed",
@@ -78,7 +70,7 @@ async def get_all_simple_departments(
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_department(
     request: Request, 
-    department_id: int,
+    department_id: str,
     department_service: DepartmentService = Depends(get_department_service),
 ):
     """ Get a department detail.
@@ -91,9 +83,10 @@ async def get_department(
         departmentResponse: department detail
     """
     try:
-        department = await department_service.get_department_by_id(department_id)
-        
-        return DepartmentResponse.model_validate(department)
+        tenant_id = request.state.tenant_id
+        return await department_service.get_department_by_id(
+            tenant_id, department_id
+        )
     except NotFoundError:
         logger.error("department_not_found", department_id=department_id)
         raise HTTPException(status_code=404, detail="department not found")
@@ -109,20 +102,15 @@ async def get_department(
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def update_department(
     request: Request,
-    department_id: int, 
+    department_id: str, 
     data: DepartmentUpdate,
     department_service: DepartmentService = Depends(get_department_service),
 ):
     try:
-        department = await department_service.update_department(
-            department_id=department_id,
-            name=data.name,
-            description=data.description,
-            parent_id=data.parent_id,
-            manager_id=data.manager_id
+        tenant_id = request.state.tenant_id
+        return await department_service.update_department(
+            tenant_id, department_id, data
         )
-        
-        return DepartmentResponse.model_validate(department)
     except NotFoundError:
         logger.error("updated_department_not_found", department_id=department_id)
         raise HTTPException(status_code=404, detail="Department not found")
@@ -138,7 +126,7 @@ async def update_department(
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def delete_department(
     request: Request,
-    department_id: int,
+    department_id: str,
     department_service: DepartmentService = Depends(get_department_service),
 ):
     """Delete custom department.
@@ -151,9 +139,10 @@ async def delete_department(
         departmentResponse: Deleted department information
     """
     try:
-        department = await department_service.delete_department(department_id=department_id)
-        
-        return DepartmentResponse.model_validate(department)
+        tenant_id = request.state.tenant_id
+        return await department_service.delete_department(
+            tenant_id, department_id
+        )
     except NotFoundError:
         logger.error("deleted_department_not_found", department_id=department_id)
         raise HTTPException(status_code=404, detail="Department not found")

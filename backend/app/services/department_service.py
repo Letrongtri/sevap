@@ -6,71 +6,92 @@ from app.services.exceptions import (
     DepartmentAlreadyExistsError, 
     NotFoundError,
 )
-from app.schemas import DepartmentSimple
+from app.schemas import (
+    DepartmentSimple,
+    DepartmentResponse,
+    DepartmentCreate,
+    DepartmentUpdate,
+)
 
 class DepartmentService:
     def __init__(self, repo: DepartmentRepository):
         self.repo = repo
     
-    async def get_all_departments(self) -> List[Department]:
-        return await self.repo.get_all_departments()
+    async def get_all_departments(self, 
+        tenant_id: str
+    ) -> List[DepartmentResponse]:
 
-    async def get_all_simple_departments(self) -> List[DepartmentSimple]:
-        departments = await self.repo.get_all_simple_departments()
+        departments = await self.repo.get_all_departments(tenant_id)
         return [
-            DepartmentSimple(
-                id=department.id,
-                name=department.name,
-                code=department.code
-            ) for department in departments
+            DepartmentResponse.model_validate(department) 
+            for department in departments
         ]
 
-    async def create_department(self, name: str, code: str, 
-                                description: str | None = None, parent_id: int | None = None, 
-                                manager_id: int | None = None) -> Department:
-        existing = await self.repo.get_department_by_code(code)
+    async def get_all_simple_departments(self, 
+        tenant_id: str
+    ) -> List[DepartmentSimple]:
+
+        departments = await self.repo.get_all_simple_departments(tenant_id)
+        return [
+            DepartmentSimple.model_validate(department) 
+            for department in departments
+        ]
+
+    async def create_department(
+        self, tenant_id: str, user_id: str, 
+        data: DepartmentCreate
+    ) -> DepartmentResponse:
+        existing = await self.repo.get_department_by_code(data.code, tenant_id)
         if existing is not None:
             raise DepartmentAlreadyExistsError()
                 
-        department = department(
-            name=name,
-            code=code,
-            description=description, 
-            parent_id=parent_id, 
-            manager_id=manager_id
+        department = Department(
+            tenant_id=tenant_id,
+            name=data.name,
+            code=data.code,
+            description=data.description,
         )
 
-        return await self.repo.create_department(department)
+        created = await self.repo.create_department(department)
+        return DepartmentResponse.model_validate(created)
     
-    async def get_department_by_id(self, department_id: int) -> Department | None:
-        department = await self.repo.get_department_by_id(department_id)
-        if department is None:
-            raise NotFoundError()
-        return department
-
-    async def update_department(self, department_id: int, name: str | None = None, 
-                          description: str | None = None, parent_id: int | None = None, 
-                          manager_id: int | None = None) -> Department:
+    async def get_department_by_id(
+        self, 
+        tenant_id: str, 
+        department_id: str
+    ) -> DepartmentResponse:
         existing = await self.repo.get_department_by_id(department_id)
-        if existing is None:
+        if existing is None or existing.tenant_id != tenant_id:
+            raise NotFoundError()
+
+        return DepartmentResponse.model_validate(existing)
+
+    async def update_department(
+        self, 
+        tenant_id: str, 
+        department_id: str, 
+        data: DepartmentUpdate
+    ) -> DepartmentResponse:
+        existing = await self.repo.get_department_by_id(department_id)
+        if existing is None or existing.tenant_id != tenant_id:
             raise NotFoundError()
         
-        if name is not None:
-            existing.name = name
-        if description is not None:
-            existing.description = description
-        if parent_id is not None:
-            existing.parent_id = parent_id
-        if manager_id is not None:
-            existing.manager_id = manager_id
+        if data.name is not None:
+            existing.name = data.name
+        if data.description is not None:
+            existing.description = data.description
 
         await self.repo.save(department=existing)
-        return existing
+        return DepartmentResponse.model_validate(existing)
     
-    async def delete_department(self, department_id: int) -> Department:
+    async def delete_department(self, 
+        tenant_id: str, 
+        department_id: str
+    ) -> DepartmentResponse:
         existing = await self.repo.get_department_by_id(department_id)
-        if existing is None:
+        if existing is None or existing.tenant_id != tenant_id:
             raise NotFoundError()
         
+        response = DepartmentResponse.model_validate(existing)
         await self.repo.delete_department(existing)
-        return existing
+        return response

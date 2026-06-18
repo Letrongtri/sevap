@@ -7,23 +7,36 @@ class DepartmentRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
     
-    async def get_all_departments(self):
-        stmt = select(Department).where(Department.is_deleted == False)
+    async def get_all_departments(self, tenant_id: str):
+        stmt = select(Department).where(
+            Department.tenant_id == tenant_id,
+            Department.is_deleted == False
+        )
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
-    async def get_all_simple_departments(self):
-        stmt = select(Department.id, Department.name, Department.code).where(Department.is_deleted == False)
+    async def get_all_simple_departments(self, tenant_id: str):
+        stmt = select(Department.id, Department.name, Department.code).where(
+            Department.tenant_id == tenant_id,
+            Department.is_deleted == False
+        )
         result = await self.db.execute(stmt)
-        return result.all()
+        return result.mappings().all()
 
-    async def get_department_by_id(self, department_id: int):
-        stmt = select(Department).where(Department.id == department_id, Department.is_deleted == False)
+    async def get_department_by_id(self, department_id: str):
+        stmt = select(Department).where(
+            Department.id == department_id,
+            Department.is_deleted == False
+        )
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
     
-    async def get_department_by_code(self, code: str):
-        stmt = select(Department).where(Department.code == code, Department.is_deleted == False)
+    async def get_department_by_code(self, code: str, tenant_id: str):
+        stmt = select(Department).where(
+            Department.code == code,
+            Department.tenant_id == tenant_id,
+            Department.is_deleted == False
+        )
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
