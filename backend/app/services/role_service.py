@@ -70,10 +70,10 @@ class RoleService:
             is_system=False
         )
 
-        if data.permissions is not None:
-            permission_objects = await self.permission_repo.get_permissions_by_ids(data.permissions)
+        if data.permission_ids is not None:
+            permission_objects = await self.permission_repo.get_permissions_by_ids(data.permission_ids)
 
-            if len(permission_objects) != len(set(data.permissions)):
+            if len(permission_objects) != len(set(data.permission_ids)):
                 raise Exception("Some permissions do not exist")
 
             role.permissions = permission_objects
@@ -99,10 +99,10 @@ class RoleService:
         if data.access_level is not None:
             existing.access_level = data.access_level
         
-        if data.permissions is not None:
-            permission_objects = await self.permission_repo.get_permissions_by_ids(data.permissions)
+        if data.permission_ids is not None:
+            permission_objects = await self.permission_repo.get_permissions_by_ids(data.permission_ids)
 
-            if len(permission_objects) != len(set(data.permissions)):
+            if len(permission_objects) != len(set(data.permission_ids)):
                 raise Exception("Some permissions do not exist")
 
             existing.permissions = permission_objects

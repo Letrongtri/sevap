@@ -1,7 +1,5 @@
-import type { ID } from './common'
-
 export interface Permission {
-    id: ID
+    id: number
     resource: string
     action: string
     description: string

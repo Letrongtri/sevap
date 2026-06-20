@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { RoleStore } from '../types/role'
+import type { ID } from '../types/common'
 
 export const useRoleStore = create<RoleStore>((set) => ({
     // ── State ──────────────────────────────────────────────────────────
@@ -15,7 +16,7 @@ export const useRoleStore = create<RoleStore>((set) => ({
     setIsAddingRole: (isAddingRole: boolean) => set({ isAddingRole }),
 
     /** Chọn role để xem */
-    setActiveRoleId: (id: number | null) => set({ activeRoleId: id }),
+    setActiveRoleId: (id: ID | null) => set({ activeRoleId: id }),
 
     /** Set query search */
     setQuery: (query: string | null) => set({ query: query }),

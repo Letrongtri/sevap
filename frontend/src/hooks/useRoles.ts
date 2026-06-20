@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRoleStore } from '../store/roleStore'
 import type { Role, RolePaginatedResponse } from '../types/role'
 import { createRole, deleteRole, fetchRoles, updateRole } from '../api/role'
+import type { ID } from '../types/common'
 
 export const ROLES_QUERY_KEY = ['roles'] as const
 
@@ -54,7 +55,7 @@ export function useUpdateRole() {
     return useMutation<
         Role,
         Error,
-        { id: number; payload: Parameters<typeof updateRole>[1] }
+        { id: ID; payload: Parameters<typeof updateRole>[1] }
     >({
         mutationFn: ({ id, payload }) => updateRole(id, payload),
         onSuccess: () => {
@@ -66,7 +67,7 @@ export function useUpdateRole() {
 /** Hook xoá role */
 export function useDeleteRole() {
     const queryClient = useQueryClient()
-    return useMutation<Role, Error, number>({
+    return useMutation<Role, Error, ID>({
         mutationFn: deleteRole,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ROLES_QUERY_KEY })

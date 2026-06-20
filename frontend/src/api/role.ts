@@ -6,6 +6,7 @@ import type {
     RoleSimple,
     UpdateRolePayload,
 } from '../types/role'
+import type { ID } from '../types/common'
 
 export const fetchAllSimpleRoles = async (): Promise<RoleSimple[]> => {
     const res = await axiosClient.get('/roles/simple')
@@ -29,7 +30,7 @@ export const fetchRoles = async (
     return res.data
 }
 
-export const fetchRoleById = async (id: number): Promise<Role> => {
+export const fetchRoleById = async (id: ID): Promise<Role> => {
     const res = await axiosClient.get(`/roles/${id}`)
     return res.data
 }
@@ -40,14 +41,14 @@ export const createRole = async (payload: AddRolePayload): Promise<Role> => {
 }
 
 export const updateRole = async (
-    id: number,
+    id: ID,
     payload: UpdateRolePayload
 ): Promise<Role> => {
     const res = await axiosClient.patch(`/roles/${id}`, payload)
     return res.data
 }
 
-export const deleteRole = async (id: number): Promise<Role> => {
+export const deleteRole = async (id: ID): Promise<Role> => {
     const res = await axiosClient.delete(`/roles/${id}`)
     return res.data
 }

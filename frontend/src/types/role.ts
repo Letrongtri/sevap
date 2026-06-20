@@ -8,10 +8,12 @@ export interface RoleSimple {
 
 export interface Role {
     id: ID
+    tenant_id: ID
     name: string
-    description: string
+    description: string | null
     access_level: string
     is_system: boolean
+    is_deleted: boolean
     created_at: Timestamp
     updated_at: Timestamp
 
@@ -22,7 +24,7 @@ export interface AddRolePayload {
     name: string
     description?: string | null
     access_level?: string | null
-    permission_ids?: ID[] | null
+    permission_ids?: number[] | null
 }
 
 export interface UpdateRolePayload {
@@ -30,7 +32,7 @@ export interface UpdateRolePayload {
     name?: string | null
     description?: string | null
     access_level?: string | null
-    permission_ids?: ID[] | null
+    permission_ids?: number[] | null
 }
 
 export interface RolePaginatedResponse {
@@ -40,7 +42,7 @@ export interface RolePaginatedResponse {
 
 export interface RoleState {
     isAddingRole: boolean
-    activeRoleId: number | null
+    activeRoleId: ID | null
     query?: string | null
     status?: string | null
     page?: number | null
@@ -49,7 +51,7 @@ export interface RoleState {
 
 export interface RoleClientActions {
     setIsAddingRole: (isAddingRole: boolean) => void
-    setActiveRoleId: (id: number | null) => void
+    setActiveRoleId: (id: ID | null) => void
     setQuery: (query: string | null) => void
     setStatus: (status: string | null) => void
     setPage: (page: number | null) => void

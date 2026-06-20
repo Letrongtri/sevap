@@ -1,9 +1,10 @@
 import Input from '../ui/Input'
 import { Hash, Shield } from 'lucide-react'
 import SearchableSelect from '../ui/SearchableSelect'
+import type { ID } from '../../types/common'
 
 interface RoleInfoFieldsProps {
-    selectedRoleId?: string | number | null
+    selectedRoleId?: ID | null
     editRoleName: string
     setEditRoleName: (val: string) => void
     editDescription: string
