@@ -4,10 +4,11 @@ import { useUserOptions } from '../../hooks/useUserOptions'
 import { fetchUserById } from '../../api/user'
 import type { UserSimple } from '../../types/user'
 import LoadingSpinner from './LoadingSpinner'
+import type { ID } from '../../types/common'
 
 interface SearchableUserSelectProps {
-    value: number | null | undefined
-    onChange: (value: number | null) => void
+    value: ID | null | undefined
+    onChange: (value: ID | null) => void
     placeholder?: string
     label?: string
     disabled?: boolean
@@ -66,7 +67,7 @@ export default function SearchableUserSelect({
         if (value) {
             const getUserInfo = async () => {
                 try {
-                    const user = await fetchUserById(Number(value))
+                    const user = await fetchUserById(value)
                     if (isMounted) {
                         setSelectedUserName(user.full_name)
                         setSearchTerm(user.full_name)

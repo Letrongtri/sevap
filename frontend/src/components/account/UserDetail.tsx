@@ -81,6 +81,9 @@ const UserDetail = () => {
                 payload: {
                     full_name: payload.full_name,
                     email: payload.email,
+                    department_id: payload.department_id ?? undefined,
+                    job_title_id: payload.job_title_id ?? undefined,
+                    role_ids: payload.role_ids,
                 },
             },
             {

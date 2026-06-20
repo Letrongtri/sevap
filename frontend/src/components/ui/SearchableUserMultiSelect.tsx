@@ -3,10 +3,11 @@ import { ChevronDown, X, User, Check } from 'lucide-react'
 import { useUserOptions } from '../../hooks/useUserOptions'
 import type { UserSimple } from '../../types/user'
 import LoadingSpinner from './LoadingSpinner'
+import type { ID } from '../../types/common'
 
 interface SearchableUserMultiSelectProps {
-    value: number[]
-    onChange: (value: number[]) => void
+    value: ID[]
+    onChange: (value: ID[]) => void
     initialSelectedUsers?: UserSimple[]
     placeholder?: string
     label?: string
@@ -27,7 +28,8 @@ export default function SearchableUserMultiSelect({
     const [searchTerm, setSearchTerm] = useState('')
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
 
-    const [selectedUsers, setSelectedUsers] = useState<UserSimple[]>(initialSelectedUsers)
+    const [selectedUsers, setSelectedUsers] =
+        useState<UserSimple[]>(initialSelectedUsers)
     const [prevInitialIds, setPrevInitialIds] = useState(() =>
         initialSelectedUsers.map((u) => u.id).join(',')
     )
@@ -92,7 +94,7 @@ export default function SearchableUserMultiSelect({
         }
     }
 
-    const handleRemoveOption = (e: React.MouseEvent, userId: number) => {
+    const handleRemoveOption = (e: React.MouseEvent, userId: ID) => {
         e.stopPropagation()
         onChange(value.filter((id) => id !== userId))
         setSelectedUsers((prev) => prev.filter((u) => u.id !== userId))

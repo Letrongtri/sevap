@@ -10,6 +10,7 @@ import {
 } from '../api/user'
 import { useUserStore } from '../store/usersStore'
 import type { User, UserPaginatedResponse } from '../types/user'
+import type { ID } from '../types/common'
 
 export const USERS_QUERY_KEY = ['users'] as const
 
@@ -82,7 +83,7 @@ export function useUpdateUser() {
     return useMutation<
         User,
         Error,
-        { id: number; payload: Parameters<typeof updateUser>[1] }
+        { id: ID; payload: Parameters<typeof updateUser>[1] }
     >({
         mutationFn: ({ id, payload }) => updateUser(id, payload),
         onSuccess: () => {
@@ -94,7 +95,7 @@ export function useUpdateUser() {
 /** Hook kích hoạt hoặc vô hiệu hoá người dùng */
 export function useToggleUserStatus() {
     const queryClient = useQueryClient()
-    return useMutation<User, Error, { id: number; active: boolean }>({
+    return useMutation<User, Error, { id: ID; active: boolean }>({
         mutationFn: ({ id, active }) =>
             active ? activateUser(id) : deactivateUser(id),
         onSuccess: () => {
@@ -106,7 +107,7 @@ export function useToggleUserStatus() {
 /** Hook xoá người dùng */
 export function useDeleteUser() {
     const queryClient = useQueryClient()
-    return useMutation<User, Error, number>({
+    return useMutation<User, Error, ID>({
         mutationFn: deleteUser,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEY })
@@ -117,7 +118,7 @@ export function useDeleteUser() {
 /** Hook đặt lại mật khẩu */
 export function useResetUserPassword() {
     const queryClient = useQueryClient()
-    return useMutation<User, Error, number>({
+    return useMutation<User, Error, ID>({
         mutationFn: resetUserPassword,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEY })

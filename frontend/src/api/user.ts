@@ -1,12 +1,17 @@
 import axiosClient from './axios'
-import type { User, UserPaginatedResponse, UserSimplePaginatedResponse } from '../types/user'
+import type {
+    User,
+    UserPaginatedResponse,
+    UserSimplePaginatedResponse,
+} from '../types/user'
+import type { ID } from '../types/common'
 
 /** Lấy danh sách tất cả người dùng */
 export const fetchUsers = async (
     query?: string | null,
-    departmentId?: number | null,
-    jobTitleId?: number | null,
-    roleId?: number | null,
+    departmentId?: ID | null,
+    jobTitleId?: ID | null,
+    roleId?: ID | null,
     status?: string | null,
     page?: number | null,
     limit: number = 10
@@ -26,7 +31,7 @@ export const fetchUsers = async (
 }
 
 /** Lấy thông tin một người dùng theo ID */
-export const fetchUserById = async (id: number): Promise<User> => {
+export const fetchUserById = async (id: ID): Promise<User> => {
     const res = await axiosClient.get(`/users/${id}`)
     return res.data
 }
@@ -37,9 +42,9 @@ export const createUser = async (payload: {
     full_name: string
     password: string
     email?: string | null
-    job_title_id?: number
-    department_id?: number
-    role_ids?: number[]
+    job_title_id?: ID
+    department_id?: ID
+    role_ids?: ID[]
 }): Promise<User> => {
     const res = await axiosClient.post('/users', payload)
     return res.data
@@ -47,13 +52,13 @@ export const createUser = async (payload: {
 
 /** Cập nhật thông tin người dùng */
 export const updateUser = async (
-    id: number,
+    id: ID,
     payload: {
         full_name?: string | null
         email?: string | null
-        job_title_id?: number
-        department_id?: number
-        role_ids?: number[]
+        job_title_id?: ID
+        department_id?: ID
+        role_ids?: ID[]
     }
 ): Promise<User> => {
     const res = await axiosClient.put(`/users/${id}`, payload)
@@ -61,25 +66,25 @@ export const updateUser = async (
 }
 
 /** Xoá người dùng */
-export const deleteUser = async (id: number): Promise<User> => {
+export const deleteUser = async (id: ID): Promise<User> => {
     const res = await axiosClient.delete(`/users/${id}`)
     return res.data
 }
 
 /** Kích hoạt tài khoản người dùng */
-export const activateUser = async (id: number): Promise<User> => {
+export const activateUser = async (id: ID): Promise<User> => {
     const res = await axiosClient.patch(`/users/${id}/activate`)
     return res.data
 }
 
 /** Vô hiệu hoá tài khoản người dùng */
-export const deactivateUser = async (id: number): Promise<User> => {
+export const deactivateUser = async (id: ID): Promise<User> => {
     const res = await axiosClient.patch(`/users/${id}/deactivate`)
     return res.data
 }
 
 /** Đặt lại mật khẩu người dùng về mặc định */
-export const resetUserPassword = async (id: number): Promise<User> => {
+export const resetUserPassword = async (id: ID): Promise<User> => {
     const res = await axiosClient.patch(`/users/${id}/reset-password`)
     return res.data
 }

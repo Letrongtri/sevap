@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { UserStore } from '../types/user'
+import type { ID } from '../types/common'
 
 /**
  * useUserStore — Zustand store cho CLIENT state của chức năng user.
@@ -26,17 +27,17 @@ export const useUserStore = create<UserStore>((set) => ({
     setIsAddingUser: (isAddingUser: boolean) => set({ isAddingUser }),
 
     /** Chọn user để xem */
-    setActiveUserId: (id: number | null) => set({ activeUserId: id }),
+    setActiveUserId: (id: ID | null) => set({ activeUserId: id }),
 
     /** Set query search */
     setQuery: (query: string | null) => set({ query: query }),
 
     /** Set department id */
-    setDepartmentId: (id: number | null) => set({ departmentId: id }),
+    setDepartmentId: (id: ID | null) => set({ departmentId: id }),
 
-    setJobTitleId: (id: number | null) => set({ jobTitleId: id }),
+    setJobTitleId: (id: ID | null) => set({ jobTitleId: id }),
 
-    setRoleId: (id: number | null) => set({ roleId: id }),
+    setRoleId: (id: ID | null) => set({ roleId: id }),
 
     setStatus: (status: string | null) => set({ status }),
 

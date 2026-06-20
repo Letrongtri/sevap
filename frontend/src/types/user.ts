@@ -58,11 +58,11 @@ export interface UserSimplePaginatedResponse {
 
 export interface UserState {
     isAddingUser: boolean
-    activeUserId: number | null
+    activeUserId: ID | null
     query?: string | null
-    departmentId?: number | null
-    jobTitleId?: number | null
-    roleId?: number | null
+    departmentId?: ID | null
+    jobTitleId?: ID | null
+    roleId?: ID | null
     status?: string | null
     page?: number | null
     limit?: number
@@ -70,11 +70,11 @@ export interface UserState {
 
 export interface UserClientActions {
     setIsAddingUser: (isAddingUser: boolean) => void
-    setActiveUserId: (id: number | null) => void
+    setActiveUserId: (id: ID | null) => void
     setQuery: (query: string | null) => void
-    setDepartmentId: (id: number | null) => void
-    setJobTitleId: (id: number | null) => void
-    setRoleId: (id: number | null) => void
+    setDepartmentId: (id: ID | null) => void
+    setJobTitleId: (id: ID | null) => void
+    setRoleId: (id: ID | null) => void
     setStatus: (status: string | null) => void
     setPage: (page: number | null) => void
     setLimit: (limit: number | null) => void

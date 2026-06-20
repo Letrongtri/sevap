@@ -87,6 +87,9 @@ const DetailAccountForm = ({
             id: selectedUser.id,
             full_name: editFullName.trim(),
             email: editEmail.trim() ? editEmail.trim() : null,
+            department_id: departmentId,
+            job_title_id: jobTitleId,
+            role_ids: roleIds,
         }
         onUpdateUser(payload)
     }
