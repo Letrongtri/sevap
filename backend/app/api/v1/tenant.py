@@ -21,14 +21,14 @@ async def register_tenant(
         logger.error("tenant_registration_failed_internal", error=str(e), exc_info=True)
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Failed to register tenant")
 
-@router.put("/{tenant_id}", response_model=TenantResponse)
+@router.put("", response_model=TenantResponse)
 async def update_tenant(
-    tenant_id: str,
     data: TenantUpdate,
     tenant_service: TenantService = Depends(get_tenant_service),
     current_user=Depends(get_current_user)
 ):
     try:
+        tenant_id = current_user.get("tenant_id")
         return await tenant_service.update_tenant(tenant_id, data)
     except NotFoundError as e:
         logger.error("tenant_not_found_on_update", tenant_id=tenant_id)
@@ -40,13 +40,13 @@ async def update_tenant(
         logger.error("tenant_update_failed", tenant_id=tenant_id, error=str(e), exc_info=True)
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Failed to update tenant")
 
-@router.delete("/{tenant_id}", response_model=TenantResponse)
+@router.delete("", response_model=TenantResponse)
 async def soft_delete_tenant(
-    tenant_id: str,
     tenant_service: TenantService = Depends(get_tenant_service),
     current_user=Depends(get_current_user)
 ):
     try:
+        tenant_id = current_user.get("tenant_id")
         return await tenant_service.soft_delete_tenant(tenant_id)
     except NotFoundError as e:
         logger.error("tenant_not_found_on_delete", tenant_id=tenant_id)

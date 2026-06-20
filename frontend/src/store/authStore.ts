@@ -13,6 +13,9 @@ const normalizeAuthUser = (user): AuthUser | null => {
         roles: user.roles,
         department: user.department,
         jobTitle: user.jobTitle || user.job_title,
+        companyName: user.companyName || user.company_name,
+        tenantId: user.tenantId || user.tenant_id,
+        tenantDomain: user.tenantDomain || user.tenant_domain,
         lastLogin: user.lastLogin || user.last_login,
     }
 }
@@ -43,7 +46,8 @@ export const useAuthStore = create<AuthStore>((set) => ({
             localStorage.setItem('expires_at', tokens.expiresAt)
         }
 
-        const normalized = user !== undefined && user !== null ? normalizeAuthUser(user) : null
+        const normalized =
+            user !== undefined && user !== null ? normalizeAuthUser(user) : null
         if (normalized) {
             localStorage.setItem('auth_user', JSON.stringify(normalized))
         }

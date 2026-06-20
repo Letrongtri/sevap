@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import { Eye, EyeOff, Lock, User, AlertCircle } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
+import { DomainInput } from '../ui/DomainInput'
 import type { LoginCredentials } from '../../types/auth'
 
 interface LoginFormProps {
@@ -16,6 +18,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     onSubmit,
 }) => {
     const [values, setValues] = useState<LoginCredentials>({
+        tenantDomain: '',
         employeeCode: '',
         password: '',
     })
@@ -26,6 +29,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
     const validate = (): boolean => {
         const errs: Partial<Record<keyof LoginCredentials, string>> = {}
+        if (!values.tenantDomain.trim())
+            errs.tenantDomain = 'Tenant domain is required.'
         if (!values.employeeCode.trim())
             errs.employeeCode = 'Employee code is required.'
         if (!values.password) errs.password = 'Password is required.'
@@ -45,7 +50,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         }
     }
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault()
         if (!validate()) return
         onSubmit(values)
@@ -89,14 +94,27 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                     </div>
                 )}
 
-                {/* Username */}
+                {/* Tenant domain */}
+                <DomainInput
+                    id="tenantDomain"
+                    name="tenantDomain"
+                    label="Tenant Domain"
+                    placeholder="company"
+                    value={values.tenantDomain}
+                    onChange={handleChange}
+                    errorText={fieldErrors.tenantDomain as string | undefined}
+                    disabled={isLoading}
+                    required
+                />
+
+                {/* Employee code */}
                 <Input
-                    id="username"
+                    id="employeeCode"
                     name="employeeCode"
                     type="text"
                     label="Employee Code"
                     placeholder="Enter your employee code"
-                    autoComplete="username"
+                    autoComplete="employeeCode"
                     value={values.employeeCode}
                     onChange={handleChange}
                     leftIcon={<User className="w-4 h-4" />}
@@ -156,6 +174,19 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                 >
                     Sign in to Platform
                 </Button>
+
+                {/* Link to Registration */}
+                <div className="text-center pt-2">
+                    <p className="text-sm text-text-muted">
+                        Don't have an organization?{' '}
+                        <Link
+                            to="/register"
+                            className="font-semibold text-primary hover:text-primary-hover transition-colors duration-150"
+                        >
+                            Register now
+                        </Link>
+                    </p>
+                </div>
             </form>
         </div>
     )

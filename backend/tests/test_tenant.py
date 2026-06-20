@@ -1,3 +1,4 @@
+from app.utils.auth import verify_token
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -81,7 +82,7 @@ async def test_update_tenant_success(async_client: AsyncClient, db_session: Asyn
         "company_address": "New Headquarter Address"
     }
     
-    response = await async_client.put(f"/api/v1/tenants/{tenant.id}", json=update_data, headers=headers)
+    response = await async_client.put("/api/v1/tenants", json=update_data, headers=headers)
     assert response.status_code == 200
     
     data = response.json()
@@ -89,49 +90,53 @@ async def test_update_tenant_success(async_client: AsyncClient, db_session: Asyn
     assert data["company_address"] == "New Headquarter Address"
 
 @pytest.mark.asyncio
-async def test_update_tenant_not_found(async_client: AsyncClient, db_session: AsyncSession, admin_headers):
-    headers = await admin_headers()
-    update_data = {
-        "company_name": "Does Not Matter"
-    }
-    # Nonexistent UUID string
-    nonexistent_id = "00000000-0000-0000-0000-000000000000"
-    response = await async_client.put(f"/api/v1/tenants/{nonexistent_id}", json=update_data, headers=headers)
-    assert response.status_code == 404
-
-@pytest.mark.asyncio
 async def test_update_tenant_unauthorized(async_client: AsyncClient, db_session: AsyncSession):
     update_data = {
         "company_name": "Unauthorized Update"
     }
-    response = await async_client.put("/api/v1/tenants/some-id", json=update_data)
+    response = await async_client.put("/api/v1/tenants", json=update_data)
     assert response.status_code == 401
 
 @pytest.mark.asyncio
-async def test_soft_delete_tenant_success(async_client: AsyncClient, db_session: AsyncSession, admin_headers):
-    # Register a new tenant to delete so we don't delete the default tenant
-    tenant = Tenants(
-        company_name="Delete Me Co",
-        company_description="To be deleted",
-        company_email="delete@me.local",
-        company_phone="0000000000",
-        company_address="Delete St",
-        tenant_domain="deleteme.local",
-        status=TenantStatus.ACTIVE.value
-    )
-    db_session.add(tenant)
-    await db_session.commit()
-    
+async def test_soft_delete_tenant_success(
+    async_client: AsyncClient,
+    db_session,
+    admin_headers
+):
     headers = await admin_headers()
-    response = await async_client.delete(f"/api/v1/tenants/{tenant.id}", headers=headers)
+
+    # Lấy tenant_id từ token đang dùng
+    token = headers["Authorization"].split(" ")[1]
+    payload = verify_token(token)
+    tenant_id = payload["tenant_id"]
+
+    # Đảm bảo tenant đang active trước khi delete
+    result = await db_session.execute(
+        select(Tenants).where(Tenants.id == tenant_id)
+    )
+    tenant = result.scalar_one()
+
+    tenant.status = TenantStatus.ACTIVE.value
+    await db_session.commit()
+
+    # Call API
+    response = await async_client.delete(
+        "/api/v1/tenants",
+        headers=headers
+    )
+
     assert response.status_code == 200
-    assert response.json()["status"] == TenantStatus.DELETED.value
-    
-    # Verify in DB
+
+    body = response.json()
+    assert body["id"] == tenant_id
+    assert body["status"] == TenantStatus.DELETED.value
+
+    # Verify DB
     await db_session.refresh(tenant)
+
     assert tenant.status == TenantStatus.DELETED.value
 
 @pytest.mark.asyncio
 async def test_delete_tenant_unauthorized(async_client: AsyncClient, db_session: AsyncSession):
-    response = await async_client.delete("/api/v1/tenants/some-id")
+    response = await async_client.delete("/api/v1/tenants")
     assert response.status_code == 401

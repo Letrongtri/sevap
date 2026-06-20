@@ -17,6 +17,7 @@ function lazyPage(importFn: () => Promise<{ default: React.ComponentType }>) {
 
 // Public
 const LoginPage = lazyPage(() => import('../pages/LoginPage'))
+const RegisterPage = lazyPage(() => import('../pages/RegisterPage'))
 
 // Private
 const HomePage = lazyPage(() => import('../pages/HomePage'))
@@ -33,6 +34,12 @@ const loginRoute = createRoute({
     getParentRoute: () => publicLayoutRoute,
     path: PUBLIC_ROUTES.LOGIN,
     component: LoginPage,
+})
+
+const registerRoute = createRoute({
+    getParentRoute: () => publicLayoutRoute,
+    path: PUBLIC_ROUTES.REGISTER,
+    component: RegisterPage,
 })
 
 /* ============================================================
@@ -80,7 +87,7 @@ const accountsRoute = createRoute({
    ============================================================ */
 
 const routeTree = rootRoute.addChildren([
-    publicLayoutRoute.addChildren([loginRoute]),
+    publicLayoutRoute.addChildren([loginRoute, registerRoute]),
     privateLayoutRoute.addChildren([
         homeRoute,
         chatRoute,

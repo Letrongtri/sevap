@@ -40,6 +40,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             id,
             className = '',
             disabled,
+            required,
             ...rest
         },
         ref
@@ -57,6 +58,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
                         className="block text-sm font-semibold text-text-secondary mb-1.5"
                     >
                         {label}
+                        {required && <span className="text-error ml-1">*</span>}
                     </label>
                 )}
 

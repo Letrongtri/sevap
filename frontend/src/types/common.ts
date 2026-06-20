@@ -2,7 +2,7 @@
    Common / shared TypeScript types
    ============================================================ */
 
-export type ID = number
+export type ID = string
 
 export type Nullable<T> = T | null
 

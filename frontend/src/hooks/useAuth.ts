@@ -22,7 +22,12 @@ export function useAuth() {
         setError(null)
 
         try {
+            const tenantDomain = credentials.tenantDomain.trim().endsWith('.hrnexus.com')
+                ? credentials.tenantDomain.trim()
+                : `${credentials.tenantDomain.trim()}.hrnexus.com`
+
             const formData = new FormData()
+            formData.append('tenant_domain', tenantDomain)
             formData.append('employee_code', credentials.employeeCode)
             formData.append('password', credentials.password)
             const response = await axiosClient.post('/auth/login', formData)

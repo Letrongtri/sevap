@@ -5,6 +5,7 @@ import type { Timestamp, ID } from './common'
    ============================================================ */
 
 export interface LoginCredentials {
+    tenantDomain: string
     employeeCode: string
     password: string
 }
@@ -16,6 +17,9 @@ export interface AuthUser {
     roles: string[]
     department?: string
     jobTitle?: string
+    tenantId?: ID
+    tenantDomain?: string
+    companyName?: string
     lastLogin?: Timestamp
 }
 

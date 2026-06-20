@@ -2,6 +2,7 @@
 export const PUBLIC_ROUTES = {
     LOGIN: '/login',
     REFRESH: '/refresh',
+    REGISTER: '/register',
 } as const
 
 // Private route paths (auth required)
