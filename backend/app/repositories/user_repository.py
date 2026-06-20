@@ -10,11 +10,12 @@ class UserRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_user_by_employee_code(self, tenant_id: str, employee_code: str, 
-                                        get_user_roles: bool = False, 
-                                        get_user_department: bool = False, 
-                                        get_user_job_title: bool = False,
-                                        get_user_tenant: bool = False
+    async def get_user_by_employee_code(
+        self, tenant_id: str, employee_code: str, 
+        get_user_roles: bool = False, 
+        get_user_department: bool = False, 
+        get_user_job_title: bool = False,
+        get_user_tenant: bool = False
     ):
         stmt = select(User).where(
             User.tenant_id == tenant_id, 
@@ -23,7 +24,12 @@ class UserRepository:
         )
 
         if get_user_roles:
-            stmt = stmt.options(selectinload(User.role_associations).selectinload(UserRole.role))
+            stmt = (
+                stmt.options(
+                    selectinload(User.role_associations)
+                    .selectinload(UserRole.role)
+                )
+            )
         if get_user_department:
             stmt = stmt.options(selectinload(User.department))
         if get_user_job_title:
@@ -34,16 +40,26 @@ class UserRepository:
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
     
-    async def get_user_by_email(self, email: str, 
-                                        get_user_roles: bool = False, 
-                                        get_user_department: bool = False, 
-                                        get_user_job_title: bool = False,
-                                        get_user_tenant: bool = False
+    async def get_user_by_email(
+        self, tenant_id: str, email: str, 
+        get_user_roles: bool = False, 
+        get_user_department: bool = False, 
+        get_user_job_title: bool = False,
+        get_user_tenant: bool = False
     ):
-        stmt = select(User).where(User.email == email, User.is_deleted == False)
+        stmt = select(User).where(
+            User.tenant_id == tenant_id, 
+            User.email == email, 
+            User.is_deleted == False
+        )
 
         if get_user_roles:
-            stmt = stmt.options(selectinload(User.role_associations).selectinload(UserRole.role))
+            stmt = (
+                stmt.options(
+                    selectinload(User.role_associations)
+                    .selectinload(UserRole.role)
+                )
+            )
         if get_user_department:
             stmt = stmt.options(selectinload(User.department))
         if get_user_job_title:
@@ -55,16 +71,23 @@ class UserRepository:
         return result.scalar_one_or_none()
     
 
-    async def get_user_by_id(self, user_id: int, 
-                             get_user_roles: bool = False,
-                             get_user_department: bool = False,
-                             get_user_job_title: bool = False,
-                             get_user_tenant: bool = False
+    async def get_user_by_id(
+        self, user_id: str, 
+        get_user_roles: bool = False,
+        get_user_department: bool = False,
+        get_user_job_title: bool = False,
+        get_user_tenant: bool = False
     ):
-        stmt = select(User).where(User.id == user_id, User.is_deleted == False)
+        stmt = select(User).where(
+            User.id == user_id,
+            User.is_deleted == False
+        )
 
         if get_user_roles:
-            stmt = stmt.options(selectinload(User.role_associations).selectinload(UserRole.role))
+            stmt = stmt.options(
+                selectinload(User.role_associations)
+                .selectinload(UserRole.role)
+            )
         if get_user_department:
             stmt = stmt.options(selectinload(User.department))
         if get_user_job_title:
@@ -77,11 +100,15 @@ class UserRepository:
 
     
     async def get_all_users(
-        self, query: str | None = None, department_id: int | None = None, 
-        role_id: int | None = None, job_title_id: int | None = None, 
-        status: str | None = None, skip: int = 0, limit: int = 10
+        self, tenant_id: str, query: str | None = None, 
+        department_id: str | None = None, role_id: str | None = None, 
+        job_title_id: str | None = None, status: str | None = None, 
+        skip: int = 0, limit: int = 10
     ) -> tuple[list[User], int]:
-        stmt = select(User).where(User.is_deleted == False)
+        stmt = select(User).where(
+            User.tenant_id == tenant_id,
+            User.is_deleted == False
+        )
 
         if query is not None:
             stmt = stmt.filter(
@@ -104,7 +131,10 @@ class UserRepository:
                 raise ValueError("Invalid status")
 
         if role_id is not None:
-            stmt = stmt.join(User.role_associations).where(UserRole.role_id == role_id)
+            stmt = (
+                stmt.join(User.role_associations)
+                .where(UserRole.role_id == role_id)
+            )
 
         count_stmt = select(func.count()).select_from(stmt.subquery())
         total_records = await self.db.scalar(count_stmt)
@@ -125,9 +155,14 @@ class UserRepository:
         return list(users), total_records
 
     async def get_user_options(
-        self, query: str | None = None, skip: int = 0, limit: int = 10
+        self, tenant_id: str, query: str | None = None, 
+        skip: int = 0, limit: int = 10
     ) -> tuple[list[User], int]:
-        stmt = select(User).where(User.is_deleted == False, User.is_active == True)
+        stmt = select(User).where(
+            User.tenant_id == tenant_id, 
+            User.is_deleted == False, 
+            User.is_active == True
+        )
 
         if query is not None and query.strip() != '':
             stmt = stmt.filter(
@@ -148,7 +183,7 @@ class UserRepository:
 
         return list(users), total_records
     
-    async def create_user(self, user: User, role_ids: list[int] | None = None):
+    async def create_user(self, user: User, role_ids: list[str] | None = None):
         try:
             self.db.add(user)
             await self.db.flush()
@@ -156,7 +191,9 @@ class UserRepository:
             if role_ids:
                 user_roles = []
                 for role_id in role_ids:
-                    user_roles.append(UserRole(user_id=user.id, role_id=role_id))
+                    user_roles.append(
+                        UserRole(user_id=user.id, role_id=role_id, assigned_by=user.id)
+                    )
                 self.db.add_all(user_roles)
             
             await self.db.commit()
@@ -177,12 +214,15 @@ class UserRepository:
             await self.db.rollback()
             raise e
 
-    async def update_user_roles(self, user_id: int, role_ids: list[int]):
+    async def update_user_roles(self, user_id: str, role_ids: list[str]):
         await self.db.execute(
             delete(UserRole).where(UserRole.user_id == user_id)
         )
         if role_ids:
-            user_roles = [UserRole(user_id=user_id, role_id=role_id) for role_id in role_ids]
+            user_roles = [
+                UserRole(user_id=user_id, role_id=role_id, assigned_by=user_id) 
+                for role_id in role_ids
+            ]
             self.db.add_all(user_roles)
 
     async def save(self, user: User):
@@ -201,6 +241,7 @@ class UserRepository:
             user.is_deleted = True
             user.is_active = False
             await self.db.commit()
+            await self.db.refresh(user)
         except Exception as e:
             await self.db.rollback()
             raise e

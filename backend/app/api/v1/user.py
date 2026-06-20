@@ -31,10 +31,12 @@ async def get_user_options(
 ):
     """ Get lightweight search options for users. """
     try:
-        return await user_service.get_user_options(query, pagination)
+        tenant_id = request.state.tenant_id
+        return await user_service.get_user_options(tenant_id, query, pagination)
     except Exception as exc:
         logger.error(
             "get_user_options_failed",
+            tenant_id=tenant_id,  
             query=query, 
             pagination=pagination, 
             exc_info=True
@@ -60,10 +62,12 @@ async def get_all_users(
         UserPaginatedResponse: User information
     """
     try:
-        return await user_service.get_all_users(query, pagination)
+        tenant_id = request.state.tenant_id
+        return await user_service.get_all_users(tenant_id, query, pagination)
     except Exception as exc:
         logger.error(
             "get_all_users_failed",
+            tenant_id=tenant_id,  
             query=query, 
             pagination=pagination, 
             exc_info=True
@@ -78,13 +82,15 @@ async def create_user(
     user_service: UserService = Depends(get_user_service),
 ):
     try:
-        return await user_service.create_user(data)
+        tenant_id = request.state.tenant_id
+        return await user_service.create_user(tenant_id, data)
     except UserAlreadyExistsError:
         logger.error("user_already_exists", employee_code=data.employee_code)
         raise HTTPException(status_code=409, detail="User already exists")
     except Exception:
         logger.error(
-            "create_user_failed", 
+            "create_user_failed",
+            tenant_id=tenant_id,  
             employee_code=data.employee_code, 
             full_name=data.full_name, 
             exc_info=True
@@ -95,7 +101,7 @@ async def create_user(
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_user(
     request: Request, 
-    user_id: int,
+    user_id: str,
     user_service: UserService = Depends(get_user_service),
 ):
     """ Get a user.
@@ -108,7 +114,8 @@ async def get_user(
         UserResponse: User information
     """
     try:
-        return await user_service.get_user_by_id(user_id)
+        tenant_id = request.state.tenant_id
+        return await user_service.get_user_by_id(tenant_id, user_id)
     except NotFoundError:
         logger.error("user_not_found", user_id=user_id)
         raise HTTPException(status_code=404, detail="User not found")
@@ -124,12 +131,13 @@ async def get_user(
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def update_user(
     request: Request,
-    user_id: int, 
+    user_id: str, 
     data: UserUpdate,
     user_service: UserService = Depends(get_user_service),
 ):
     try:
-        return await user_service.update_user(user_id=user_id, data=data)
+        tenant_id = request.state.tenant_id
+        return await user_service.update_user(tenant_id, user_id, data)
     except NotFoundError:
         logger.error("update_user_not_found", user_id=user_id)
         raise HTTPException(status_code=404, detail="User not found")
@@ -148,7 +156,7 @@ async def update_user(
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def delete_user(
     request: Request,
-    user_id: int,
+    user_id: str,
     user_service: UserService = Depends(get_user_service),
 ):
     """Delete a user.
@@ -161,7 +169,8 @@ async def delete_user(
         UserResponse: User information
     """
     try:
-        return await user_service.delete_user(user_id=user_id)
+        tenant_id = request.state.tenant_id
+        return await user_service.delete_user(tenant_id, user_id)
     except NotFoundError:
         logger.error("delete_user_not_found", user_id=user_id)
         raise HTTPException(status_code=404, detail="User not found")
@@ -177,7 +186,7 @@ async def delete_user(
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def activate_user(
     request: Request,
-    user_id: int,
+    user_id: str,
     user_service: UserService = Depends(get_user_service),
 ):
     """Activate user account.
@@ -190,7 +199,8 @@ async def activate_user(
         UserResponse: User information
     """
     try:
-        return await user_service.toggle_user_status(user_id=user_id, active=True)
+        tenant_id = request.state.tenant_id
+        return await user_service.toggle_user_status(tenant_id, user_id, True)
     except NotFoundError:
         logger.error("activate_user_not_found", user_id=user_id)
         raise HTTPException(status_code=404, detail="User not found")
@@ -206,7 +216,7 @@ async def activate_user(
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def deactivate_user(
     request: Request,
-    user_id: int,
+    user_id: str,
     user_service: UserService = Depends(get_user_service),
 ):
     """Deactivate user account.
@@ -219,7 +229,8 @@ async def deactivate_user(
         UserResponse: User information
     """
     try:
-        return await user_service.toggle_user_status(user_id=user_id, active=False)
+        tenant_id = request.state.tenant_id
+        return await user_service.toggle_user_status(tenant_id, user_id, False)
     except NotFoundError:
         logger.error("deactivate_user_not_found", user_id=user_id)
         raise HTTPException(status_code=404, detail="User not found")
@@ -235,7 +246,7 @@ async def deactivate_user(
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def reset_user_password(
     request: Request,
-    user_id: int,
+    user_id: str,
     user_service: UserService = Depends(get_user_service),
 ):
     """Activate user account.
@@ -248,7 +259,8 @@ async def reset_user_password(
         UserResponse: User information
     """
     try:
-        return await user_service.reset_user_password(user_id)
+        tenant_id = request.state.tenant_id
+        return await user_service.reset_user_password(tenant_id, user_id)
     except NotFoundError:
         logger.error("reset_password_user_not_found", user_id=user_id)
         raise HTTPException(status_code=404, detail="User not found")
@@ -264,7 +276,7 @@ async def reset_user_password(
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def change_user_password(
     request: Request,
-    user_id: int, 
+    user_id: str, 
     data: UserUpdatePassword,
     user_service: UserService = Depends(get_user_service),
 ):
@@ -279,8 +291,9 @@ async def change_user_password(
         UserResponse: User information
     """
     try:
+        tenant_id = request.state.tenant_id
         return await user_service.change_user_password(
-            user_id=user_id,
+            tenant_id, user_id,
             old_password=data.old_password, 
             new_password=data.new_password, 
         )

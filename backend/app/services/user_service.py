@@ -20,14 +20,22 @@ class UserService:
     def __init__(self, repo: UserRepository):
         self.repo = repo
 
-    async def create_user(self, data: UserCreate) -> UserResponse:
-        existing = await self.repo.get_user_by_employee_code(data.employee_code)
-        if existing is not None:
+    async def create_user(self, tenant_id: str, data: UserCreate) -> UserResponse:
+        existing_by_employee_code = await self.repo.get_user_by_employee_code(
+            tenant_id=tenant_id,
+            employee_code=data.employee_code
+        )
+        existing_by_email = await self.repo.get_user_by_email(
+            tenant_id=tenant_id,
+            email=data.email
+        )
+        if existing_by_employee_code is not None or existing_by_email is not None:
             raise UserAlreadyExistsError()
         
         hashed_password = hash_password(data.password)
         
         db_user = User(
+            tenant_id=tenant_id,
             employee_code=data.employee_code, 
             full_name=data.full_name, 
             email=data.email, 
@@ -49,6 +57,7 @@ class UserService:
             employee_code=user.employee_code,
             full_name=user.full_name,
             email=user.email,
+            tenant_id=user.tenant_id,
             is_active=user.is_active,
             is_deleted=user.is_deleted,
             last_login=user.last_login,
@@ -63,14 +72,14 @@ class UserService:
 
         return user_resp
     
-    async def get_user_by_id(self, user_id: int) -> UserResponse:
+    async def get_user_by_id(self, tenant_id: str, user_id: str) -> UserResponse:
         user = await self.repo.get_user_by_id(
             user_id,
             get_user_roles=True,
             get_user_department=True,
             get_user_job_title=True
         )
-        if user is None:
+        if user is None or user.tenant_id != tenant_id:
             raise NotFoundError()
         
         roles = []
@@ -83,6 +92,7 @@ class UserService:
             employee_code=user.employee_code,
             full_name=user.full_name,
             email=user.email,
+            tenant_id=user.tenant_id,
             is_active=user.is_active,
             is_deleted=user.is_deleted,
             last_login=user.last_login,
@@ -98,12 +108,16 @@ class UserService:
         return user_resp
 
     
-    async def get_all_users(self, query: UserQuery, 
+    async def get_all_users(
+        self, 
+        tenant_id: str,
+        query: UserQuery, 
         pagination: PaginationQuery
     ) -> UserPaginatedResponse:
         skip = (pagination.page - 1) * pagination.limit
 
         users_data, total_records = await self.repo.get_all_users(
+            tenant_id=tenant_id,
             query=query.query,
             job_title_id=query.job_title_id,
             department_id=query.department_id,
@@ -114,7 +128,10 @@ class UserService:
         )
 
         # 3. Tính toán tổng số trang
-        total_pages = math.ceil(total_records / pagination.limit) if total_records > 0 else 0
+        total_pages = (
+            math.ceil(total_records / pagination.limit) 
+            if total_records > 0 else 0
+        )
 
         # 4. Mapping dữ liệu từ SQLAlchemy Model sang Pydantic Schema
         user_responses = []
@@ -123,7 +140,9 @@ class UserService:
             roles = []
             if user.role_associations and len(user.role_associations) > 0:
                 for role_association in user.role_associations:
-                    roles.append(RoleSimple.model_validate(role_association.role))
+                    roles.append(
+                        RoleSimple.model_validate(role_association.role)
+                    )
 
             # Tạo object UserResponse
             user_resp = UserResponse(
@@ -131,6 +150,7 @@ class UserService:
                 employee_code=user.employee_code,
                 full_name=user.full_name,
                 email=user.email,
+                tenant_id=user.tenant_id,
                 is_active=user.is_active,
                 is_deleted=user.is_deleted,
                 last_login=user.last_login,
@@ -155,16 +175,23 @@ class UserService:
             )
         )
 
-    async def get_user_options(self, query: str | None, pagination: PaginationQuery) -> UserSimplePaginatedResponse:
+    async def get_user_options(
+        self, tenant_id: str, query: str | None, 
+        pagination: PaginationQuery
+    ) -> UserSimplePaginatedResponse:
         skip = (pagination.page - 1) * pagination.limit
 
         users_data, total_records = await self.repo.get_user_options(
+            tenant_id=tenant_id,
             query=query,
             skip=skip,
             limit=pagination.limit
         )
 
-        total_pages = math.ceil(total_records / pagination.limit) if total_records > 0 else 0
+        total_pages = (
+            math.ceil(total_records / pagination.limit) 
+            if total_records > 0 else 0
+        )
 
         user_responses = [
             UserSimple.model_validate(user) for user in users_data
@@ -180,16 +207,20 @@ class UserService:
             )
         )
 
-    async def update_user(self, user_id: int, data: UserUpdate) -> UserResponse:
+    async def update_user(
+        self, tenant_id: str, user_id: str, data: UserUpdate
+    ) -> UserResponse:
         existing = await self.repo.get_user_by_id(user_id)
-        if existing is None:
+        if existing is None or existing.tenant_id != tenant_id:
             raise NotFoundError()
         
         if data.full_name is not None:
             existing.full_name = data.full_name
         if data.email is not None:
             if existing.email != data.email:
-                existing_by_email = await self.repo.get_user_by_email(data.email)
+                existing_by_email = await self.repo.get_user_by_email(
+                    tenant_id=tenant_id, email=data.email
+                )
                 if existing_by_email is not None:
                     raise UserAlreadyExistsError()
             existing.email = data.email
@@ -223,6 +254,7 @@ class UserService:
             employee_code=updated_user.employee_code,
             full_name=updated_user.full_name,
             email=updated_user.email,
+            tenant_id=updated_user.tenant_id,
             is_active=updated_user.is_active,
             is_deleted=updated_user.is_deleted,
             last_login=updated_user.last_login,
@@ -237,9 +269,11 @@ class UserService:
 
         return user_resp
 
-    async def toggle_user_status(self, user_id: int, active: bool) -> UserResponse:
+    async def toggle_user_status(
+        self, tenant_id: str, user_id: str, active: bool
+    ) -> UserResponse:
         existing = await self.repo.get_user_by_id(user_id)
-        if existing is None:
+        if existing is None or existing.tenant_id != tenant_id:
             raise NotFoundError()
         
         existing.is_active = active
@@ -264,6 +298,7 @@ class UserService:
             employee_code=updated_user.employee_code,
             full_name=updated_user.full_name,
             email=updated_user.email,
+            tenant_id=updated_user.tenant_id,
             is_active=updated_user.is_active,
             is_deleted=updated_user.is_deleted,
             last_login=updated_user.last_login,
@@ -278,16 +313,19 @@ class UserService:
 
         return user_resp
     
-    async def delete_user(self, user_id: int) -> UserResponse:
+    async def delete_user(self, tenant_id: str, user_id: str) -> UserResponse:
         existing = await self.repo.get_user_by_id(user_id)
-        if existing is None:
+        if existing is None or existing.tenant_id != tenant_id:
             raise NotFoundError()
+        
+        await self.repo.delete_user(existing)
         
         user_resp = UserResponse(
             id=existing.id,
             employee_code=existing.employee_code,
             full_name=existing.full_name,
             email=existing.email,
+            tenant_id=existing.tenant_id,
             is_active=existing.is_active,
             is_deleted=existing.is_deleted,
             last_login=existing.last_login,
@@ -299,13 +337,13 @@ class UserService:
             department=None,
             roles=None
         )
-        
-        await self.repo.delete_user(existing)
         return user_resp
 
-    async def reset_user_password(self, user_id: int) -> UserResponse:
+    async def reset_user_password(
+        self, tenant_id: str, user_id: str
+    ) -> UserResponse:
         existing = await self.repo.get_user_by_id(user_id)
-        if existing is None:
+        if existing is None or existing.tenant_id != tenant_id:
             raise NotFoundError()
         
         default_password = settings.DEFAULT_USER_PASSWORD
@@ -330,6 +368,7 @@ class UserService:
             employee_code=user.employee_code,
             full_name=user.full_name,
             email=user.email,
+            tenant_id=user.tenant_id,
             is_active=user.is_active,
             is_deleted=user.is_deleted,
             last_login=user.last_login,
@@ -343,9 +382,12 @@ class UserService:
         )
         return user_resp
     
-    async def change_user_password(self, user_id: int, old_password: str, new_password: str) -> UserResponse:
+    async def change_user_password(
+        self, tenant_id: str, user_id: str, 
+        old_password: str, new_password: str
+    ) -> UserResponse:
         existing = await self.repo.get_user_by_id(user_id)
-        if existing is None:
+        if existing is None or existing.tenant_id != tenant_id:
             raise NotFoundError()
         
         if not verify_password(old_password, existing.password):
@@ -372,6 +414,7 @@ class UserService:
             employee_code=user.employee_code,
             full_name=user.full_name,
             email=user.email,
+            tenant_id=user.tenant_id,
             is_active=user.is_active,
             is_deleted=user.is_deleted,
             last_login=user.last_login,
