@@ -14,6 +14,7 @@ import Input from '../ui/Input'
 import Button from '../ui/Button'
 import { formatBytes } from '../../../utils/formater'
 import type { Document } from '../../types/document'
+import type { ID } from '../../types/common'
 
 interface DocumentDetailFormProps {
     document?: Document
@@ -47,9 +48,9 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
     const [category, setCategory] = useState('')
     const [effectiveDate, setEffectiveDate] = useState<string | null>(null)
     const [accessLevel, setAccessLevel] = useState('public')
-    const [departmentIds, setDepartmentIds] = useState<number[]>([])
-    const [roleAccess, setRoleAccess] = useState<number[]>([])
-    const [targetUserIds, setTargetUserIds] = useState<number[]>([])
+    const [departmentIds, setDepartmentIds] = useState<ID[]>([])
+    const [roleAccess, setRoleAccess] = useState<ID[]>([])
+    const [targetUserIds, setTargetUserIds] = useState<ID[]>([])
 
     const formRef = useRef<HTMLFormElement>(null)
 
@@ -115,8 +116,6 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
         }
     }, [document, isEditing, isAddingDocument])
 
-
-
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
             const file = e.target.files[0]
@@ -164,7 +163,8 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
                     category: category.trim() || null,
                     effective_date: effectiveDate,
                     access_level: accessLevel,
-                    department_ids: departmentIds.length > 0 ? departmentIds : null,
+                    department_ids:
+                        departmentIds.length > 0 ? departmentIds : null,
                     role_access: roleAccess.length > 0 ? roleAccess : null,
                     target_user_ids:
                         targetUserIds.length > 0 ? targetUserIds : null,
@@ -187,7 +187,7 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
         } else if (isEditing && document) {
             updateMutation.mutate(
                 {
-                    id: Number(document.id),
+                    id: document.id,
                     payload: {
                         title: title.trim() || null,
                         category: category.trim() || null,

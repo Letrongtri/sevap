@@ -48,7 +48,7 @@ const DocumentDetail = () => {
         setFormError(null)
         downloadMutation.mutate(
             {
-                id: Number(document.id),
+                id: document.id,
                 fileName:
                     document.file_name?.substring(
                         document.file_name.indexOf('_') + 1
@@ -70,7 +70,7 @@ const DocumentDetail = () => {
         setFormError(null)
         setFormSuccess(null)
 
-        deleteMutation.mutate(Number(document.id), {
+        deleteMutation.mutate(document.id, {
             onSuccess: () => {
                 setFormSuccess('Document deleted successfully.')
                 handleCloseCard()

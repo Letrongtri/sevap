@@ -4,6 +4,7 @@ import { useConversations } from '../../hooks/useConversations'
 import { useDeleteConversation } from '../../hooks/useDeleteConversation'
 import { useNavigate } from '@tanstack/react-router'
 import Tooltip from '../ui/Tooltip'
+import type { ID } from '../../types/common'
 
 const ChatHistory = ({ collapsed }: { collapsed: boolean }) => {
     const { activeChatId, setActiveChat, searchKeyword, setSearchKeyword } =
@@ -14,7 +15,7 @@ const ChatHistory = ({ collapsed }: { collapsed: boolean }) => {
     const { mutate: deleteConv } = useDeleteConversation()
     const navigate = useNavigate()
 
-    const handleSelectChat = (id: number) => {
+    const handleSelectChat = (id: ID) => {
         setActiveChat(id)
         navigate({
             to: '/chat/$conversationId',

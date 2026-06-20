@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { DocumentStore } from '../types/document'
-import type { Timestamp } from '../types/common'
+import type { AccessLevel, ID, Timestamp } from '../types/common'
 
 export const useDocumentStore = create<DocumentStore>((set) => ({
     // ── State ──────────────────────────────────────────────────────────
@@ -21,26 +21,26 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
         set({ isAddingDocument }),
 
     /** Chọn document để xem */
-    setActiveDocumentId: (id: number | null) => set({ activeDocumentId: id }),
+    setActiveDocumentId: (id: ID | null) => set({ activeDocumentId: id }),
 
     /** Set query search */
     setQuery: (query: string | null) => set({ query: query }),
 
     /** Set department ID */
-    setDepartmentId: (departmentId: number | null) => set({ departmentId }),
+    setDepartmentId: (departmentId: ID | null) => set({ departmentId }),
 
     /** Set access level */
-    setAccessLevel: (accessLevel: string | null) => set({ accessLevel }),
+    setAccessLevel: (accessLevel: AccessLevel | null) => set({ accessLevel }),
 
     /** Set effective date */
     setEffectiveDate: (effectiveDate: Timestamp | null) =>
         set({ effectiveDate }),
 
     /** Set role access */
-    setRoleAccess: (roleAccess: number | null) => set({ roleAccess }),
+    setRoleAccess: (roleAccess: ID | null) => set({ roleAccess }),
 
     /** Set target user IDs */
-    setTargetUserId: (targetUserId: number | null) => set({ targetUserId }),
+    setTargetUserId: (targetUserId: ID | null) => set({ targetUserId }),
 
     setPage: (page: number | null) => set({ page }),
 

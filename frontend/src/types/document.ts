@@ -29,22 +29,22 @@ export interface Document {
 export interface DocumentUploadPayload {
     file: File
     access_level: string
-    department_ids?: number[] | null
+    department_ids?: ID[] | null
     title?: string | null
     category?: string | null
     effective_date?: Timestamp | null
-    role_access?: number[] | null
-    target_user_ids?: number[] | null
+    role_access?: ID[] | null
+    target_user_ids?: ID[] | null
 }
 
 export interface DocumentUpdatePayload {
     access_level?: string | null
-    department_ids?: number[] | null
+    department_ids?: ID[] | null
     title?: string | null
     category?: string | null
     effective_date?: Timestamp | null
-    role_access?: number[] | null
-    target_user_ids?: number[] | null
+    role_access?: ID[] | null
+    target_user_ids?: ID[] | null
 }
 
 export interface DocumentPaginatedResponse {
@@ -54,37 +54,37 @@ export interface DocumentPaginatedResponse {
 
 export interface DocumentQuery {
     query?: string | null
-    department_id?: number | null
+    department_id?: ID | null
     access_level?: string | null
     effective_date?: Timestamp | null
-    role_id?: number | null
-    user_id?: number | null
+    role_id?: ID | null
+    user_id?: ID | null
     page?: number | null
     limit?: number
 }
 
 export interface DocumentState {
     isAddingDocument: boolean
-    activeDocumentId: number | null
+    activeDocumentId: ID | null
     query?: string | null
-    departmentId?: number | null
+    departmentId?: ID | null
     accessLevel?: AccessLevel | null
     effectiveDate?: Timestamp | null
-    roleAccess?: number | null
-    targetUserId?: number | null
+    roleAccess?: ID | null
+    targetUserId?: ID | null
     page?: number | null
     limit?: number
 }
 
 export interface DocumentClientActions {
     setIsAddingDocument: (isAddingDocument: boolean) => void
-    setActiveDocumentId: (id: number | null) => void
+    setActiveDocumentId: (id: ID | null) => void
     setQuery: (query: string | null) => void
-    setDepartmentId: (id: number | null) => void
+    setDepartmentId: (id: ID | null) => void
     setAccessLevel: (accessLevel: AccessLevel | null) => void
     setEffectiveDate: (effectiveDate: Timestamp | null) => void
-    setRoleAccess: (roleAccess: number | null) => void
-    setTargetUserId: (targetUserId: number | null) => void
+    setRoleAccess: (roleAccess: ID | null) => void
+    setTargetUserId: (targetUserId: ID | null) => void
     setPage: (page: number | null) => void
     setLimit: (limit: number | null) => void
     clearActiveDocument: () => void

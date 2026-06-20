@@ -9,6 +9,7 @@ import {
     uploadDocument,
     downloadDocumentFile,
 } from '../api/document'
+import type { ID } from '../types/common'
 
 export const DOCUMENTS_QUERY_KEY = ['documents'] as const
 
@@ -65,7 +66,7 @@ export function useDocuments() {
 }
 
 /** Hook lấy thông tin tài liệu chi tiết theo ID */
-export function useDocument(id: number | null) {
+export function useDocument(id: ID | null) {
     return useQuery<Document, Error>({
         queryKey: [...DOCUMENTS_QUERY_KEY, id],
         queryFn: () => fetchDocumentById(id!),
@@ -79,7 +80,6 @@ export function useDocument(id: number | null) {
         },
     })
 }
-
 
 /** Hook tạo người dùng mới */
 export function useUploadDocument() {
@@ -98,7 +98,7 @@ export function useUpdateDocument() {
     return useMutation<
         Document,
         Error,
-        { id: number; payload: Parameters<typeof updateDocument>[1] }
+        { id: ID; payload: Parameters<typeof updateDocument>[1] }
     >({
         mutationFn: ({ id, payload }) => updateDocument(id, payload),
         onSuccess: () => {
@@ -110,7 +110,7 @@ export function useUpdateDocument() {
 /** Hook xoá document */
 export function useDeleteDocument() {
     const queryClient = useQueryClient()
-    return useMutation<Document, Error, number>({
+    return useMutation<Document, Error, ID>({
         mutationFn: deleteDocument,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: DOCUMENTS_QUERY_KEY })
@@ -120,7 +120,7 @@ export function useDeleteDocument() {
 
 /** Hook tải xuống file document */
 export function useDownloadDocument() {
-    return useMutation<void, Error, { id: number; fileName: string }>({
+    return useMutation<void, Error, { id: ID; fileName: string }>({
         mutationFn: ({ id, fileName }) => downloadDocumentFile(id, fileName),
     })
 }

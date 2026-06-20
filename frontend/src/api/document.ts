@@ -6,6 +6,7 @@ import type {
     DocumentQuery,
     DocumentUpdatePayload,
 } from '../types/document'
+import type { ID } from '../types/common'
 
 /** Lấy danh sách tất cả tài liệu */
 export const fetchDocuments = async (
@@ -27,7 +28,7 @@ export const fetchDocuments = async (
 }
 
 /** Lấy thông tin tài liệu theo ID */
-export const fetchDocumentById = async (id: number): Promise<Document> => {
+export const fetchDocumentById = async (id: ID): Promise<Document> => {
     const res = await axiosClient.get(`/documents/${id}`)
     return res.data
 }
@@ -73,7 +74,7 @@ export const uploadDocument = async (
 
 /** Cập nhật thông tin tài liệu */
 export const updateDocument = async (
-    id: number,
+    id: ID,
     payload: DocumentUpdatePayload
 ): Promise<Document> => {
     const res = await axiosClient.put(`/documents/${id}`, payload)
@@ -81,14 +82,14 @@ export const updateDocument = async (
 }
 
 /** Xoá tài liệu */
-export const deleteDocument = async (id: number): Promise<Document> => {
+export const deleteDocument = async (id: ID): Promise<Document> => {
     const res = await axiosClient.delete(`/documents/${id}`)
     return res.data
 }
 
 /** Tải xuống hoặc xem tài liệu (.docx) */
 export const downloadDocumentFile = async (
-    id: number,
+    id: ID,
     fileName: string
 ): Promise<void> => {
     const res = await axiosClient.get(`/documents/${id}/file`, {
