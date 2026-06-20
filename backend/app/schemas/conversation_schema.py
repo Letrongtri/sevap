@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
+from app.schemas.base_schema import PaginationResponse
 from app.schemas.message_schema import MessageResponse
 
 
@@ -24,3 +25,7 @@ class ConversationResponse(BaseModel):
 # Schema cho detail endpoint — bao gồm messages đã được eager-load
 class ConversationDetailResponse(ConversationResponse):
     messages: list[MessageResponse] = []
+
+class ConversationPaginatedResponse(BaseModel):
+    conversations: list[ConversationResponse]
+    pagination: PaginationResponse

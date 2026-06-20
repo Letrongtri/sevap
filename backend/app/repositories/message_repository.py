@@ -8,7 +8,7 @@ class MessageRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_message_by_id(self, message_id: int):
+    async def get_message_by_id(self, message_id: str):
         stmt = select(Message).where(Message.id == message_id)
 
         result = await self.db.execute(stmt)
@@ -24,10 +24,8 @@ class MessageRepository:
             raise e
     
     async def get_messages_by_conversation_id(
-        self, 
-        conversation_id: int, 
-        limit: int = 10, 
-        last_id: int | None = None
+        self, conversation_id: str, 
+        limit: int = 10, last_id: str | None = None
     ):
         stmt = (
             select(Message)
