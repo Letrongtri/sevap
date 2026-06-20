@@ -28,6 +28,7 @@ class RetrievalService:
         chunks = await self.repo.similarity_search(
             query_embedding=query_embedding,
             allowed_doc_ids=allowed_ids,   # boundary từ bước 1
+            tenant_id=par_context.tenant_id,
             top_k=top_k,
         )
 

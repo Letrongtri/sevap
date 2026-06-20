@@ -19,10 +19,10 @@ def mock_ai_brain():
          patch("app.ai_brain.router.intent_router.IntentRouter.route_stream", side_effect=mock_route_stream) as mock_route:
         mock_par.return_value = PARContext(
             user_id="dummy-user-id",
+            tenant_id="dummy-tenant-id",
             role_ids=[],
             role_access_level="public",
             department_ids=[],
-            managed_department_ids=[],
             is_admin=False
         )
         yield mock_par, mock_route

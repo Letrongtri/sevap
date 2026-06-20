@@ -15,7 +15,7 @@ class PARRepository:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
 
-    async def build_par_context(self, user_id: int) -> PARContext:
+    async def build_par_context(self, tenant_id: str, user_id: str) -> PARContext:
         """Xây dựng PAR Context từ user_id, truy vấn DB một lần."""
         
         # Lấy thông tin user
@@ -37,10 +37,10 @@ class PARRepository:
             # Fallback: chỉ đọc public
             return PARContext(
                 user_id=user_id, 
+                tenant_id=tenant_id,
                 role_ids=role_ids, 
                 role_access_level=highest_level,
                 department_ids=department_ids,
-                managed_department_ids=managed_department_ids,
                 is_admin=is_admin
             )
         
@@ -65,17 +65,17 @@ class PARRepository:
         
         return PARContext(
             user_id=user_id,
+            tenant_id=tenant_id,
             role_ids=role_ids,
             role_access_level=highest_level,
             department_ids=department_ids,
-            managed_department_ids=managed_department_ids,
             is_admin=is_admin
         )
 
     async def get_allowed_document_ids(
         self,
         ctx: PARContext,
-    ) -> Set[int]:
+    ) -> Set[str]:
         """
         Relational Filter.
         Trả về SET document_ids mà user được phép đọc.
@@ -85,10 +85,11 @@ class PARRepository:
         allowed_levels = ctx.allowed_access_levels()
         allowed_ids = set()
 
-        # Admin có quyền cao nhất, đọc toàn bộ tài liệu 
+        # Admin có quyền cao nhất, đọc toàn bộ tài liệu của tenant
         if ctx.is_admin:
             stmt_private_admin = select(Document.id).where(
                 and_(
+                    Document.tenant_id == ctx.tenant_id,
                     Document.is_deleted == False,
                     Document.status == DocumentStatus.DONE
                 )
@@ -100,6 +101,7 @@ class PARRepository:
         # NHÁNH 1: TÀI LIỆU PUBLIC (Ai hợp lệ cũng được đọc)
         stmt_public = select(Document.id).where(
             and_(
+                Document.tenant_id == ctx.tenant_id,
                 Document.is_deleted == False,
                 Document.status == DocumentStatus.DONE,
                 Document.access_level == AccessLevel.PUBLIC
@@ -113,6 +115,7 @@ class PARRepository:
         if AccessLevel.MANAGERIAL in allowed_levels:
             stmt_managerial = select(Document.id).where(
                 and_(
+                    Document.tenant_id == ctx.tenant_id,
                     Document.is_deleted == False,
                     Document.status == DocumentStatus.DONE,
                     Document.access_level == AccessLevel.MANAGERIAL
@@ -123,30 +126,24 @@ class PARRepository:
 
         # NHÁNH 3: TÀI LIỆU PRIVATE
         ## Điều kiện 1: Là người upload
-        private_conds = [
-            Document.uploader_id == ctx.user_id,
-        ] 
-        
-        ## Điều kiện 2: Là Quản lý của phòng ban sở hữu tài liệu đó
-        if ctx.managed_department_ids:
-            private_conds.append(Document.department_accesses.any(DocumentDepartmentAccess.department_id.in_(ctx.managed_department_ids)))
-            
         stmt_private_base = select(Document.id).where(
             and_(
+                Document.tenant_id == ctx.tenant_id,
                 Document.is_deleted == False,
                 Document.status == DocumentStatus.DONE,
                 Document.access_level == AccessLevel.PRIVATE,
-                or_(*private_conds)
+                or_(Document.uploader_id == ctx.user_id)
             )
         )
         res_private_base = await self.db.execute(stmt_private_base)
         allowed_ids.update({row[0] for row in res_private_base.fetchall()})
 
-        ## Điều kiện 3: Gán Explicit Quyền riêng cho User qua document_user_access
+        ## Điều kiện 2: Gán Explicit Quyền riêng cho User qua document_user_access
         stmt_private_user = select(DocumentUserAccess.document_id).join(
             Document, Document.id == DocumentUserAccess.document_id
         ).where(
             and_(
+                Document.tenant_id == ctx.tenant_id,
                 DocumentUserAccess.user_id == ctx.user_id,
                 Document.is_deleted == False,
                 Document.status == DocumentStatus.DONE,
@@ -156,12 +153,13 @@ class PARRepository:
         res_private_user = await self.db.execute(stmt_private_user)
         allowed_ids.update({row[0] for row in res_private_user.fetchall()})
 
-        ## Điều kiện 4: Gán Explicit Quyền riêng cho Role (Ví dụ: HR chuyên trách)
+        ## Điều kiện 3: Gán Explicit Quyền riêng cho Role (Ví dụ: HR chuyên trách)
         if ctx.role_ids:
             stmt_private_role = select(DocumentRoleAccess.document_id).join(
                 Document, Document.id == DocumentRoleAccess.document_id
             ).where(
                 and_(
+                    Document.tenant_id == ctx.tenant_id,
                     DocumentRoleAccess.role_id.in_(ctx.role_ids),
                     Document.is_deleted == False,
                     Document.status == DocumentStatus.DONE,
@@ -171,12 +169,29 @@ class PARRepository:
             res_private_role = await self.db.execute(stmt_private_role)
             allowed_ids.update({row[0] for row in res_private_role.fetchall()})
 
+        ## Điều kiện 4: Gán Explicit Quyền riêng cho Department (Ví dụ: Phòng Marketing)
+        if ctx.department_ids:
+            stmt_private_department = select(DocumentDepartmentAccess.document_id).join(
+                Document, Document.id == DocumentDepartmentAccess.document_id
+            ).where(
+                and_(
+                    Document.tenant_id == ctx.tenant_id,
+                    DocumentDepartmentAccess.department_id.in_(ctx.department_ids),
+                    Document.is_deleted == False,
+                    Document.status == DocumentStatus.DONE,
+                    Document.access_level == AccessLevel.PRIVATE
+                )
+            )
+            res_private_department = await self.db.execute(stmt_private_department)
+            allowed_ids.update({row[0] for row in res_private_department.fetchall()})
+
         return allowed_ids
     
     async def similarity_search(
         self,
         query_embedding: List[float],
-        allowed_doc_ids: Set[int],
+        allowed_doc_ids: Set[str],
+        tenant_id: str,
         top_k: int = 5,
     ) -> List[RetrievalResult]:
         """
@@ -202,7 +217,8 @@ class PARRepository:
             JOIN  document_chunks    dc ON dc.id = ve.document_chunk_id
             JOIN  documents          d  ON d.id  = dc.document_id
             WHERE
-                dc.document_id  = ANY(:doc_ids)     -- ← PAR boundary inject
+                d.tenant_id = :tenant_id
+                AND dc.document_id  = ANY(:doc_ids)     -- ← PAR boundary inject
                 AND dc.embedding_status = 'done'
                 AND d.is_deleted = FALSE
             ORDER BY
@@ -213,6 +229,7 @@ class PARRepository:
         result = await self.db.execute(sql, {
             "qvec":    vec_literal,
             "doc_ids": list(allowed_doc_ids),
+            "tenant_id": tenant_id,
             "top_k":   top_k,
         })
 

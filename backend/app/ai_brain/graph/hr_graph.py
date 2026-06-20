@@ -3,8 +3,8 @@ from typing import TypedDict, Optional
 
 class HRGraphState(TypedDict):
     query: str
-    user_id: int
-    role_ids: list[int]
+    user_id: str
+    role_ids: list[str]
     role_access_level: str
     agent_type: Optional[str]    # filled by router
     answer: Optional[str]

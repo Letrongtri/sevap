@@ -13,11 +13,11 @@ ACCESS_LEVEL_HIERARCHY = {
 
 @dataclass
 class PARContext:
-    user_id: int
-    role_ids: list[int]
+    user_id: str
+    tenant_id: str
     role_access_level: str   # level cao nhất trong các role của user
-    department_ids: list[int]
-    managed_department_ids: list[int]
+    department_ids: list[str]
+    role_ids: list[str]
     is_admin: bool = False
     
     def allowed_access_levels(self) -> list[str]:
@@ -29,8 +29,8 @@ class PARContext:
         ]
 
 class RetrievalResult(BaseModel):
-    chunk_id: int
-    document_id: int
+    chunk_id: str
+    document_id: str
     content: str
     score: float
     doc_title: str

@@ -101,7 +101,7 @@ class MessageService:
         }) + "\n\n"
 
         # ── 4. Build PAR context & stream from LLM ─────────────────────────
-        par_context = await self.par_repo.build_par_context(user_id)
+        par_context = await self.par_repo.build_par_context(tenant_id, user_id)
 
         full_answer = ""
         agent_type: str | None = None
