@@ -4,6 +4,7 @@ import { streamMessage } from '../api/chat'
 import { CONVERSATIONS_QUERY_KEY } from './useConversations'
 import { messagesQueryKey } from './useMessages'
 import type { StreamingState } from '../types/chat'
+import type { ID } from '../types/common'
 
 /**
  * useSendMessage — Hook để gửi tin nhắn và nhận câu trả lời dạng stream.
@@ -30,7 +31,7 @@ export function useSendMessage() {
     }, [])
 
     const sendMessage = useCallback(
-        async (content: string, conversationId?: number | null) => {
+        async (content: string, conversationId?: ID | null) => {
             // Cancel any previous in-flight stream
             abortRef.current?.abort()
             abortRef.current = new AbortController()
@@ -42,7 +43,7 @@ export function useSendMessage() {
                 streamingContent: '',
             })
 
-            let resolvedConversationId: number | null = conversationId ?? null
+            let resolvedConversationId: ID | null = conversationId ?? null
 
             try {
                 const gen = streamMessage({ content, conversationId })
@@ -68,7 +69,8 @@ export function useSendMessage() {
                         case 'token':
                             setStreamingState((prev) => ({
                                 ...prev,
-                                streamingContent: prev.streamingContent + event.token,
+                                streamingContent:
+                                    prev.streamingContent + event.token,
                             }))
                             break
 
@@ -76,7 +78,9 @@ export function useSendMessage() {
                             // Refresh messages list for the finished conversation
                             if (resolvedConversationId) {
                                 queryClient.invalidateQueries({
-                                    queryKey: messagesQueryKey(resolvedConversationId),
+                                    queryKey: messagesQueryKey(
+                                        resolvedConversationId
+                                    ),
                                 })
                             }
                             break
@@ -90,7 +94,11 @@ export function useSendMessage() {
                 if (err instanceof DOMException && err.name === 'AbortError') {
                     // Intentional abort — not an error
                 } else {
-                    setError(err instanceof Error ? err : new Error('Unknown streaming error'))
+                    setError(
+                        err instanceof Error
+                            ? err
+                            : new Error('Unknown streaming error')
+                    )
                 }
             } finally {
                 setStreamingState((prev) => ({

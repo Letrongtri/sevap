@@ -6,6 +6,7 @@ import { useSendMessage } from '../hooks/useSendMessage'
 import MessageList from '../components/chat/MessageList'
 import InputBox from '../components/chat/InputBox'
 import type { Message } from '../types/chat'
+import type { ID } from '../types/common'
 
 /* ─────────────────────────────────────────────────────────────
    ChatPage — hỗ trợ cả /chat và /chat/:conversationId
@@ -15,15 +16,15 @@ export default function ChatPage() {
     const navigate = useNavigate()
 
     // ── URL param (có thể undefined khi ở /chat) ──────────────────────
-    const { conversationId: conversationIdParam } =
-        useParams({ strict: false }) as { conversationId?: string }
+    const { conversationId: conversationIdParam } = useParams({
+        strict: false,
+    }) as { conversationId?: ID }
 
-    const urlConversationId = conversationIdParam
-        ? parseInt(conversationIdParam, 10)
-        : null
+    const urlConversationId = conversationIdParam ? conversationIdParam : null
 
     // ── Client state (Zustand) ─────────────────────────────────────────
-    const { activeChatId, setActiveChat, initialMessage, setInitialMessage } = useChatStore()
+    const { activeChatId, setActiveChat, initialMessage, setInitialMessage } =
+        useChatStore()
 
     // Đồng bộ URL → Zustand khi trang load lần đầu hoặc URL thay đổi
     useEffect(() => {
@@ -52,7 +53,8 @@ export default function ChatPage() {
 
     // ── Streaming ─────────────────────────────────────────────────────
     const { sendMessage, streamingState } = useSendMessage()
-    const { isStreaming, streamingContent, streamingConversationId } = streamingState
+    const { isStreaming, streamingContent, streamingConversationId } =
+        streamingState
 
     // Điều hướng ngay lập tức khi nhận được conversationId mới từ API/stream metadata
     useEffect(() => {
@@ -86,8 +88,8 @@ export default function ChatPage() {
         (content: string) => {
             // 1. Hiển thị ngay bubble của user (optimistic)
             const optimisticMsg: Message = {
-                id: -Date.now(), // id âm để phân biệt
-                conversationId: conversationId ?? -1,
+                id: `temp_${Date.now()}` as ID, // id âm để phân biệt
+                conversationId: conversationId ?? '',
                 actor: 'user',
                 content,
                 createdAt: new Date().toISOString(),

@@ -43,7 +43,7 @@ export interface CreateConversationPayload {
 
 export interface ChatClientState {
     /** ID của conversation đang được xem, null nếu chưa chọn */
-    activeChatId: number | null
+    activeChatId: ID | null
     /** Từ khoá tìm kiếm trong sidebar history */
     searchKeyword: string
     /** Tin nhắn ban đầu truyền từ Home page sang Chat page */
@@ -51,7 +51,7 @@ export interface ChatClientState {
 }
 
 export interface ChatClientActions {
-    setActiveChat: (id: number | null) => void
+    setActiveChat: (id: ID | null) => void
     setSearchKeyword: (keyword: string) => void
     clearActiveChat: () => void
     setInitialMessage: (message: string | null) => void
@@ -66,8 +66,8 @@ export type ChatStore = ChatClientState & ChatClientActions
 /** Emitted right after user message is persisted. Carries IDs for optimistic UI. */
 export interface MetadataEvent {
     type: 'metadata'
-    conversationId: number
-    userMessageId: number
+    conversationId: ID
+    userMessageId: ID
 }
 
 /** One LLM token chunk. */
@@ -79,7 +79,7 @@ export interface TokenEvent {
 /** Stream finished successfully. */
 export interface DoneEvent {
     type: 'done'
-    assistantMessageId: number
+    assistantMessageId: ID
     sources: Array<{ title: string; chunk_id: string | null }>
     agentType: string
 }
@@ -96,7 +96,7 @@ export type StreamEvent = MetadataEvent | TokenEvent | DoneEvent | ErrorEvent
 export interface StreamingState {
     isStreaming: boolean
     /** ID of the conversation being streamed into (known after metadata event) */
-    streamingConversationId: number | null
+    streamingConversationId: ID | null
     /** Accumulated assistant answer as tokens arrive */
     streamingContent: string
 }

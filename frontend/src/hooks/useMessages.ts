@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useReducer } from 'react'
 import { fetchConversationDetail, fetchMoreMessages } from '../api/chat'
 import type { Message } from '../types/chat'
+import type { ID } from '../types/common'
 
-export const messagesQueryKey = (conversationId: number | null) =>
+export const messagesQueryKey = (conversationId: ID | null) =>
     ['messages', conversationId] as const
 
 const PAGE_LIMIT = 20
@@ -105,7 +106,7 @@ function reducer(state: MessagesState, action: MessagesAction): MessagesState {
  *  - Khi scroll lên gần đầu: gọi GET /conversations/{id}/messages?last_id=<oldestId>&limit=20.
  *  - Messages được prepend (cũ hơn thêm vào đầu danh sách).
  */
-export function useMessages(conversationId: number | null) {
+export function useMessages(conversationId: ID | null) {
     const [state, dispatch] = useReducer(reducer, initialState)
 
     // ── Initial load (và re-fetch khi fetchVersion thay đổi) ──────────
@@ -143,7 +144,7 @@ export function useMessages(conversationId: number | null) {
         if (!conversationId || state.isFetchingMore || !state.hasMore) return
 
         const oldestId = state.messages[0]?.id
-        if (!oldestId || oldestId < 0) return // bỏ qua optimistic messages
+        if (!oldestId || oldestId.startsWith('temp_')) return // bỏ qua optimistic messages
 
         dispatch({ type: 'FETCH_MORE_START' })
         try {

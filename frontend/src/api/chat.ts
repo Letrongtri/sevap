@@ -8,6 +8,7 @@ import type {
     CreateConversationPayload,
     StreamEvent,
 } from '../types/chat'
+import type { ID } from '../types/common'
 
 const API_BASE = 'http://localhost:8000/api/v1'
 
@@ -42,7 +43,7 @@ export const createConversation = async (
 }
 
 /** Xoá một conversation */
-export const deleteConversation = async (id: number): Promise<void> => {
+export const deleteConversation = async (id: ID): Promise<void> => {
     await axiosClient.delete(`/conversations/${id}`)
 }
 
@@ -51,7 +52,7 @@ export const deleteConversation = async (id: number): Promise<void> => {
  * Dùng cho lần đầu mở chat (initial load).
  */
 export const fetchConversationDetail = async (
-    id: number
+    id: ID
 ): Promise<ConversationDetail> => {
     const res = await axiosClient.get(`/conversations/${id}`)
     // Backend trả về snake_case, map sang camelCase
@@ -69,8 +70,8 @@ export const fetchConversationDetail = async (
 
 /** Lấy thêm messages cũ hơn (cursor-based pagination ngược) */
 export const fetchMoreMessages = async (
-    conversationId: number,
-    lastId: number,
+    conversationId: ID,
+    lastId: ID,
     limit = 20
 ): Promise<Message[]> => {
     const res = await axiosClient.get(
@@ -83,8 +84,8 @@ export const fetchMoreMessages = async (
 /** Map từ backend snake_case sang frontend camelCase */
 function mapMessage(m: Record<string, unknown>): Message {
     return {
-        id: m.id as number,
-        conversationId: m.conversation_id as number,
+        id: m.id as ID,
+        conversationId: m.conversation_id as ID,
         actor: m.actor as string,
         agentType: (m.agent_type as string | null) ?? null,
         content: m.content as string,
@@ -94,7 +95,7 @@ function mapMessage(m: Record<string, unknown>): Message {
 
 /** Lấy danh sách messages của một conversation (legacy) */
 export const fetchMessages = async (
-    conversationId: number
+    conversationId: ID
 ): Promise<Message[]> => {
     const res = await axiosClient.get(
         `/conversations/${conversationId}/messages`
@@ -126,7 +127,7 @@ export const sendMessage = async (
  */
 export async function* streamMessage(payload: {
     content: string
-    conversationId?: number | null
+    conversationId?: ID | null
 }): AsyncGenerator<StreamEvent> {
     const { accessToken } = useAuthStore.getState()
 
@@ -184,8 +185,8 @@ export async function* streamMessage(payload: {
                     case 'metadata':
                         yield {
                             type: 'metadata',
-                            conversationId: parsed.conversation_id as number,
-                            userMessageId: parsed.user_message_id as number,
+                            conversationId: parsed.conversation_id as ID,
+                            userMessageId: parsed.user_message_id as ID,
                         }
                         break
                     case 'token':
@@ -195,7 +196,7 @@ export async function* streamMessage(payload: {
                         yield {
                             type: 'done',
                             assistantMessageId:
-                                parsed.assistant_message_id as number,
+                                parsed.assistant_message_id as ID,
                             sources: parsed.sources ?? [],
                             agentType: parsed.agent_type as string,
                         }
