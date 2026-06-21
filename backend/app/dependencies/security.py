@@ -41,10 +41,15 @@ async def get_current_user(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token",
             )
-        
+
+        is_global_admin = (
+            tenant.tenant_domain == "system.hrnexus.com" and "admin" in roles
+        )
+
         request.state.user = {
             "id": user_id,
             "roles": roles,
+            "is_global_admin": is_global_admin,
         }
         request.state.tenant_id = tenant_id
 
@@ -52,6 +57,7 @@ async def get_current_user(
             "user_id": user_id,
             "roles": roles,
             "tenant_id": tenant_id,
+            "is_global_admin": is_global_admin,
         }
 
     except JWTError:
@@ -59,3 +65,14 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token",
         )
+
+async def require_global_admin(
+    current_user: dict = Depends(get_current_user)
+):
+    print(current_user)
+    if not current_user.get("is_global_admin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Yêu cầu quyền Quản trị viên hệ thống (Global Admin)"
+        )
+    return current_user

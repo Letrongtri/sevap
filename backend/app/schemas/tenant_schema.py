@@ -3,6 +3,7 @@ from pydantic import BaseModel, ConfigDict, model_validator, Field, field_valida
 from datetime import datetime
 from app.core.enum import TenantStatus
 from app.utils.sanitization import validate_password_strength
+from app.schemas.base_schema import PaginationResponse
 
 class TenantCreate(BaseModel):
     # Tenant details
@@ -78,3 +79,11 @@ class TenantResponse(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class TenantQuery(BaseModel):
+    query: str | None = None
+    status: TenantStatus | None = None
+
+class TenantPaginatedResponse(BaseModel):
+    tenants: list[TenantResponse]
+    pagination: PaginationResponse

@@ -28,7 +28,11 @@ from .job_title_schema import (
     JobTitleCreate, JobTitleUpdate, JobTitleResponse, JobTitleSimple
 )
 from .tenant_schema import (
-    TenantCreate, TenantUpdate, TenantResponse, TenantSimple
+    TenantCreate, TenantUpdate, TenantResponse, TenantSimple,
+    TenantPaginatedResponse, TenantQuery
+)
+from .global_admin_schema import (
+    TenantSummaryResponse, VectorStorageResponse, LLMMetricsResponse
 )
 from .base_schema import PaginationQuery, PaginationResponse
 

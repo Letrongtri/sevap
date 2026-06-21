@@ -1,3 +1,4 @@
+import math
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.models import Tenants, Role, Permission, RolePermission, User, UserRole
@@ -5,7 +6,12 @@ from app.repositories import TenantRepository
 from app.services.exceptions import TenantAlreadyExistsError, NotFoundError
 from app.utils.auth import hash_password
 from app.core.enum import TenantStatus
-from app.schemas import TenantCreate, TenantResponse, TenantUpdate
+from app.schemas import (
+    TenantCreate, TenantResponse, TenantUpdate,
+    TenantPaginatedResponse, TenantQuery, PaginationQuery,
+    PaginationResponse
+)
+from app.core.logging import logger
 
 class TenantService:
     def __init__(self, tenant_repo: TenantRepository, db: AsyncSession):
@@ -174,3 +180,35 @@ class TenantService:
         tenant.status = TenantStatus.DELETED.value
         updated_tenant = await self.tenant_repo.save(tenant)
         return TenantResponse.model_validate(updated_tenant)
+
+    async def get_tenants(
+        self, 
+        query: TenantQuery, 
+        pagination: PaginationQuery
+    ) -> TenantPaginatedResponse:
+        skip = (pagination.page - 1) * pagination.limit
+
+        tenants, total_records = await self.tenant_repo.get_tenants(
+            query=query.query,
+            status=query.status,
+            skip=skip,
+            limit=pagination.limit
+        )
+
+        total_pages = (
+            math.ceil(total_records / pagination.limit) 
+            if total_records > 0 else 0
+        )
+
+        return TenantPaginatedResponse(
+            tenants=[
+                TenantResponse.model_validate(tenant)
+                for tenant in tenants
+            ],
+            pagination=PaginationResponse(
+                total=total_records,
+                page=pagination.page,
+                limit=pagination.limit,
+                total_pages=total_pages
+            )
+        )

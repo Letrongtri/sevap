@@ -1,3 +1,5 @@
+from sqlalchemy import func
+from app.core.enum import TenantStatus
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.models import Tenants
@@ -44,3 +46,37 @@ class TenantRepository:
         except Exception as e:
             await self.db.rollback()
             raise e
+
+    async def get_tenants(self, 
+        query: str | None,
+        status: TenantStatus | None,
+        skip: int,
+        limit: int
+    ) -> tuple[list[Tenants], int]:
+        stmt = select(Tenants)
+
+        if query:
+            stmt = stmt.where(
+                Tenants.company_name.ilike(f"%{query}%") |
+                Tenants.company_description.ilike(f"%{query}%") |
+                Tenants.company_email.ilike(f"%{query}%") |
+                Tenants.company_phone.ilike(f"%{query}%") |
+                Tenants.company_address.ilike(f"%{query}%") |
+                Tenants.tenant_domain.ilike(f"%{query}%")
+            )
+        
+        if status:
+            stmt = stmt.where(Tenants.status == status)
+        else:
+            stmt = stmt.where(Tenants.status != TenantStatus.DELETED)
+        
+        count_stmt = select(func.count()).select_from(stmt.subquery())
+        total_records = await self.db.scalar(count_stmt)
+        
+        stmt = stmt.offset(skip).limit(limit)
+
+        result = await self.db.execute(stmt)
+
+        tenants = result.unique().scalars().all()
+
+        return list(tenants), total_records

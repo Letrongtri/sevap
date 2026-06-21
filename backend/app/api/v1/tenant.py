@@ -54,3 +54,18 @@ async def soft_delete_tenant(
     except Exception as e:
         logger.error("tenant_delete_failed", tenant_id=tenant_id, error=str(e), exc_info=True)
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Failed to delete tenant")
+
+@router.get("/info", response_model=TenantResponse)
+async def get_tenant_info(
+    tenant_service: TenantService = Depends(get_tenant_service),
+    current_user=Depends(get_current_user)
+):
+    try:
+        tenant_id = current_user.get("tenant_id")
+        return await tenant_service.get_tenant_by_id(tenant_id)
+    except NotFoundError as e:
+        logger.error("tenant_not_found_on_info", tenant_id=tenant_id)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except Exception as e:
+        logger.error("tenant_info_failed", tenant_id=tenant_id, error=str(e), exc_info=True)
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Failed to get tenant info")

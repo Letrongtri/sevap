@@ -15,9 +15,10 @@ from app.api.v1.department import router as department_router
 from app.api.v1.job_title import router as job_title_router
 from app.api.v1.permission import router as permission_router
 from app.api.v1.tenant import router as tenant_router
+from app.api.v1.global_admin import router as global_admin_router
 
 from app.core.logging import logger
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, require_global_admin
 
 api_router = APIRouter()
 
@@ -31,6 +32,7 @@ api_router.include_router(conversation_router, prefix="/conversations", tags=["c
 api_router.include_router(department_router, prefix="/departments", tags=["departments"], dependencies=[Depends(get_current_user)])
 api_router.include_router(job_title_router, prefix="/job_titles", tags=["job_titles"], dependencies=[Depends(get_current_user)])
 api_router.include_router(permission_router, prefix="/permissions", tags=["permissions"], dependencies=[Depends(get_current_user)])
+api_router.include_router(global_admin_router, prefix="/global-admin", tags=["global-admin"], dependencies=[Depends(require_global_admin)])
 
 @api_router.get("/health")
 async def health_check():

@@ -19,10 +19,10 @@ async def add_system_default_data(db: AsyncSession):
     tenant = Tenants(
         company_name="System Default",
         company_description="Hệ thống mặc định cho doanh nghiệp",
-        company_email="system@company.local",
+        company_email="system@hrnexus.com",
         company_phone="0123456789",
         company_address="Trụ sở chính",
-        tenant_domain="system.local",
+        tenant_domain="system.hrnexus.com",
         status="active"
     )
     db.add(tenant)
