@@ -1,5 +1,5 @@
 import uuid_utils
-from sqlalchemy import Column, String, DateTime, Text, ForeignKey
+from sqlalchemy import Column, String, DateTime, Text, ForeignKey, Index
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.db.base_class import Base
@@ -19,3 +19,8 @@ class ActivityLog(Base):
 
     tenant = relationship("Tenants", back_populates="activity_logs")
     user = relationship("User", back_populates="activity_logs")
+
+    __table_args__ = (
+        Index("idx_activity_logs_tenant_created", "tenant_id", "created_at"),
+        Index("idx_activity_logs_user", "user_id"),
+    )

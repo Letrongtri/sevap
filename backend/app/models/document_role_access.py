@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, ForeignKey, DateTime
+from sqlalchemy import Column, String, ForeignKey, DateTime, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.base_class import Base
@@ -12,3 +12,7 @@ class DocumentRoleAccess(Base):
 
     role = relationship("Role", back_populates="document_accesses")
     document = relationship("Document", back_populates="role_accesses")
+
+    __table_args__ = (
+        Index("idx_doc_role_access_role", "role_id"),
+    )

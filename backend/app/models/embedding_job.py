@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey, Index
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.db.base_class import Base
@@ -19,4 +19,10 @@ class EmbeddingJob(Base):
 
     document = relationship("Document", back_populates="embedding_jobs")
     user = relationship("User", back_populates="embedding_jobs")
+
+    __table_args__ = (
+        Index("idx_embedding_jobs_doc", "document_id"),
+        Index("idx_embedding_jobs_user", "triggered_by"),
+        Index("idx_embedding_jobs_status", "status"),
+    )
     

@@ -44,5 +44,7 @@ class User(Base):
     __table_args__ = (
         Index("uq_user_tenant_employee_code_active", "tenant_id", "employee_code", unique=True, postgresql_where=text("is_deleted = false")),
         Index("uq_user_tenant_email_active", "tenant_id", "email", unique=True, postgresql_where=text("is_deleted = false")),
+        Index("idx_users_department", "department_id"),
+        Index("idx_users_job_title", "job_title_id"),
     )
 

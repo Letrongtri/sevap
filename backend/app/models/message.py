@@ -1,5 +1,5 @@
 import uuid_utils
-from sqlalchemy import Column, String, Float, DateTime, Text, ForeignKey
+from sqlalchemy import Column, String, Float, DateTime, Text, ForeignKey, Index
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -20,3 +20,7 @@ class Message(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     conversation = relationship("Conversation", back_populates="messages")
+
+    __table_args__ = (
+        Index("idx_messages_conversation_created", "conversation_id", "created_at"),
+    )

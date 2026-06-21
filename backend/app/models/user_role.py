@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey
+from sqlalchemy import Column, String, DateTime, ForeignKey, Index
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.db.base_class import Base
@@ -14,3 +14,7 @@ class UserRole(Base):
     role = relationship("Role", back_populates="user_associations")
     user = relationship("User", foreign_keys=[user_id], back_populates="role_associations")
     assigner = relationship("User", foreign_keys=[assigned_by])
+
+    __table_args__ = (
+        Index("idx_user_roles_role", "role_id"),
+    )

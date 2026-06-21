@@ -1,5 +1,5 @@
 import uuid_utils
-from sqlalchemy import Column, String, DateTime, ForeignKey, Integer
+from sqlalchemy import Column, String, DateTime, ForeignKey, Integer, Index
 from pgvector.sqlalchemy import Vector
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -19,3 +19,14 @@ class VectorEmbedding(Base):
 
     tenant = relationship("Tenants", back_populates="vector_embeddings")
     document_chunk = relationship("DocumentChunk", back_populates="vector_embedding")
+
+    __table_args__ = (
+        Index(
+            "idx_vector_embeddings_hnsw",
+            "embedding",
+            postgresql_using="hnsw",
+            postgresql_ops={"embedding": "vector_cosine_ops"},
+        ),
+        Index("idx_vector_embeddings_chunk", "document_chunk_id"),
+        Index("idx_vector_embeddings_tenant", "tenant_id"),
+    )

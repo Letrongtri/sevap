@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, ForeignKey, DateTime
+from sqlalchemy import Column, String, ForeignKey, DateTime, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.base_class import Base
@@ -12,3 +12,7 @@ class DocumentUserAccess(Base):
 
     user = relationship("User", back_populates="document_accesses")
     document = relationship("Document", back_populates="user_accesses")
+
+    __table_args__ = (
+        Index("idx_doc_user_access_user", "user_id"),
+    )

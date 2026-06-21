@@ -1,5 +1,5 @@
 import uuid_utils
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
+from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Index
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.db.base_class import Base
@@ -24,4 +24,8 @@ class Conversation(Base):
         cascade="all, delete-orphan", 
         passive_deletes=True, 
         order_by="Message.id.desc()"
+    )
+
+    __table_args__ = (
+        Index("idx_conversations_tenant_user_updated", "tenant_id", "user_id", "updated_at"),
     )

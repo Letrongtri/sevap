@@ -1,5 +1,5 @@
 import uuid_utils
-from sqlalchemy import Column, DateTime, ForeignKey, String, func
+from sqlalchemy import Column, DateTime, ForeignKey, String, func, Index
 from sqlalchemy.orm import relationship
 from app.db.base_class import Base
 
@@ -18,3 +18,8 @@ class UserSession(Base):
 
     tenant = relationship("Tenants", back_populates="user_sessions")
     user = relationship("User", back_populates="user_sessions")
+
+    __table_args__ = (
+        Index("idx_user_sessions_jti", "jti", unique=True),
+        Index("idx_user_sessions_tenant_user", "tenant_id", "user_id"),
+    )

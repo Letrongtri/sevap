@@ -51,6 +51,8 @@ class Document(Base):
             unique=True, 
             postgresql_where=text("is_deleted = false AND file_hash IS NOT NULL")
         ),
+        Index("idx_documents_tenant_deleted", "tenant_id", "is_deleted"),
+        Index("idx_documents_uploader", "uploader_id"),
     )
 
     

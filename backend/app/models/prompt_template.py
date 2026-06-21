@@ -1,5 +1,5 @@
 import uuid_utils
-from sqlalchemy import Column, String, Boolean, DateTime, Text, ForeignKey
+from sqlalchemy import Column, String, Boolean, DateTime, Text, ForeignKey, Index
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.db.base_class import Base
@@ -22,3 +22,8 @@ class PromptTemplate(Base):
 
     tenant = relationship("Tenants", back_populates="prompt_templates")
     user = relationship("User", back_populates="prompt_templates")
+
+    __table_args__ = (
+        Index("idx_prompt_templates_tenant_agent_active", "tenant_id", "agent_type", "is_active"),
+        Index("idx_prompt_templates_user", "user_id"),
+    )

@@ -1,5 +1,5 @@
 import uuid_utils
-from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey, UniqueConstraint, Index
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
@@ -27,4 +27,5 @@ class DocumentChunk(Base):
 
     __table_args__ = (
         UniqueConstraint('document_id', 'chunk_index', name='unique_document_chunk_index'),
+        Index("idx_document_chunks_tenant", "tenant_id"),
     )
