@@ -2,7 +2,7 @@ from typing import Annotated
 from fastapi.responses import StreamingResponse
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
 
 from app.dependencies import get_conversation_service, get_message_service
 from app.schemas import (
@@ -14,6 +14,7 @@ from app.services import (
     ConversationService, MessageService, 
     NotFoundError, InternalError
 )
+from app.decorators import log_activity
 from app.core.logging import logger
 
 
@@ -50,10 +51,19 @@ async def get_all_personal_conversations(
 # thêm câu hỏi vào cuộc hội thoại ->
 # stream câu trả lời từ AI brain token-by-token
 @router.post("/message")
+@log_activity(
+    action="chat.message_sent",
+    resource="conversation",
+    meta_extractor=lambda res, *args, **kwargs: {
+        "conversation_id": kwargs.get("data").conversation_id,
+        "prompt_length": len(kwargs.get("data").content)
+    }
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def send_message(
     request: Request,
     data: MessageSend,
+    background_tasks: BackgroundTasks,
     message_service: MessageService = Depends(get_message_service),
 ):
     user_id: str | None = None
@@ -114,11 +124,20 @@ async def get_conversation(
         raise HTTPException(status_code=422, detail="Failed to get conversation")
 
 @router.patch("/{conversation_id}", response_model=ConversationResponse)
+@log_activity(
+    action="conversation.update",
+    resource="conversation",
+    meta_extractor=lambda res, *args, **kwargs: {
+        "conversation_id": kwargs.get("conversation_id"), 
+        "title": kwargs.get("data").title
+    }
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def update_conversation(
     request: Request,
     conversation_id: str, 
     data: ConversationUpdate,
+    background_tasks: BackgroundTasks,
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     try:
@@ -140,10 +159,18 @@ async def update_conversation(
         raise HTTPException(status_code=422, detail="Failed to update conversation")
 
 @router.delete("/{conversation_id}", response_model=ConversationResponse)
+@log_activity(
+    action="conversation.delete",
+    resource="conversation",
+    meta_extractor=lambda res, *args, **kwargs: {
+        "conversation_id": kwargs.get("conversation_id")
+    }
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def delete_conversation(
     request: Request,
     conversation_id: str,
+    background_tasks: BackgroundTasks,
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     try:

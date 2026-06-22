@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi import APIRouter, HTTPException, Depends, Request, BackgroundTasks
 from typing import List
 
 from app.services import (
@@ -17,6 +17,7 @@ from app.schemas import (
     PaginationQuery
 )
 from app.dependencies import get_role_service
+from app.decorators import log_activity
 from app.core.logging import logger
 
 router = APIRouter()
@@ -53,10 +54,19 @@ async def get_all_roles(
         raise HTTPException(status_code=422, detail="Failed to get all roles")
 
 @router.post("", response_model=RoleResponse)
+@log_activity(
+    action="role.create",
+    resource="role",
+    meta_extractor=lambda res, *args, **kwargs: {
+        "role_id": res.id, 
+        "role_name": res.name
+    }
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def create_role(
     request: Request, 
     data: RoleCreate,
+    background_tasks: BackgroundTasks,
     role_service: RoleService = Depends(get_role_service),
 ):
     try:
@@ -121,11 +131,20 @@ async def get_role(
         raise HTTPException(status_code=422, detail="Failed to get role")
 
 @router.patch("/{role_id}", response_model=RoleResponse)
+@log_activity(
+    action="role.update",
+    resource="role",
+    meta_extractor=lambda res, *args, **kwargs: {
+        "role_id": kwargs.get("role_id"),
+        "role_name": res.name
+    }
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def update_role(
     request: Request,
     role_id: str, 
     data: RoleUpdate,
+    background_tasks: BackgroundTasks,
     role_service: RoleService = Depends(get_role_service),
 ):
     try:
@@ -143,10 +162,19 @@ async def update_role(
         raise HTTPException(status_code=422, detail="Failed to update role")
 
 @router.delete("/{role_id}", response_model=RoleResponse)
+@log_activity(
+    action="role.delete",
+    resource="role",
+    meta_extractor=lambda res, *args, **kwargs: {
+        "role_id": kwargs.get("role_id"), 
+        "role_name": res.name
+    }
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def delete_role(
     request: Request,
     role_id: str,
+    background_tasks: BackgroundTasks,
     role_service: RoleService = Depends(get_role_service),
 ):
     """Delete custom role.

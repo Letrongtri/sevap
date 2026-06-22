@@ -4,7 +4,7 @@ This module provides endpoints for user login, session management,
 and token verification.
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi import APIRouter, HTTPException, Depends, Request, BackgroundTasks
 
 from app.models import User
 from app.services import (
@@ -24,6 +24,7 @@ router = APIRouter()
 async def login(
     request: Request, 
     data: LoginForm,
+    background_tasks: BackgroundTasks,
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Login a user.
@@ -45,6 +46,7 @@ async def login(
             data.tenant_domain,
             data.employee_code, 
             data.password,
+            background_tasks,
             client_ip
         )
 
@@ -111,11 +113,22 @@ async def refresh_token(
 async def logout(
     request: Request,
     data: RefreshTokenRequest,
+    background_tasks: BackgroundTasks,
     current_user=Depends(get_current_user),
     auth_service: AuthService = Depends(get_auth_service)
 ):
     try:
-        await auth_service.logout(data.refresh_token)
+        user_id = current_user.get("user_id")
+        tenant_id = current_user.get("tenant_id")
+        client_ip = request.client.host if request.client else None
+        
+        await auth_service.logout(
+            refresh_token=data.refresh_token, 
+            user_id=user_id, 
+            tenant_id=tenant_id, 
+            client_ip=client_ip, 
+            background_tasks=background_tasks
+        )
         return {"message": "Logout successful"}
     except NotFoundError:
         logger.error("user_not_found", exc_info=True)

@@ -1,11 +1,11 @@
-from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi import APIRouter, HTTPException, Depends, Request, BackgroundTasks
 from typing import Annotated
 
 from app.services import (
     UserService,
     UserAlreadyExistsError,
     InvalidPasswordError,
-    NotFoundError
+    NotFoundError,
 )
 from app.schemas import (
     UserCreate, 
@@ -17,7 +17,8 @@ from app.schemas import (
     UserPaginatedResponse,
     UserSimplePaginatedResponse
 )
-from app.dependencies import get_user_service
+from app.dependencies import get_user_service, get_current_user
+from app.decorators import log_activity
 from app.core.logging import logger
 
 router = APIRouter()
@@ -75,10 +76,20 @@ async def get_all_users(
         raise HTTPException(status_code=422, detail="Failed to get all users")
 
 @router.post("", response_model=UserResponse)
+@log_activity(
+    action="user.create",
+    resource="user",
+    meta_extractor=lambda res, *args, **kwargs: {
+        "created_user_id": res.id, 
+        "employee_code": res.employee_code, 
+        "full_name": res.full_name
+    }
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def create_user(
     request: Request, 
     data: UserCreate,
+    background_tasks: BackgroundTasks,
     user_service: UserService = Depends(get_user_service),
 ):
     try:
@@ -128,11 +139,19 @@ async def get_user(
         raise HTTPException(status_code=422, detail="Failed to get user")
 
 @router.put("/{user_id}", response_model=UserResponse)
+@log_activity(
+    action="user.update",
+    resource="user",
+    meta_extractor=lambda res, *args, **kwargs: {
+        "updated_user_id": kwargs.get("user_id")
+    }
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def update_user(
     request: Request,
     user_id: str, 
     data: UserUpdate,
+    background_tasks: BackgroundTasks,
     user_service: UserService = Depends(get_user_service),
 ):
     try:
@@ -153,10 +172,18 @@ async def update_user(
         raise HTTPException(status_code=422, detail="Failed to update user")
 
 @router.delete("/{user_id}", response_model=UserResponse)
+@log_activity(
+    action="user.delete",
+    resource="user",
+    meta_extractor=lambda res, *args, **kwargs: {
+        "deleted_user_id": kwargs.get("user_id")
+    }
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def delete_user(
     request: Request,
     user_id: str,
+    background_tasks: BackgroundTasks,
     user_service: UserService = Depends(get_user_service),
 ):
     """Delete a user.
@@ -183,10 +210,18 @@ async def delete_user(
         raise HTTPException(status_code=422, detail="Failed to delete user")
 
 @router.patch("/{user_id}/activate", response_model=UserResponse)
+@log_activity(
+    action="user.activate",
+    resource="user",
+    meta_extractor=lambda res, *args, **kwargs: {
+        "target_user_id": kwargs.get("user_id")
+    }
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def activate_user(
     request: Request,
     user_id: str,
+    background_tasks: BackgroundTasks,
     user_service: UserService = Depends(get_user_service),
 ):
     """Activate user account.
@@ -213,10 +248,18 @@ async def activate_user(
         raise HTTPException(status_code=422, detail="Failed to activate user")
 
 @router.patch("/{user_id}/deactivate", response_model=UserResponse)
+@log_activity(
+    action="user.deactivate",
+    resource="user",
+    meta_extractor=lambda res, *args, **kwargs: {
+        "target_user_id": kwargs.get("user_id")
+    }
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def deactivate_user(
     request: Request,
     user_id: str,
+    background_tasks: BackgroundTasks,
     user_service: UserService = Depends(get_user_service),
 ):
     """Deactivate user account.
@@ -243,10 +286,18 @@ async def deactivate_user(
         raise HTTPException(status_code=422, detail="Failed to deactivate user")
 
 @router.patch("/{user_id}/reset-password", response_model=UserResponse)
+@log_activity(
+    action="user.reset_password",
+    resource="user",
+    meta_extractor=lambda res, *args, **kwargs: {
+        "target_user_id": kwargs.get("user_id")
+    }
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def reset_user_password(
     request: Request,
     user_id: str,
+    background_tasks: BackgroundTasks,
     user_service: UserService = Depends(get_user_service),
 ):
     """Activate user account.
@@ -273,11 +324,19 @@ async def reset_user_password(
         raise HTTPException(status_code=422, detail="Failed to reset user password")
 
 @router.put("/{user_id}/change-password", response_model=UserResponse)
+@log_activity(
+    action="user.change_password",
+    resource="user",
+    meta_extractor=lambda res, *args, **kwargs: {
+        "target_user_id": kwargs.get("user_id")
+    }
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def change_user_password(
     request: Request,
     user_id: str, 
     data: UserUpdatePassword,
+    background_tasks: BackgroundTasks,
     user_service: UserService = Depends(get_user_service),
 ):
     """Change user password.

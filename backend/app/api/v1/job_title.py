@@ -1,10 +1,11 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
 
 from app.dependencies import get_job_title_service
 from app.schemas import JobTitleCreate, JobTitleResponse, JobTitleUpdate, JobTitleSimple
 from app.services import JobTitleService, NotFoundError, JobTitleAlreadyExistsError
+from app.decorators import log_activity
 from app.core.logging import logger
 
 
@@ -27,10 +28,19 @@ async def get_all_job_titles(
         raise HTTPException(status_code=422, detail="Failed to get all job_titles")
 
 @router.post("", response_model=JobTitleResponse)
+@log_activity(
+    action="job_title.create",
+    resource="job_title",
+    meta_extractor=lambda res, *args, **kwargs: {
+        "job_title_id": res.id,
+        "job_title_name": res.title_name
+    }
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def create_job_title(
     request: Request, 
     data: JobTitleCreate,
+    background_tasks: BackgroundTasks,
     job_title_service: JobTitleService = Depends(get_job_title_service),
 ):
     try:
@@ -94,11 +104,20 @@ async def get_job_title(
         raise HTTPException(status_code=422, detail="Failed to get job_title")
 
 @router.patch("/{job_title_id}", response_model=JobTitleResponse)
+@log_activity(
+    action="job_title.update",
+    resource="job_title",
+    meta_extractor=lambda res, *args, **kwargs: {
+        "job_title_id": kwargs.get("job_title_id"),
+        "job_title_name": res.title_name
+    }
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def update_job_title(
     request: Request,
     job_title_id: str, 
     data: JobTitleUpdate,
+    background_tasks: BackgroundTasks,
     job_title_service: JobTitleService = Depends(get_job_title_service),
 ):
     try:
@@ -120,10 +139,19 @@ async def update_job_title(
         raise HTTPException(status_code=422, detail="Failed to update job title")
 
 @router.delete("/{job_title_id}", response_model=JobTitleResponse)
+@log_activity(
+    action="job_title.delete",
+    resource="job_title",
+    meta_extractor=lambda res, *args, **kwargs: {
+        "job_title_id": kwargs.get("job_title_id"),
+        "job_title_name": res.title_name
+    }
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def delete_job_title(
     request: Request,
     job_title_id: str,
+    background_tasks: BackgroundTasks,
     job_title_service: JobTitleService = Depends(get_job_title_service),
 ):
     """Delete custom job_title.

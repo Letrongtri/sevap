@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status, BackgroundTasks
 from app.dependencies import get_tenant_service, get_global_admin_service
 from app.schemas import (
     TenantCreate, TenantUpdate, TenantResponse, 
@@ -7,6 +7,7 @@ from app.schemas import (
     TenantSummaryResponse, VectorStorageResponse,
     LLMMetricsResponse
 )
+from app.decorators import log_activity
 from app.services import (
     TenantService, GlobalAdminService,
     TenantAlreadyExistsError, NotFoundError
@@ -32,9 +33,19 @@ async def get_tenants(
         )
 
 @router.post("/tenants", response_model=TenantResponse)
+@log_activity(
+    action="global_admin.tenant_create",
+    resource="tenant",
+    meta_extractor=lambda res, *args, **kwargs: {
+        "tenant_name": res.company_name, 
+        "tenant_domain": res.tenant_domain
+    },
+    is_global=True
+)
 async def create_tenant(
     request: Request,
     data: TenantCreate,
+    background_tasks: BackgroundTasks,
     tenant_service: TenantService = Depends(get_tenant_service),
 ):
     try:
@@ -80,10 +91,17 @@ async def get_tenant_by_id(
         )
 
 @router.put("/tenants/{tenant_id}", response_model=TenantResponse)
+@log_activity(
+    action="global_admin.tenant_update",
+    resource="tenant",
+    meta_extractor=lambda res, *args, **kwargs: {"tenant_name": res.company_name},
+    is_global=True
+)
 async def update_tenant(
     request: Request,
     tenant_id: str,
     data: TenantUpdate,
+    background_tasks: BackgroundTasks,
     tenant_service: TenantService = Depends(get_tenant_service),
 ):
     try:
@@ -104,8 +122,16 @@ async def update_tenant(
         )
 
 @router.delete("/tenants/{tenant_id}", response_model=TenantResponse)
+@log_activity(
+    action="global_admin.tenant_delete",
+    resource="tenant",
+    meta_extractor=lambda res, *args, **kwargs: {"tenant_name": res.company_name},
+    is_global=True
+)
 async def delete_tenant(
+    request: Request,
     tenant_id: str,
+    background_tasks: BackgroundTasks,
     tenant_service: TenantService = Depends(get_tenant_service),
 ):
     try:

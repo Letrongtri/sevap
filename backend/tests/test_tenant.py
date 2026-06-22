@@ -52,9 +52,9 @@ async def test_register_tenant_success(async_client: AsyncClient, db_session: As
 
 @pytest.mark.asyncio
 async def test_register_tenant_conflict_domain(async_client: AsyncClient, db_session: AsyncSession):
-    # Registering a tenant with system.local domain (which is seeded)
+    # Registering a tenant with system.hrnexus.com domain (which is seeded)
     register_data = {
-        "tenant_domain": "system.local",
+        "tenant_domain": "system.hrnexus.com",
         "company_name": "Conflict Co",
         "company_email": "conflict@domain.local",
         "company_phone": "0912345678",
@@ -72,7 +72,7 @@ async def test_register_tenant_conflict_domain(async_client: AsyncClient, db_ses
 @pytest.mark.asyncio
 async def test_update_tenant_success(async_client: AsyncClient, db_session: AsyncSession, admin_headers):
     # Fetch seeded tenant
-    res = await db_session.execute(select(Tenants).filter_by(tenant_domain="system.local"))
+    res = await db_session.execute(select(Tenants).filter_by(tenant_domain="system.hrnexus.com"))
     tenant = res.scalars().first()
     assert tenant is not None
     

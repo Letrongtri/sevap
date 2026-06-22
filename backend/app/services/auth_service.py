@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from fastapi import BackgroundTasks
 
 from app.repositories import UserRepository, UserSessionRepository, TenantRepository
 from app.services import (
@@ -10,6 +11,7 @@ from app.models import User, UserSession
 from app.utils.auth import create_access_token, create_refresh_token, verify_password, verify_token
 from app.core.logging import logger
 from app.schemas import UserResponse, RoleSimple
+from app.services.activity_log_service import ActivityLogService
 
 class AuthService:
     def __init__(
@@ -22,7 +24,12 @@ class AuthService:
         self.session_repo = session_repo
         self.tenant_repo = tenant_repo
 
-    async def login(self, tenant_domain: str, employee_code: str, password: str, client_ip: str | None = None) -> User:
+    async def login(
+        self, tenant_domain: str, employee_code: str, 
+        password: str, background_tasks: BackgroundTasks, 
+        client_ip: str | None = None
+    ) -> User:
+
         tenant = await self.tenant_repo.get_tenant_by_domain(tenant_domain)
         if not tenant:
             raise NotFoundError("Tenant not found")
@@ -32,8 +39,22 @@ class AuthService:
             get_user_department=True, 
             get_user_job_title=True,
             get_user_tenant=True
-            )
+        )
+
         if not user or not verify_password(password, user.password):
+            ActivityLogService.log(
+                background_tasks=None,
+                user_id=None,
+                tenant_id=tenant.id,
+                action="user.login_failed",
+                resource="auth",
+                meta_data={
+                    "employee_code": employee_code,
+                    "tenant_domain": tenant_domain
+                },
+                ip_address=client_ip,
+                log_level="WARNING"
+            )
             raise InvalidCredentialsError()
         
         user_roles = []
@@ -59,6 +80,20 @@ class AuthService:
             "login_success",
             employee_code=employee_code,
             client_ip=client_ip
+        )
+        
+        ActivityLogService.log(
+            background_tasks=background_tasks,
+            user_id=user.id,
+            tenant_id=user.tenant_id,
+            action="user.login",
+            resource="auth",
+            meta_data={
+                "employee_code": employee_code,
+                "tenant_domain": tenant_domain
+            },
+            ip_address=client_ip,
+            log_level="INFO"
         )
         
         return user, access_token, refresh_token
@@ -89,7 +124,12 @@ class AuthService:
 
         return new_access_token
         
-    async def logout(self, refresh_token: str):
+    async def logout(
+        self, refresh_token: str, 
+        user_id: str, tenant_id: str, 
+        client_ip: str | None = None, 
+        background_tasks: BackgroundTasks = None
+    ):
         token_payload = verify_token(refresh_token)
 
         session = await self.session_repo.get_user_session_by_jti(token_payload["jti"])
@@ -99,6 +139,15 @@ class AuthService:
         session.revoked_at = datetime.now(timezone.utc)
         
         await self.session_repo.save(session)
+
+        ActivityLogService.log(
+            background_tasks=background_tasks,
+            user_id=user_id,
+            tenant_id=tenant_id,
+            action="user.logout",
+            resource="auth",
+            ip_address=client_ip
+        )
 
     async def get_current_user(self, user_id: str):
         # Verify user exists in database

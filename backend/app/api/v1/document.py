@@ -23,12 +23,22 @@ from app.schemas import (
     PaginationQuery
 )
 from app.dependencies import get_document_service
+from app.decorators import log_activity
 from app.core.logging import logger
 from app.core.enum import AccessLevel
 
 router = APIRouter()
 
 @router.post("", response_model=DocumentResponse)
+@log_activity(
+    action="document.upload",
+    resource="document",
+    meta_extractor=lambda res, *args, **kwargs: {
+        "document_id": res.id, 
+        "title": res.title, 
+        "access_level": res.access_level
+    }
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["upload_document"][0])
 async def upload_document(
     request: Request,
@@ -168,11 +178,20 @@ async def get_document_file(
         raise HTTPException(status_code=500, detail="Failed to retrieve document file")
 
 @router.put("/{document_id}", response_model=DocumentResponse)
+@log_activity(
+    action="document.update",
+    resource="document",
+    meta_extractor=lambda res, *args, **kwargs: {
+        "document_id": kwargs.get("document_id"), 
+        "title": res.title
+    }
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["upload_document"][0])
 async def update_document(
     request: Request,
     document_id: str,
     data: DocumentUpdate,
+    background_tasks: BackgroundTasks,
     document_service: DocumentService = Depends(get_document_service),
 ):
     try:
@@ -198,10 +217,19 @@ async def update_document(
         raise HTTPException(status_code=422, detail="Failed to upload document")
 
 @router.delete("/{document_id}", response_model=DocumentResponse)
+@log_activity(
+    action="document.delete",
+    resource="document",
+    meta_extractor=lambda res, *args, **kwargs: {
+        "document_id": kwargs.get("document_id"), 
+        "title": res.title
+    }
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def delete_document(
     request: Request,
     document_id: str,
+    background_tasks: BackgroundTasks,
     document_service: DocumentService = Depends(get_document_service),
 ):
     try:

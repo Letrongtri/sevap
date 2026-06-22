@@ -1,15 +1,26 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from app.dependencies import get_tenant_service, get_current_user
+from fastapi import APIRouter, Depends, HTTPException, Request, status, BackgroundTasks
+from app.dependencies import get_tenant_service, get_current_user, require_tenant_admin
 from app.schemas import TenantCreate, TenantUpdate, TenantResponse
 from app.services import TenantService, TenantAlreadyExistsError, NotFoundError
+from app.decorators import log_activity
 from app.core.logging import logger
 
 router = APIRouter()
 
 @router.post("/register", response_model=TenantResponse, status_code=status.HTTP_201_CREATED)
+@log_activity(
+    action="tenant.register",
+    resource="tenant",
+    meta_extractor=lambda res, *args, **kwargs: {
+        "tenant_name": res.company_name,
+        "tenant_domain": res.tenant_domain
+    },
+    is_global=True
+)
 async def register_tenant(
     request: Request,
     data: TenantCreate,
+    background_tasks: BackgroundTasks,
     tenant_service: TenantService = Depends(get_tenant_service),
 ):
     try:
@@ -22,10 +33,17 @@ async def register_tenant(
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Failed to register tenant")
 
 @router.put("", response_model=TenantResponse)
+@log_activity(
+    action="tenant.update",
+    resource="tenant",
+    meta_extractor=lambda res, *args, **kwargs: {"tenant_name": res.company_name}
+)
 async def update_tenant(
+    request: Request,
     data: TenantUpdate,
+    background_tasks: BackgroundTasks,
     tenant_service: TenantService = Depends(get_tenant_service),
-    current_user=Depends(get_current_user)
+    current_user=Depends(require_tenant_admin)
 ):
     try:
         tenant_id = current_user.get("tenant_id")
@@ -41,9 +59,16 @@ async def update_tenant(
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Failed to update tenant")
 
 @router.delete("", response_model=TenantResponse)
+@log_activity(
+    action="tenant.delete",
+    resource="tenant",
+    meta_extractor=lambda res, *args, **kwargs: {"tenant_name": res.company_name}
+)
 async def soft_delete_tenant(
+    request: Request,
+    background_tasks: BackgroundTasks,
     tenant_service: TenantService = Depends(get_tenant_service),
-    current_user=Depends(get_current_user)
+    current_user=Depends(require_tenant_admin)
 ):
     try:
         tenant_id = current_user.get("tenant_id")

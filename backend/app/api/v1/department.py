@@ -1,10 +1,11 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
 
-from app.dependencies import get_department_service, get_message_service
+from app.dependencies import get_department_service
 from app.schemas import DepartmentCreate, DepartmentResponse, DepartmentUpdate, DepartmentSimple
 from app.services import DepartmentService, NotFoundError, DepartmentAlreadyExistsError
+from app.decorators import log_activity
 from app.core.logging import logger
 
 
@@ -27,10 +28,19 @@ async def get_all_departments(
         raise HTTPException(status_code=422, detail="Failed to get all departments")
 
 @router.post("", response_model=DepartmentResponse)
+@log_activity(
+    action="department.create",
+    resource="department",
+    meta_extractor=lambda res, *args, **kwargs: {
+        "department_id": res.id,
+        "department_name": res.name
+    }
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def create_department(
     request: Request, 
     data: DepartmentCreate,
+    background_tasks: BackgroundTasks,
     department_service: DepartmentService = Depends(get_department_service),
 ):
     try:
@@ -99,11 +109,20 @@ async def get_department(
         raise HTTPException(status_code=422, detail="Failed to get department")
 
 @router.patch("/{department_id}", response_model=DepartmentResponse)
+@log_activity(
+    action="department.update",
+    resource="department",
+    meta_extractor=lambda res, *args, **kwargs: {
+        "department_id": kwargs.get("department_id"),
+        "department_name": res.name
+    }
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def update_department(
     request: Request,
     department_id: str, 
     data: DepartmentUpdate,
+    background_tasks: BackgroundTasks,
     department_service: DepartmentService = Depends(get_department_service),
 ):
     try:
@@ -123,10 +142,19 @@ async def update_department(
         raise HTTPException(status_code=422, detail="Failed to update department")
 
 @router.delete("/{department_id}", response_model=DepartmentResponse)
+@log_activity(
+    action="department.delete",
+    resource="department",
+    meta_extractor=lambda res, *args, **kwargs: {
+        "department_id": kwargs.get("department_id"),
+        "department_name": res.name
+    }
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def delete_department(
     request: Request,
     department_id: str,
+    background_tasks: BackgroundTasks,
     department_service: DepartmentService = Depends(get_department_service),
 ):
     """Delete custom department.

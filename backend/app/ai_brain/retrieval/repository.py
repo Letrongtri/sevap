@@ -244,3 +244,56 @@ class PARRepository:
             )
             for row in result.mappings().fetchall()
         ]
+
+    async def check_par_gate_blocked(
+        self,
+        query_embedding: List[float],
+        allowed_doc_ids: Set[str],
+        tenant_id: str,
+        threshold: float = 0.5
+    ) -> List[dict]:
+        """
+        Check if there are any chunks in the tenant matching the query
+        that were excluded from allowed_doc_ids (i.e., blocked by PAR gate).
+        """
+        vec_literal = "[" + ",".join(str(v) for v in query_embedding) + "]"
+        
+        sql = text("""
+            SELECT
+                d.id AS document_id,
+                d.title AS doc_title,
+                d.access_level,
+                1 - (ve.embedding <=> CAST(:qvec AS vector)) AS score
+            FROM vector_embeddings ve
+            JOIN document_chunks dc ON dc.id = ve.document_chunk_id
+            JOIN documents d ON d.id = dc.document_id
+            WHERE
+                d.tenant_id = :tenant_id
+                AND dc.embedding_status = 'done'
+                AND d.is_deleted = FALSE
+                AND (:doc_ids_empty = TRUE OR NOT (dc.document_id = ANY(:doc_ids)))
+                AND (1 - (ve.embedding <=> CAST(:qvec AS vector))) >= :threshold
+            ORDER BY score DESC
+            LIMIT 10
+        """)
+        
+        result = await self.db.execute(sql, {
+            "qvec": vec_literal,
+            "tenant_id": tenant_id,
+            "doc_ids": list(allowed_doc_ids) if allowed_doc_ids else [],
+            "doc_ids_empty": len(allowed_doc_ids) == 0,
+            "threshold": threshold
+        })
+        
+        seen = set()
+        deduped = []
+        for row in result.mappings().fetchall():
+            if row.document_id not in seen:
+                seen.add(row.document_id)
+                deduped.append({
+                    "document_id": row.document_id,
+                    "doc_title": row.doc_title,
+                    "access_level": row.access_level,
+                    "score": row.score
+                })
+        return deduped

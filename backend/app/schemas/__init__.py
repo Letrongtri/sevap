@@ -35,6 +35,10 @@ from .global_admin_schema import (
     TenantSummaryResponse, VectorStorageResponse, LLMMetricsResponse
 )
 from .base_schema import PaginationQuery, PaginationResponse
+from .activity_log_schema import (
+    ActivityLogCreate, ActivityLogResponse, 
+    ActivityLogQuery, ActivityLogPaginatedResponse
+)
 
 UserResponse.model_rebuild()
 DepartmentResponse.model_rebuild()
