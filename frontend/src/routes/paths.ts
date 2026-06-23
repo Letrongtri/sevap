@@ -13,6 +13,11 @@ export const PRIVATE_ROUTES = {
     DOCUMENTS: '/documents',
     ROLES: '/roles',
     ACCOUNTS: '/accounts',
+    GLOBAL_DASHBOARD: '/global-admin',
+    GLOBAL_TENANTS: '/global-admin/tenants',
+    GLOBAL_PERMISSIONS: '/global-admin/permissions',
+    GLOBAL_INFRASTRUCTURE: '/global-admin/infrastructure',
+    GLOBAL_LOGS: '/global-admin/logs',
 } as const
 
 // Route that users are redirected to after login

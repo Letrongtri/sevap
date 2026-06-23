@@ -16,6 +16,7 @@ from app.services.chunking_service import ChunkService
 from app.services.exceptions import NotFoundError, MissingRequiredFieldsError
 from app.core.enum import AccessLevel, DocumentStatus
 from app.core.logging import logger
+from app.core.config import settings
 from app.schemas import (
     DocumentQuery, 
     DocumentResponse, 
@@ -47,8 +48,7 @@ class DocumentService:
             if not department_ids and not role_access and not target_user_ids:
                 raise MissingRequiredFieldsError()
             
-        BASE_DIR = Path(__file__).resolve().parent.parent.parent
-        UPLOAD_DIR = BASE_DIR / "data" / "uploads"
+        UPLOAD_DIR = settings.UPLOAD_DIR
         UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
         uploaded_file_name = f"{uuid.uuid4()}_{file.filename}"

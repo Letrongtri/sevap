@@ -22,19 +22,31 @@ const BottomNavigation = ({
     const { logout } = useAuth()
     const userInitial = user?.fullName?.charAt(0)?.toUpperCase() ?? 'U'
 
+    const isGlobalAdmin =
+        user?.tenantDomain === 'system.hrnexus.com' &&
+        user?.roles?.includes('admin')
+
     return (
-        <div className="flex-shrink-0 border-t border-border/60 px-2 pt-2 pb-3 space-y-0.5">
+        <div
+            className={[
+                'flex-shrink-0 border-t border-border/60 px-2 pt-2 pb-3 space-y-0.5',
+                isGlobalAdmin ? 'mt-auto' : '',
+            ].join(' ')}
+        >
             {/* Settings & Support links */}
-            {bottomNav.map(({ label, icon, to }) => (
-                <NavItem
-                    key={to}
-                    label={label}
-                    icon={icon}
-                    to={to}
-                    collapsed={collapsed}
-                    currentPath={currentPath}
-                />
-            ))}
+            {bottomNav.map(
+                ({ label, icon, to }) =>
+                    !isGlobalAdmin && (
+                        <NavItem
+                            key={to}
+                            label={label}
+                            icon={icon}
+                            to={to}
+                            collapsed={collapsed}
+                            currentPath={currentPath}
+                        />
+                    )
+            )}
 
             {/* Account row */}
             {collapsed ? (

@@ -1,11 +1,14 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request, status, BackgroundTasks
+from fastapi.responses import StreamingResponse
+import json
+import asyncio
 from app.dependencies import get_tenant_service, get_global_admin_service
 from app.schemas import (
     TenantCreate, TenantUpdate, TenantResponse, 
     TenantPaginatedResponse, TenantQuery, PaginationQuery,
     TenantSummaryResponse, VectorStorageResponse,
-    LLMMetricsResponse
+    LLMMetricsResponse, DashboardStatsResponse
 )
 from app.decorators import log_activity
 from app.services import (
@@ -199,3 +202,51 @@ async def get_llm_metrics(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Failed to get LLM metrics"
         )
+
+@router.get("/dashboard/stats", response_model=DashboardStatsResponse)
+async def get_dashboard_stats(
+    global_admin_service: GlobalAdminService = Depends(get_global_admin_service),
+):
+    """
+    Get aggregated dashboard stats for the Platform Admin panel.
+    """
+    try:
+        return await global_admin_service.get_dashboard_stats()
+    except Exception as e:
+        logger.error("dashboard_stats_failed", error=str(e), exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Failed to retrieve dashboard statistics"
+        )
+
+@router.get("/dashboard/realtime")
+async def get_dashboard_realtime(
+    request: Request,
+    global_admin_service: GlobalAdminService = Depends(get_global_admin_service),
+):
+    """
+    Server-Sent Events (SSE) endpoint to stream real-time dashboard updates.
+    """
+    async def event_generator():
+        while True:
+            # Check client connection status to prevent orphan tasks
+            if await request.is_disconnected():
+                logger.info("dashboard_realtime_client_disconnected")
+                break
+            
+            try:
+                data = await global_admin_service.get_realtime_data()
+                yield f"data: {json.dumps(data)}\n\n"
+            except Exception as e:
+                logger.error("dashboard_realtime_stream_generation_error", error=str(e))
+                # Stream error state so client knows there is a temporary issue
+                error_payload = {"error": "Internal stream error", "details": str(e)}
+                yield f"data: {json.dumps(error_payload)}\n\n"
+            
+            # Flush intervals (e.g. 3 seconds)
+            await asyncio.sleep(3)
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream"
+    )

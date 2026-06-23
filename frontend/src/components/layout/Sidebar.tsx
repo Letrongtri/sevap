@@ -19,6 +19,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     const isManager =
         user?.roles?.includes('admin') || user?.roles?.includes('manager')
 
+    const isGlobalAdmin =
+        user?.tenantDomain === 'system.hrnexus.com' &&
+        user?.roles?.includes('admin')
+
     return (
         <aside
             className={[
@@ -38,11 +42,12 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             <MainNavigation
                 collapsed={collapsed}
                 isManager={isManager}
+                isGlobalAdmin={isGlobalAdmin}
                 currentPath={currentPath}
             />
 
             {/* SECTION 3 — Chat history (scrollable, từ API) */}
-            <ChatHistory collapsed={collapsed} />
+            {!isGlobalAdmin && <ChatHistory collapsed={collapsed} />}
 
             {/* SECTION 4 — Settings, Support, Account */}
             <BottomNavigation

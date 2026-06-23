@@ -32,7 +32,9 @@ from .tenant_schema import (
     TenantPaginatedResponse, TenantQuery
 )
 from .global_admin_schema import (
-    TenantSummaryResponse, VectorStorageResponse, LLMMetricsResponse
+    TenantSummaryResponse, VectorStorageResponse, LLMMetricsResponse,
+    DashboardStatsResponse, GrowthVelocityItem, TenantDensityItem,
+    OllamaAllocationNode
 )
 from .base_schema import PaginationQuery, PaginationResponse
 from .activity_log_schema import (

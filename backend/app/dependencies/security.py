@@ -8,7 +8,7 @@ from app.repositories import TenantRepository
 from app.utils.auth import verify_token
 from app.services.activity_log_service import ActivityLogService
 
-bearer_scheme = HTTPBearer()
+bearer_scheme = HTTPBearer(auto_error=False)
 
 async def get_current_user(
     request: Request,
@@ -17,7 +17,18 @@ async def get_current_user(
     db: AsyncSession = Depends(get_db)
 ):
     try:
-        token = credentials.credentials
+        token = None
+        if credentials:
+            token = credentials.credentials
+        else:
+            # Fallback to query parameter for EventSource/SSE connections
+            token = request.query_params.get("token")
+
+        if not token:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or missing authentication token",
+            )
         payload = verify_token(token)
         if not payload:
             raise HTTPException(

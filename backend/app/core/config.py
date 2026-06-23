@@ -132,6 +132,11 @@ class Settings:
         self.DEBUG = os.getenv("DEBUG", "false").lower() in ("true", "1", "t", "yes")
         self.DEFAULT_USER_PASSWORD = os.getenv("DEFAULT_USER_PASSWORD", "password")
 
+        self.BASE_DIR = Path(__file__).resolve().parent.parent.parent
+        self.UPLOAD_DIR = self.BASE_DIR / "data" / "uploads"
+
+        self.MAX_CAPACITY_TB = float(os.getenv("MAX_CAPACITY_TB", "4.0"))
+
         # CORS Settings
         # self.ALLOWED_ORIGINS = parse_list_from_env("ALLOWED_ORIGINS", ["*"])
         self.ALLOWED_ORIGINS = [
@@ -150,8 +155,7 @@ class Settings:
         self.EMBEDDING_CHUNK_OVERLAP = int(os.getenv("EMBEDDING_CHUNK_OVERLAP", "64"))
         self.EMBEDDING_BATCH_SIZE = int(os.getenv("EMBEDDING_BATCH_SIZE", "32"))
 
-        BASE_DIR = Path(__file__).resolve().parent.parent.parent
-        self.EMBEDDING_MODEL_PATH = os.getenv("EMBEDDING_MODEL_PATH", BASE_DIR / "data" / "models" / "bge-m3")
+        self.EMBEDDING_MODEL_PATH = os.getenv("EMBEDDING_MODEL_PATH", self.BASE_DIR / "data" / "models" / "bge-m3")
 
         # OLLAMA Configuration
         self.OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")

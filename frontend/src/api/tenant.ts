@@ -8,7 +8,14 @@ import axiosClient from './axios'
 export const registerTenant = async (
     payload: AddTenantPayload
 ): Promise<Tenant> => {
-    const res = await axiosClient.post('/tenants/register', payload)
+    const tenantDomain = payload.tenant_domain.trim().endsWith('.hrnexus.com')
+        ? payload.tenant_domain.trim()
+        : `${payload.tenant_domain.trim()}.hrnexus.com`
+
+    const res = await axiosClient.post('/tenants/register', {
+        ...payload,
+        tenant_domain: tenantDomain,
+    })
     return res.data
 }
 
