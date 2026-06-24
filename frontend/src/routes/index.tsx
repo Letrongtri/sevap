@@ -1,171 +1,78 @@
-import { createRoute, createRouter, redirect } from '@tanstack/react-router'
-import { useAuthStore } from '../store/authStore'
-import { lazy, Suspense } from 'react'
+import { createRouter } from '@tanstack/react-router'
 import { rootRoute } from './rootRoute'
-import { publicLayoutRoute } from './publicRoutes'
-import LoadingSpinner from '../components/ui/LoadingSpinner'
-import { PRIVATE_ROUTES, PUBLIC_ROUTES } from './paths'
-import { privateLayoutRoute } from './privateRoutes'
-
-function lazyPage(importFn: () => Promise<{ default: React.ComponentType }>) {
-    const Comp = lazy(importFn)
-    return () => (
-        <Suspense fallback={<LoadingSpinner />}>
-            <Comp />
-        </Suspense>
-    )
-}
-
-// Public
-const LoginPage = lazyPage(() => import('../pages/LoginPage'))
-const RegisterPage = lazyPage(() => import('../pages/RegisterPage'))
-
-// Private
-const HomePage = lazyPage(() => import('../pages/HomePage'))
-const ChatPage = lazyPage(() => import('../pages/ChatPage'))
-const DocumentsPage = lazyPage(() => import('../pages/DocumentsPage'))
-const RolesPage = lazyPage(() => import('../pages/RolesPage'))
-const AccountsPage = lazyPage(() => import('../pages/AccountsPage'))
-
-// Global Admin Console
-const GlobalAdminDashboard = lazyPage(() => import('../pages/GlobalAdminDashboard'))
-const GlobalAdminTenants = lazyPage(() => import('../pages/GlobalAdminPlaceholders').then((m) => ({ default: m.GlobalAdminTenants })))
-const GlobalAdminPermissions = lazyPage(() => import('../pages/GlobalAdminPlaceholders').then((m) => ({ default: m.GlobalAdminPermissions })))
-const GlobalAdminInfrastructure = lazyPage(() => import('../pages/GlobalAdminPlaceholders').then((m) => ({ default: m.GlobalAdminInfrastructure })))
-const GlobalAdminLogs = lazyPage(() => import('../pages/GlobalAdminPlaceholders').then((m) => ({ default: m.GlobalAdminLogs })))
+import {
+    publicLayoutRoute,
+    loginRoute,
+    registerRoute,
+    globalAdminLoginRoute,
+} from './publicRoutes'
+import {
+    tenantLayoutRoute,
+    homeRoute,
+    chatRoute,
+    chatDetailRoute,
+    directoryRoute,
+    forbiddenRoute,
+} from './tenantRoutes'
+import { privateLayoutRoute } from './privateLayoutRoute'
+import { documentLayoutRoute, documentsRoute } from './documentRoutes'
+import {
+    tenantAdminLayoutRoute,
+    adminAccountsRoute,
+    adminRolesRoute,
+    adminDepartmentsRoute,
+    adminJobTitlesRoute,
+    adminLogsRoute,
+} from './tenantAdminRoutes'
+import { globalAdminLayoutRoute, globalAdminRoutes } from './globalAdminRoutes'
 
 /* ============================================================
-   Public route leaves
-   ============================================================ */
-
-const loginRoute = createRoute({
-    getParentRoute: () => publicLayoutRoute,
-    path: PUBLIC_ROUTES.LOGIN,
-    component: LoginPage,
-})
-
-const registerRoute = createRoute({
-    getParentRoute: () => publicLayoutRoute,
-    path: PUBLIC_ROUTES.REGISTER,
-    component: RegisterPage,
-})
-
-/* ============================================================
-   Private route leaves
-   ============================================================ */
-
-const homeRoute = createRoute({
-    getParentRoute: () => privateLayoutRoute,
-    path: PRIVATE_ROUTES.HOME,
-    component: HomePage,
-})
-
-const chatRoute = createRoute({
-    getParentRoute: () => privateLayoutRoute,
-    path: PRIVATE_ROUTES.CHAT,
-    component: ChatPage,
-})
-
-const chatDetailRoute = createRoute({
-    getParentRoute: () => privateLayoutRoute,
-    path: PRIVATE_ROUTES.CHAT_DETAIL,
-    component: ChatPage,
-})
-
-const documentsRoute = createRoute({
-    getParentRoute: () => privateLayoutRoute,
-    path: PRIVATE_ROUTES.DOCUMENTS,
-    component: DocumentsPage,
-})
-
-const rolesRoute = createRoute({
-    getParentRoute: () => privateLayoutRoute,
-    path: PRIVATE_ROUTES.ROLES,
-    component: RolesPage,
-})
-
-const accountsRoute = createRoute({
-    getParentRoute: () => privateLayoutRoute,
-    path: PRIVATE_ROUTES.ACCOUNTS,
-    component: AccountsPage,
-})
-
-/* ============================================================
-   Global Admin Console Routes (Restricted access)
-   ============================================================ */
-
-function requireGlobalAdminGuard() {
-    const { user } = useAuthStore.getState()
-    const isGlobalAdmin =
-        user?.tenantDomain === 'system.hrnexus.com' &&
-        user?.roles?.includes('admin')
-    if (!isGlobalAdmin) {
-        throw redirect({ to: PRIVATE_ROUTES.HOME })
-    }
-}
-
-const globalDashboardRoute = createRoute({
-    getParentRoute: () => privateLayoutRoute,
-    path: PRIVATE_ROUTES.GLOBAL_DASHBOARD,
-    beforeLoad: requireGlobalAdminGuard,
-    component: GlobalAdminDashboard,
-})
-
-const globalTenantsRoute = createRoute({
-    getParentRoute: () => privateLayoutRoute,
-    path: PRIVATE_ROUTES.GLOBAL_TENANTS,
-    beforeLoad: requireGlobalAdminGuard,
-    component: globalAdminPageWrapper(GlobalAdminTenants),
-})
-
-const globalPermissionsRoute = createRoute({
-    getParentRoute: () => privateLayoutRoute,
-    path: PRIVATE_ROUTES.GLOBAL_PERMISSIONS,
-    beforeLoad: requireGlobalAdminGuard,
-    component: globalAdminPageWrapper(GlobalAdminPermissions),
-})
-
-const globalInfrastructureRoute = createRoute({
-    getParentRoute: () => privateLayoutRoute,
-    path: PRIVATE_ROUTES.GLOBAL_INFRASTRUCTURE,
-    beforeLoad: requireGlobalAdminGuard,
-    component: globalAdminPageWrapper(GlobalAdminInfrastructure),
-})
-
-const globalLogsRoute = createRoute({
-    getParentRoute: () => privateLayoutRoute,
-    path: PRIVATE_ROUTES.GLOBAL_LOGS,
-    beforeLoad: requireGlobalAdminGuard,
-    component: globalAdminPageWrapper(GlobalAdminLogs),
-})
-
-function globalAdminPageWrapper(Comp: React.ComponentType) {
-    return () => <Comp />
-}
-
-/* ============================================================
-   Assemble the full route tree
+   Route Tree Assembly — 4 Zone Architecture
+   Zone 1: Basic user  /
+   Zone 2: Docs mgmt   /documents
+   Zone 3: Admin panel /admin/*
+   Zone 4: Global admin /global-admin/*
    ============================================================ */
 
 const routeTree = rootRoute.addChildren([
+    // Public routes (no auth)
     publicLayoutRoute.addChildren([loginRoute, registerRoute]),
+    globalAdminLoginRoute,
+
+    // Private routes (auth required)
     privateLayoutRoute.addChildren([
-        homeRoute,
-        chatRoute,
-        chatDetailRoute,
-        documentsRoute,
-        rolesRoute,
-        accountsRoute,
-        globalDashboardRoute,
-        globalTenantsRoute,
-        globalPermissionsRoute,
-        globalInfrastructureRoute,
-        globalLogsRoute,
+        // Zone 1 & 4 — Rendered inside AppShell
+        tenantLayoutRoute.addChildren([
+            // Zone 1 — Basic user
+            homeRoute,
+            chatRoute,
+            chatDetailRoute,
+            directoryRoute,
+            forbiddenRoute,
+        ]),
+
+        // Zone 2 — Document Management (hr_manager + admin) (renders DocumentShell directly)
+        documentLayoutRoute.addChildren([documentsRoute]),
+
+        // Zone 3 — Admin Panel (admin only) (renders AdminShell directly)
+        tenantAdminLayoutRoute.addChildren([
+            adminAccountsRoute,
+            adminRolesRoute,
+            adminDepartmentsRoute,
+            adminJobTitlesRoute,
+            adminLogsRoute,
+        ]),
+
+        // Zone 4 — Global Admin (renders AdminShell directly)
+        globalAdminLayoutRoute.addChildren([
+            // Zone 4 — Global Admin
+            ...globalAdminRoutes,
+        ]),
     ]),
 ])
 
 /* ============================================================
-   Create & export router
+   Router instance
    ============================================================ */
 
 export const router = createRouter({

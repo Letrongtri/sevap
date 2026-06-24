@@ -44,7 +44,7 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
 
     setPage: (page: number | null) => set({ page }),
 
-    setLimit: (limit: number) => set({ limit }),
+    setLimit: (limit: number | null) => set({ limit: limit ?? 10 }),
 
     /** Bỏ chọn document hiện tại */
     clearActiveDocument: () => set({ activeDocumentId: null }),

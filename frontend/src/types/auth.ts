@@ -15,6 +15,8 @@ export interface AuthUser {
     fullName: string
     employeeCode: string
     roles: string[]
+    permissions: string[]
+    isGlobalAdmin: boolean
     department?: string
     jobTitle?: string
     tenantId?: ID

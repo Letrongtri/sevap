@@ -1,14 +1,12 @@
-import { Settings, LogOut, LifeBuoy } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { NavItem } from './NavItem'
-import { PRIVATE_ROUTES } from '../../routes/paths'
 import { useAuth } from '../../hooks/useAuth'
 import type { AuthUser } from '../../types/auth'
 import Tooltip from '../ui/Tooltip'
+import { isGlobalAdmin } from '../../lib/permissions'
 
-const bottomNav = [
-    { label: 'Settings', icon: Settings, to: PRIVATE_ROUTES.SETTINGS },
-    { label: 'Support', icon: LifeBuoy, to: PRIVATE_ROUTES.SUPPORT },
-] as const
+// Placeholder nav items — restore when settings/support pages are implemented
+const bottomNav: { label: string; icon: typeof LogOut; to: string }[] = []
 
 const BottomNavigation = ({
     collapsed,
@@ -21,22 +19,19 @@ const BottomNavigation = ({
 }) => {
     const { logout } = useAuth()
     const userInitial = user?.fullName?.charAt(0)?.toUpperCase() ?? 'U'
-
-    const isGlobalAdmin =
-        user?.tenantDomain === 'system.hrnexus.com' &&
-        user?.roles?.includes('admin')
+    const isGA = isGlobalAdmin(user)
 
     return (
         <div
             className={[
                 'flex-shrink-0 border-t border-border/60 px-2 pt-2 pb-3 space-y-0.5',
-                isGlobalAdmin ? 'mt-auto' : '',
+                isGA ? 'mt-auto' : '',
             ].join(' ')}
         >
             {/* Settings & Support links */}
             {bottomNav.map(
                 ({ label, icon, to }) =>
-                    !isGlobalAdmin && (
+                    !isGA && (
                         <NavItem
                             key={to}
                             label={label}
@@ -70,10 +65,10 @@ const BottomNavigation = ({
                             {user?.fullName ?? 'User'}
                         </p>
                         <p className="text-[10px] text-text-placeholder mt-0.5 truncate">
-                            {user?.roles.includes('admin')
+                            {user?.roles?.includes('admin')
                                 ? 'Admin'
-                                : user?.roles.includes('manager')
-                                  ? 'Manager'
+                                : user?.roles?.includes('hr_manager')
+                                  ? 'HR Manager'
                                   : 'Employee'}
                         </p>
                     </div>

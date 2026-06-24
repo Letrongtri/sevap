@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react'
 import { Link } from '@tanstack/react-router'
 import { PRIVATE_ROUTES } from '../../routes/paths'
 import Tooltip from '../ui/Tooltip'
@@ -11,7 +12,7 @@ export const NavItem = ({
     currentPath,
 }: {
     label: string
-    icon: React.ComponentType<{ className?: string }>
+    icon: ComponentType<{ className?: string }>
     to: string
     collapsed: boolean
     currentPath: string

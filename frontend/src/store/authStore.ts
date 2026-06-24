@@ -4,19 +4,28 @@ import axiosClient from '../api/axios'
 
 type AuthStore = AuthState & AuthActions
 
-const normalizeAuthUser = (user): AuthUser | null => {
+const normalizeAuthUser = (
+    user: Record<string, unknown> | null | undefined
+): AuthUser | null => {
     if (!user) return null
     return {
-        id: user.id,
-        fullName: user.fullName || user.full_name,
-        employeeCode: user.employeeCode || user.employee_code,
-        roles: user.roles,
-        department: user.department,
-        jobTitle: user.jobTitle || user.job_title,
-        companyName: user.companyName || user.company_name,
-        tenantId: user.tenantId || user.tenant_id,
-        tenantDomain: user.tenantDomain || user.tenant_domain,
-        lastLogin: user.lastLogin || user.last_login,
+        id: user.id as string,
+        fullName: ((user.fullName || user.full_name) as string) ?? '',
+        employeeCode:
+            ((user.employeeCode || user.employee_code) as string) ?? '',
+        roles: (user.roles as string[]) ?? [],
+        permissions: (user.permissions as string[]) ?? [],
+        isGlobalAdmin: Boolean(
+            user.isGlobalAdmin ?? user.is_global_admin ?? false
+        ),
+        department: user.department as string | undefined,
+        jobTitle: ((user.jobTitle || user.job_title) as string) ?? undefined,
+        companyName:
+            ((user.companyName || user.company_name) as string) ?? undefined,
+        tenantId: ((user.tenantId || user.tenant_id) as string) ?? undefined,
+        tenantDomain:
+            ((user.tenantDomain || user.tenant_domain) as string) ?? undefined,
+        lastLogin: ((user.lastLogin || user.last_login) as string) ?? undefined,
     }
 }
 
@@ -47,7 +56,9 @@ export const useAuthStore = create<AuthStore>((set) => ({
         }
 
         const normalized =
-            user !== undefined && user !== null ? normalizeAuthUser(user) : null
+            user !== undefined && user !== null
+                ? normalizeAuthUser(user as unknown as Record<string, unknown>)
+                : null
         if (normalized) {
             localStorage.setItem('auth_user', JSON.stringify(normalized))
         }

@@ -5,6 +5,7 @@ import SystemBranding from '../sidebar/SystemBranding'
 import MainNavigation from '../sidebar/MainNavigation'
 import BottomNavigation from '../sidebar/BottomNavigation'
 import ChatHistory from '../sidebar/ChatHistory'
+import { isGlobalAdmin } from '../../lib/permissions'
 
 interface SidebarProps {
     collapsed: boolean
@@ -16,12 +17,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     const currentPath = routerState.location.pathname
     const user = useAuthStore((s) => s.user)
 
-    const isManager =
-        user?.roles?.includes('admin') || user?.roles?.includes('manager')
-
-    const isGlobalAdmin =
-        user?.tenantDomain === 'system.hrnexus.com' &&
-        user?.roles?.includes('admin')
+    const isGA = isGlobalAdmin(user)
 
     return (
         <aside
@@ -41,13 +37,12 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             {/* SECTION 2 — Main navigation */}
             <MainNavigation
                 collapsed={collapsed}
-                isManager={isManager}
-                isGlobalAdmin={isGlobalAdmin}
+                user={user}
                 currentPath={currentPath}
             />
 
             {/* SECTION 3 — Chat history (scrollable, từ API) */}
-            {!isGlobalAdmin && <ChatHistory collapsed={collapsed} />}
+            {!isGA && <ChatHistory collapsed={collapsed} />}
 
             {/* SECTION 4 — Settings, Support, Account */}
             <BottomNavigation
