@@ -42,40 +42,13 @@ async def login(
     """
     try:
         client_ip = request.client.host if request.client else None
-        user, access_token, refresh_token = await auth_service.login(
+        return await auth_service.login(
             data.employee_code, 
             data.password,
             background_tasks,
             client_ip,
             data.tenant_domain
-        )
-
-        user_roles = []
-        for role in user.role_associations:
-            user_roles.append(role.role.name)
-        
-        user_info = UserInfoResponse(
-            id=user.id,
-            full_name=user.full_name,
-            employee_code=user.employee_code,
-            roles=user_roles,
-            department=user.department.name if user.department else "",
-            job_title=user.job_title.title_name if user.job_title else "",
-            tenant_id=user.tenant_id if user.tenant else "",
-            tenant_domain=user.tenant.tenant_domain if user.tenant else "",
-            company_name=user.tenant.company_name if user.tenant else "",
-            last_login=user.last_login,
-        )
-
-        return LoginResponse(
-            token_type="bearer", 
-            access_token=access_token.token, 
-            access_token_expires_at=access_token.expires_at,
-            refresh_token=refresh_token.token,
-            refresh_token_expires_at=refresh_token.expires_at,
-            user=user_info
-        )
-    
+        )    
     except InvalidCredentialsError:
         logger.error("login_invalid_credentials", employee_code=data.employee_code, exc_info=True)
         raise HTTPException(
@@ -96,12 +69,7 @@ async def refresh_token(
     auth_service: AuthService = Depends(get_auth_service)
 ):
     try:
-        new_access_token = await auth_service.refresh_token(data.refresh_token)
-        return RefreshTokenResponse(
-            access_token=new_access_token.token,
-            access_token_expires_at=new_access_token.expires_at,
-            token_type="bearer"
-        )
+        return await auth_service.refresh_token(data.refresh_token)
     except InvalidTokenError:
         logger.error("refresh_token_invalid", exc_info=True)
         raise HTTPException(status_code=401, detail="Invalid refresh token")
@@ -122,14 +90,13 @@ async def logout(
         tenant_id = current_user.get("tenant_id")
         client_ip = request.client.host if request.client else None
         
-        await auth_service.logout(
+        return await auth_service.logout(
             refresh_token=data.refresh_token, 
             user_id=user_id, 
             tenant_id=tenant_id, 
             client_ip=client_ip, 
             background_tasks=background_tasks
         )
-        return {"message": "Logout successful"}
     except NotFoundError:
         logger.error("user_not_found", exc_info=True)
         raise HTTPException(status_code=404, detail="User not found")

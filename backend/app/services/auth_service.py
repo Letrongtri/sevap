@@ -11,7 +11,7 @@ from app.models import User, UserSession
 from app.utils.auth import create_access_token, create_refresh_token, verify_password, verify_token
 from app.core.enum import LogLevel, DefaultRole
 from app.core.logging import logger
-from app.schemas import UserResponse, RoleSimple
+from app.schemas import UserResponse, RoleSimple, UserInfoResponse, LoginResponse, RefreshTokenResponse
 from app.services.activity_log_service import ActivityLogService
 
 class AuthService:
@@ -30,7 +30,7 @@ class AuthService:
         password: str, background_tasks: BackgroundTasks, 
         client_ip: str | None = None,
         tenant_domain: str | None = None
-    ) -> User:
+    ) -> LoginResponse:
         is_global_admin = False
         if tenant_domain is None:
             user = await self.user_repo.get_user_by_employee_code(
@@ -121,10 +121,35 @@ class AuthService:
             ip_address=client_ip,
             log_level=LogLevel.INFO
         )
-        
-        return user, access_token, refresh_token
 
-    async def refresh_token(self, refresh_token: str):
+        user_roles = []
+        for role in user.role_associations:
+            user_roles.append(role.role.name)
+        
+        user_info = UserInfoResponse(
+            id=user.id,
+            full_name=user.full_name,
+            employee_code=user.employee_code,
+            roles=user_roles,
+            department=user.department.name if user.department else "",
+            job_title=user.job_title.title_name if user.job_title else "",
+            tenant_id=user.tenant_id if user.tenant else "",
+            tenant_domain=user.tenant.tenant_domain if user.tenant else "",
+            company_name=user.tenant.company_name if user.tenant else "",
+            last_login=user.last_login,
+            is_global_admin=is_global_admin
+        )
+
+        return LoginResponse(
+            token_type="bearer", 
+            access_token=access_token.token, 
+            access_token_expires_at=access_token.expires_at,
+            refresh_token=refresh_token.token,
+            refresh_token_expires_at=refresh_token.expires_at,
+            user=user_info
+        )
+
+    async def refresh_token(self, refresh_token: str) -> RefreshTokenResponse:
         token_payload = verify_token(refresh_token)
         if not token_payload:
             raise InvalidTokenError()
@@ -148,7 +173,11 @@ class AuthService:
             user_roles=roles
         )
 
-        return new_access_token
+        return RefreshTokenResponse(
+            access_token=new_access_token.token,
+            access_token_expires_at=new_access_token.expires_at,
+            token_type="bearer"
+        )
         
     async def logout(
         self, refresh_token: str, 
@@ -174,6 +203,8 @@ class AuthService:
             resource="auth",
             ip_address=client_ip
         )
+        
+        return {"message": "Logout successful"}
 
     async def get_current_user(self, user_id: str):
         # Verify user exists in database

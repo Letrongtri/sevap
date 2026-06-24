@@ -14,6 +14,7 @@ class UserInfoResponse(BaseModel):
     tenant_domain: str = Field(..., description="The tenant domain of the user")
     company_name: str = Field(..., description="The company name of the user")
     last_login: datetime = Field(..., description="The last login date of the user")
+    is_global_admin: bool = Field(..., description="The global admin status of the user")
 
 # Schema cho JWT Token
 class Token(BaseModel):
