@@ -147,6 +147,7 @@ def check_permission(
             )
 
         user_perms = current_user.get("permissions", [])
+        print(required_perm, user_perms)
         if required_perm in user_perms:
             return current_user
 

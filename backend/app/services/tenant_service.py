@@ -112,7 +112,6 @@ class TenantService:
             new_tenant = await self.tenant_repo.create_tenant(tenant)
             return TenantResponse.model_validate(new_tenant)
         except Exception as e:
-            await self.db.rollback()
             raise e
 
     async def get_tenant_by_id(self, tenant_id: str) -> TenantResponse:

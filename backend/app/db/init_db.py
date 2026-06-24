@@ -5,13 +5,87 @@ from app.utils.auth import hash_password
 from app.core.logging import logger
 from app.core.enum import PermissionResource, PermissionAction, AccessLevel, DefaultRole
 
+# Danh sách tất cả permissions cần tồn tại trong hệ thống
+ALL_PERMISSIONS = [
+    # Resource: tenants
+    (PermissionResource.TENANTS, PermissionAction.CREATE, "Tạo công ty mới"),
+    (PermissionResource.TENANTS, PermissionAction.READ, "Xem thông tin công ty"),
+    (PermissionResource.TENANTS, PermissionAction.UPDATE, "Cập nhật thông tin công ty"),
+    (PermissionResource.TENANTS, PermissionAction.DELETE, "Xóa công ty"),
+    (PermissionResource.TENANTS, PermissionAction.SUSPEND, "Đình chỉ công ty"),
+    # Resource: permissions
+    (PermissionResource.PERMISSIONS, PermissionAction.READ, "Xem danh sách quyền hạn"),
+    # Resource: activity_logs
+    (PermissionResource.ACTIVITY_LOGS, PermissionAction.READ, "Xem nhật ký hoạt động"),
+    # Resource: users
+    (PermissionResource.USERS, PermissionAction.CREATE, "Tạo tài khoản người dùng"),
+    (PermissionResource.USERS, PermissionAction.READ, "Xem tài khoản người dùng"),
+    (PermissionResource.USERS, PermissionAction.UPDATE, "Cập nhật tài khoản người dùng"),
+    (PermissionResource.USERS, PermissionAction.DELETE, "Xóa tài khoản người dùng"),
+    (PermissionResource.USERS, PermissionAction.SUSPEND, "Đình chỉ tài khoản người dùng"),
+    # Resource: roles
+    (PermissionResource.ROLES, PermissionAction.CREATE, "Tạo vai trò mới"),
+    (PermissionResource.ROLES, PermissionAction.READ, "Xem vai trò và quyền hạn"),
+    (PermissionResource.ROLES, PermissionAction.UPDATE, "Cập nhật vai trò và quyền hạn"),
+    (PermissionResource.ROLES, PermissionAction.DELETE, "Xóa vai trò"),
+    (PermissionResource.ROLES, PermissionAction.ASSIGN, "Gán vai trò cho người dùng"),
+    # Resource: job_titles
+    (PermissionResource.JOB_TITLES, PermissionAction.CREATE, "Tạo chức danh công việc"),
+    (PermissionResource.JOB_TITLES, PermissionAction.READ, "Xem danh sách chức danh công việc"),
+    (PermissionResource.JOB_TITLES, PermissionAction.UPDATE, "Cập nhật chức danh công việc"),
+    (PermissionResource.JOB_TITLES, PermissionAction.DELETE, "Xóa chức danh công việc"),
+    (PermissionResource.JOB_TITLES, PermissionAction.ASSIGN, "Gán chức danh công việc cho người dùng"),
+    # Resource: documents
+    (PermissionResource.DOCUMENTS, PermissionAction.CREATE, "Tạo tài liệu mới"),
+    (PermissionResource.DOCUMENTS, PermissionAction.READ, "Xem/đọc tài liệu"),
+    (PermissionResource.DOCUMENTS, PermissionAction.UPDATE, "Cập nhật thông tin tài liệu"),
+    (PermissionResource.DOCUMENTS, PermissionAction.DELETE, "Xóa tài liệu"),
+    (PermissionResource.DOCUMENTS, PermissionAction.UPLOAD, "Tải lên tài liệu"),
+    (PermissionResource.DOCUMENTS, PermissionAction.DOWNLOAD, "Tải xuống tài liệu"),
+    # Resource: departments
+    (PermissionResource.DEPARTMENTS, PermissionAction.CREATE, "Tạo phòng ban mới"),
+    (PermissionResource.DEPARTMENTS, PermissionAction.READ, "Xem thông tin phòng ban"),
+    (PermissionResource.DEPARTMENTS, PermissionAction.UPDATE, "Cập nhật phòng ban"),
+    (PermissionResource.DEPARTMENTS, PermissionAction.DELETE, "Xóa phòng ban"),
+    (PermissionResource.DEPARTMENTS, PermissionAction.ASSIGN, "Gán phòng ban cho người dùng"),
+    # Resource: conversations
+    (PermissionResource.CONVERSATIONS, PermissionAction.CREATE, "Tạo cuộc trò chuyện mới"),
+    (PermissionResource.CONVERSATIONS, PermissionAction.READ, "Xem lịch sử trò chuyện"),
+    (PermissionResource.CONVERSATIONS, PermissionAction.UPDATE, "Cập nhật thông tin cuộc trò chuyện"),
+    (PermissionResource.CONVERSATIONS, PermissionAction.DELETE, "Xóa cuộc trò chuyện"),
+    (PermissionResource.CONVERSATIONS, PermissionAction.SEND, "Gửi tin nhắn trong cuộc trò chuyện"),
+]
+
+async def ensure_permissions(db: AsyncSession):
+    """Upsert toàn bộ permissions vào DB. Chạy mỗi lần khởi động để đồng bộ
+    các permissions mới được thêm vào mà không làm ảnh hưởng dữ liệu cũ."""
+    # Lấy tất cả permissions đang tồn tại trong DB
+    result = await db.execute(select(Permission.resource, Permission.action))
+    existing = {(row.resource, row.action) for row in result.all()}
+
+    new_perms = []
+    for resource, action, description in ALL_PERMISSIONS:
+        res_val = resource.value if hasattr(resource, 'value') else resource
+        act_val = action.value if hasattr(action, 'value') else action
+        if (res_val, act_val) not in existing:
+            new_perms.append(Permission(resource=resource, action=action, description=description))
+
+    if new_perms:
+        db.add_all(new_perms)
+        await db.flush()
+        logger.info(f"Đã thêm {len(new_perms)} permissions mới vào hệ thống.")
+
 async def add_system_default_data(db: AsyncSession):
-    # 1. Kiểm tra xem dữ liệu User đã tồn tại chưa
+    # Bước 1: Luôn đồng bộ permissions (upsert) - chạy mỗi lần khởi động
+    await ensure_permissions(db)
+
+    # Bước 2: Kiểm tra xem dữ liệu User đã tồn tại chưa
     result = await db.execute(select(User).limit(1))
     first_user = result.scalars().first()
-    
+
     if first_user is not None:
-        print("Dữ liệu mặc định đã tồn tại. Bỏ qua bước Seeding.")
+        await db.commit()  # Commit permissions mới nếu có
+        print("Dữ liệu mặc định đã tồn tại. Bỏ qua bước Seeding User/Role.")
         return
 
     logger.info("Bắt đầu khởi tạo dữ liệu mặc định")
@@ -24,78 +98,28 @@ async def add_system_default_data(db: AsyncSession):
         is_system=True
     )
     db.add(role)
-    await db.flush() # Đẩy roles vào session để lấy được ID
+    await db.flush()  # Đẩy role vào session để lấy được ID
 
-    # 4. Khởi tạo danh sách Permissions cốt lõi cho hệ thống (toàn cục)
+    # 4. Lấy lại các permissions của Global Admin từ DB (đã được ensure_permissions chèn)
+    from app.core.default_roles import DEFAULT_ROLES
+    from app.core.enum import DefaultRole as DR
+    ga_cfg = DEFAULT_ROLES[DR.GLOBAL_ADMIN]
+    ga_resource_actions = {
+        (res.value if hasattr(res, 'value') else res, act.value if hasattr(act, 'value') else act)
+        for res, acts in ga_cfg["permissions"].items()
+        for act in acts
+    }
+    perm_result = await db.execute(select(Permission))
+    all_perms = perm_result.scalars().all()
     global_admin_permissions_data = [
-        # Resource: tenants
-        Permission(resource=PermissionResource.TENANTS, action=PermissionAction.CREATE, description="Tạo công ty mới"),
-        Permission(resource=PermissionResource.TENANTS, action=PermissionAction.READ, description="Xem thông tin công ty"),
-        Permission(resource=PermissionResource.TENANTS, action=PermissionAction.UPDATE, description="Cập nhật thông tin công ty"),
-        Permission(resource=PermissionResource.TENANTS, action=PermissionAction.DELETE, description="Xóa công ty"),
-        Permission(resource=PermissionResource.TENANTS, action=PermissionAction.SUSPEND, description="Đình chỉ công ty"),
-        
-        # Resource: permissions
-        Permission(resource=PermissionResource.PERMISSIONS, action=PermissionAction.READ, description="Xem danh sách quyền hạn"),
-        
-        # Resource: activity_logs
-        Permission(resource=PermissionResource.ACTIVITY_LOGS, action=PermissionAction.READ, description="Xem nhật ký hoạt động"),
+        p for p in all_perms if (p.resource, p.action) in ga_resource_actions
     ]
-    db.add_all(global_admin_permissions_data)
-    await db.flush()
-
-    other_permissions_data = [
-        # Resource: users
-        Permission(resource=PermissionResource.USERS, action=PermissionAction.CREATE, description="Tạo tài khoản người dùng"),
-        Permission(resource=PermissionResource.USERS, action=PermissionAction.READ, description="Xem tài khoản người dùng"),
-        Permission(resource=PermissionResource.USERS, action=PermissionAction.UPDATE, description="Cập nhật tài khoản người dùng"),
-        Permission(resource=PermissionResource.USERS, action=PermissionAction.DELETE, description="Xóa tài khoản người dùng"),
-        Permission(resource=PermissionResource.USERS, action=PermissionAction.SUSPEND, description="Đình chỉ tài khoản người dùng"),
-        
-        # Resource: roles
-        Permission(resource=PermissionResource.ROLES, action=PermissionAction.CREATE, description="Tạo vai trò mới"),
-        Permission(resource=PermissionResource.ROLES, action=PermissionAction.READ, description="Xem vai trò và quyền hạn"),
-        Permission(resource=PermissionResource.ROLES, action=PermissionAction.UPDATE, description="Cập nhật vai trò và quyền hạn"),
-        Permission(resource=PermissionResource.ROLES, action=PermissionAction.DELETE, description="Xóa vai trò"),
-        Permission(resource=PermissionResource.ROLES, action=PermissionAction.ASSIGN, description="Gán vai trò cho người dùng"),
-        
-        # Resource: job_titles
-        Permission(resource=PermissionResource.JOB_TITLES, action=PermissionAction.CREATE, description="Tạo chức danh công việc"),
-        Permission(resource=PermissionResource.JOB_TITLES, action=PermissionAction.READ, description="Xem danh sách chức danh công việc"),
-        Permission(resource=PermissionResource.JOB_TITLES, action=PermissionAction.UPDATE, description="Cập nhật chức danh công việc"),
-        Permission(resource=PermissionResource.JOB_TITLES, action=PermissionAction.DELETE, description="Xóa chức danh công việc"),
-        Permission(resource=PermissionResource.JOB_TITLES, action=PermissionAction.ASSIGN, description="Gán chức danh công việc cho người dùng"),
-        
-        # Resource: documents
-        Permission(resource=PermissionResource.DOCUMENTS, action=PermissionAction.CREATE, description="Tạo tài liệu mới"),
-        Permission(resource=PermissionResource.DOCUMENTS, action=PermissionAction.READ, description="Xem/đọc tài liệu"),
-        Permission(resource=PermissionResource.DOCUMENTS, action=PermissionAction.UPDATE, description="Cập nhật thông tin tài liệu"),
-        Permission(resource=PermissionResource.DOCUMENTS, action=PermissionAction.DELETE, description="Xóa tài liệu"),
-        Permission(resource=PermissionResource.DOCUMENTS, action=PermissionAction.UPLOAD, description="Tải lên tài liệu"),
-        Permission(resource=PermissionResource.DOCUMENTS, action=PermissionAction.DOWNLOAD, description="Tải xuống tài liệu"),
-        
-        # Resource: department
-        Permission(resource=PermissionResource.DEPARTMENTS, action=PermissionAction.CREATE, description="Tạo phòng ban mới"),
-        Permission(resource=PermissionResource.DEPARTMENTS, action=PermissionAction.READ, description="Xem thông tin phòng ban"),
-        Permission(resource=PermissionResource.DEPARTMENTS, action=PermissionAction.UPDATE, description="Cập nhật phòng ban"),
-        Permission(resource=PermissionResource.DEPARTMENTS, action=PermissionAction.DELETE, description="Xóa phòng ban"),
-        Permission(resource=PermissionResource.DEPARTMENTS, action=PermissionAction.ASSIGN, description="Gán phòng ban cho người dùng"),
-        
-        # Resource: conversation
-        Permission(resource=PermissionResource.CONVERSATIONS, action=PermissionAction.CREATE, description="Tạo cuộc trò chuyện mới"),
-        Permission(resource=PermissionResource.CONVERSATIONS, action=PermissionAction.READ, description="Xem lịch sử trò chuyện"),
-        Permission(resource=PermissionResource.CONVERSATIONS, action=PermissionAction.UPDATE, description="Cập nhật thông tin cuộc trò chuyện"),
-        Permission(resource=PermissionResource.CONVERSATIONS, action=PermissionAction.DELETE, description="Xóa cuộc trò chuyện"),
-        Permission(resource=PermissionResource.CONVERSATIONS, action=PermissionAction.SEND, description="Gửi tin nhắn trong cuộc trò chuyện")
-    ]
-    db.add_all(other_permissions_data)
-    await db.flush()
 
     # 5. Khởi tạo RolePermissions cho global admin
-    global_admin_permissions = []
-    for p in global_admin_permissions_data:
-        global_admin_permissions.append(RolePermission(role_id=role.id, permission_id=p.id))
-    
+    global_admin_permissions = [
+        RolePermission(role_id=role.id, permission_id=p.id)
+        for p in global_admin_permissions_data
+    ]
     db.add_all(global_admin_permissions)
     await db.flush()
 
