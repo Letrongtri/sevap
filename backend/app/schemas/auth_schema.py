@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from app.utils.sanitization import validate_password_strength
 from datetime import datetime
@@ -33,7 +34,7 @@ class LoginResponse(BaseModel):
 
 
 class LoginForm(BaseModel):
-    tenant_domain: str = Field(..., description="The tenant domain of the user")
+    tenant_domain: Optional[str] = Field(None, description="The tenant domain of the user")
     employee_code: str = Field(..., description="The employee code of the user")
     password: str = Field(..., description="The password of the user")
 

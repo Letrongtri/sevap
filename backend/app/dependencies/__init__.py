@@ -1,8 +1,7 @@
 from .user import get_user_service
 from .security import (
     get_current_user,
-    require_global_admin,
-    require_tenant_admin
+    check_permission
 )
 from .role import get_role_service
 from .document import get_document_service

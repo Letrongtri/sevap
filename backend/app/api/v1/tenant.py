@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status, BackgroundTasks
-from app.dependencies import get_tenant_service, get_current_user, require_tenant_admin
+from app.dependencies import get_tenant_service, get_current_user
 from app.schemas import TenantCreate, TenantUpdate, TenantResponse
 from app.services import TenantService, TenantAlreadyExistsError, NotFoundError
 from app.decorators import log_activity
@@ -43,7 +43,7 @@ async def update_tenant(
     data: TenantUpdate,
     background_tasks: BackgroundTasks,
     tenant_service: TenantService = Depends(get_tenant_service),
-    current_user=Depends(require_tenant_admin)
+    current_user=Depends(get_current_user)
 ):
     try:
         tenant_id = current_user.get("tenant_id")
@@ -68,7 +68,7 @@ async def soft_delete_tenant(
     request: Request,
     background_tasks: BackgroundTasks,
     tenant_service: TenantService = Depends(get_tenant_service),
-    current_user=Depends(require_tenant_admin)
+    current_user=Depends(get_current_user)
 ):
     try:
         tenant_id = current_user.get("tenant_id")

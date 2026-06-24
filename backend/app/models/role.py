@@ -8,7 +8,7 @@ class Role(Base):
     __tablename__ = "roles"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid_utils.uuid7()), index=True)
-    tenant_id = Column(String(36), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(String(36), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True)
     name = Column(String(64), nullable=False)
     description = Column(Text)
     access_level = Column(String(32), nullable=False)

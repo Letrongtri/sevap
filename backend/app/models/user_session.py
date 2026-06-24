@@ -8,7 +8,7 @@ class UserSession(Base):
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid_utils.uuid7()), index=True)
     user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    tenant_id = Column(String(36), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(String(36), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True)
     
     jti = Column(String(256), nullable=False)
     ip_address = Column(String(64))

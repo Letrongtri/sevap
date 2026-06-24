@@ -3,119 +3,98 @@ from sqlalchemy.future import select
 from app.models import User, Role, UserRole, Permission, RolePermission, Tenants
 from app.utils.auth import hash_password
 from app.core.logging import logger
+from app.core.enum import PermissionResource, PermissionAction, AccessLevel, DefaultRole
 
 async def add_system_default_data(db: AsyncSession):
-    # 1. Kiểm tra xem dữ liệu Tenant đã tồn tại chưa
-    result = await db.execute(select(Tenants).limit(1))
-    first_tenant = result.scalars().first()
+    # 1. Kiểm tra xem dữ liệu User đã tồn tại chưa
+    result = await db.execute(select(User).limit(1))
+    first_user = result.scalars().first()
     
-    if first_tenant is not None:
+    if first_user is not None:
         print("Dữ liệu mặc định đã tồn tại. Bỏ qua bước Seeding.")
         return
 
     logger.info("Bắt đầu khởi tạo dữ liệu mặc định")
 
-    # 2. Khởi tạo default Tenant
-    tenant = Tenants(
-        company_name="System Default",
-        company_description="Hệ thống mặc định cho doanh nghiệp",
-        company_email="system@hrnexus.com",
-        company_phone="0123456789",
-        company_address="Trụ sở chính",
-        tenant_domain="system.hrnexus.com",
-        status="active"
-    )
-    db.add(tenant)
-    await db.flush() # Lấy ID của tenant
-
     # 3. Khởi tạo danh sách Roles cốt lõi cho hệ thống scoped theo default Tenant
-    roles = [
-        Role(
-            tenant_id=tenant.id,
-            name="admin", 
-            description="Quản trị viên hệ thống, toàn quyền truy cập", 
-            access_level="managerial", 
-            is_system=True
-        ),
-        Role(
-            tenant_id=tenant.id,
-            name="manager", 
-            description="Quản lý Nhân sự", 
-            access_level="managerial", 
-            is_system=True
-        ),
-        Role(
-            tenant_id=tenant.id,
-            name="employee", 
-            description="Nhân viên tiêu chuẩn, truy cập dữ liệu public/private", 
-            access_level="private", 
-            is_system=True
-        ),
-        Role(
-            tenant_id=tenant.id,
-            name="guest", 
-            description="Khách hoặc Thực tập sinh, chỉ đọc dữ liệu public", 
-            access_level="public", 
-            is_system=True
-        )
-    ]
-    db.add_all(roles)
+    role = Role(
+        name=DefaultRole.GLOBAL_ADMIN.value, 
+        description="Quản trị viên toàn hệ thống, có thể quản lý các tenants", 
+        access_level=AccessLevel.MANAGERIAL, 
+        is_system=True
+    )
+    db.add(role)
     await db.flush() # Đẩy roles vào session để lấy được ID
 
     # 4. Khởi tạo danh sách Permissions cốt lõi cho hệ thống (toàn cục)
-    permissions_data = [
-        # Module: System's User Management
-        Permission(resource="users", action="read", description="Xem tài khoản người dùng"),
-        Permission(resource="users", action="write", description="Tạo hoặc cập nhật tài khoản"),
-        Permission(resource="users", action="delete", description="Vô hiệu hóa hoặc xóa tài khoản"),
-        # Module: Role Management
-        Permission(resource="roles", action="read", description="Xem vai trò và quyền"),
-        Permission(resource="roles", action="write", description="Thêm hoặc cập nhật vai trò và quyền"),
-        Permission(resource="roles", action="delete", description="Xóa vai trò và quyền không phải là vai trò mặc định hệ thống"),
-        # Module: Knowledge & Documents Management
-        Permission(resource="documents", action="read", description="Đọc tài liệu"),
-        Permission(resource="documents", action="write", description="Tải lên hoặc cập nhật tài liệu"),
-        Permission(resource="documents", action="delete", description="Xóa tài liệu"),
-        Permission(resource="documents", action="manage", description="Thiết lập cấp độ truy cập tài liệu"),
-        # Module: Embedding / Vector DB Management
-        Permission(resource="embeddings", action="manage", description="Kích hoạt và quản lý Vector DB"),
-        # Module: Chat Management
-        Permission(resource="chat", action="read", description="Xem lịch sử chat cá nhân"),
-        Permission(resource="chat", action="manage", description="Quản lý toàn bộ chat hệ thống"),
-        # Module: Integration Config (MCP)
-        Permission(resource="mcp_servers", action="manage", description="Cấu hình tích hợp MCP Servers"),
-        # Module: System Management
-        Permission(resource="prompt_templates", action="manage", description="Quản lý Prompt Templates"),
-        # Module: Information Query
-        Permission(resource="reports", action="read", description="Truy cập báo cáo quản trị"),
-        Permission(resource="tasks", action="execute", description="Thực thi tác vụ Actionable (họp, phép, v.v.)")
+    global_admin_permissions_data = [
+        # Resource: tenants
+        Permission(resource=PermissionResource.TENANTS, action=PermissionAction.CREATE, description="Tạo công ty mới"),
+        Permission(resource=PermissionResource.TENANTS, action=PermissionAction.READ, description="Xem thông tin công ty"),
+        Permission(resource=PermissionResource.TENANTS, action=PermissionAction.UPDATE, description="Cập nhật thông tin công ty"),
+        Permission(resource=PermissionResource.TENANTS, action=PermissionAction.DELETE, description="Xóa công ty"),
+        Permission(resource=PermissionResource.TENANTS, action=PermissionAction.SUSPEND, description="Đình chỉ công ty"),
+        
+        # Resource: permissions
+        Permission(resource=PermissionResource.PERMISSIONS, action=PermissionAction.READ, description="Xem danh sách quyền hạn"),
+        
+        # Resource: activity_logs
+        Permission(resource=PermissionResource.ACTIVITY_LOGS, action=PermissionAction.READ, description="Xem nhật ký hoạt động"),
     ]
-    db.add_all(permissions_data)
+    db.add_all(global_admin_permissions_data)
     await db.flush()
 
-    # 5. Khởi tạo RolePermissions cốt lõi cho hệ thống
-    role_map = {r.name: r for r in roles}
+    other_permissions_data = [
+        # Resource: users
+        Permission(resource=PermissionResource.USERS, action=PermissionAction.CREATE, description="Tạo tài khoản người dùng"),
+        Permission(resource=PermissionResource.USERS, action=PermissionAction.READ, description="Xem tài khoản người dùng"),
+        Permission(resource=PermissionResource.USERS, action=PermissionAction.UPDATE, description="Cập nhật tài khoản người dùng"),
+        Permission(resource=PermissionResource.USERS, action=PermissionAction.DELETE, description="Xóa tài khoản người dùng"),
+        Permission(resource=PermissionResource.USERS, action=PermissionAction.SUSPEND, description="Đình chỉ tài khoản người dùng"),
+        
+        # Resource: roles
+        Permission(resource=PermissionResource.ROLES, action=PermissionAction.CREATE, description="Tạo vai trò mới"),
+        Permission(resource=PermissionResource.ROLES, action=PermissionAction.READ, description="Xem vai trò và quyền hạn"),
+        Permission(resource=PermissionResource.ROLES, action=PermissionAction.UPDATE, description="Cập nhật vai trò và quyền hạn"),
+        Permission(resource=PermissionResource.ROLES, action=PermissionAction.DELETE, description="Xóa vai trò"),
+        Permission(resource=PermissionResource.ROLES, action=PermissionAction.ASSIGN, description="Gán vai trò cho người dùng"),
+        
+        # Resource: job_titles
+        Permission(resource=PermissionResource.JOB_TITLES, action=PermissionAction.CREATE, description="Tạo chức danh công việc"),
+        Permission(resource=PermissionResource.JOB_TITLES, action=PermissionAction.READ, description="Xem danh sách chức danh công việc"),
+        Permission(resource=PermissionResource.JOB_TITLES, action=PermissionAction.UPDATE, description="Cập nhật chức danh công việc"),
+        Permission(resource=PermissionResource.JOB_TITLES, action=PermissionAction.DELETE, description="Xóa chức danh công việc"),
+        Permission(resource=PermissionResource.JOB_TITLES, action=PermissionAction.ASSIGN, description="Gán chức danh công việc cho người dùng"),
+        
+        # Resource: documents
+        Permission(resource=PermissionResource.DOCUMENTS, action=PermissionAction.CREATE, description="Tạo tài liệu mới"),
+        Permission(resource=PermissionResource.DOCUMENTS, action=PermissionAction.READ, description="Xem/đọc tài liệu"),
+        Permission(resource=PermissionResource.DOCUMENTS, action=PermissionAction.UPDATE, description="Cập nhật thông tin tài liệu"),
+        Permission(resource=PermissionResource.DOCUMENTS, action=PermissionAction.DELETE, description="Xóa tài liệu"),
+        Permission(resource=PermissionResource.DOCUMENTS, action=PermissionAction.UPLOAD, description="Tải lên tài liệu"),
+        
+        # Resource: department
+        Permission(resource=PermissionResource.DEPARTMENTS, action=PermissionAction.CREATE, description="Tạo phòng ban mới"),
+        Permission(resource=PermissionResource.DEPARTMENTS, action=PermissionAction.READ, description="Xem thông tin phòng ban"),
+        Permission(resource=PermissionResource.DEPARTMENTS, action=PermissionAction.UPDATE, description="Cập nhật phòng ban"),
+        Permission(resource=PermissionResource.DEPARTMENTS, action=PermissionAction.DELETE, description="Xóa phòng ban"),
+        
+        # Resource: conversation
+        Permission(resource=PermissionResource.CONVERSATIONS, action=PermissionAction.CREATE, description="Tạo cuộc trò chuyện mới"),
+        Permission(resource=PermissionResource.CONVERSATIONS, action=PermissionAction.READ, description="Xem lịch sử trò chuyện"),
+        Permission(resource=PermissionResource.CONVERSATIONS, action=PermissionAction.UPDATE, description="Cập nhật thông tin cuộc trò chuyện"),
+        Permission(resource=PermissionResource.CONVERSATIONS, action=PermissionAction.DELETE, description="Xóa cuộc trò chuyện"),
+        Permission(resource=PermissionResource.CONVERSATIONS, action=PermissionAction.SEND, description="Gửi tin nhắn trong cuộc trò chuyện")
+    ]
+    db.add_all(other_permissions_data)
+    await db.flush()
+
+    # 5. Khởi tạo RolePermissions cho global admin
+    global_admin_permissions = []
+    for p in global_admin_permissions_data:
+        global_admin_permissions.append(RolePermission(role_id=role.id, permission_id=p.id))
     
-    admin_perms = permissions_data # Admin có tất cả quyền
-    manager_perms = [p for p in permissions_data if p.resource in ["users", "documents", "reports", "chat", "tasks"] and p.action != "delete"]
-    employee_perms = [p for p in permissions_data if (p.resource == "documents" and p.action == "read") or (p.resource == "chat" and p.action == "read") or (p.resource == "tasks" and p.action == "execute")]
-    guest_perms = [p for p in permissions_data if p.resource == "documents" and p.action == "read"]
-
-    role_permissions = []
-    # Gán quyền cho Admin
-    for p in admin_perms:
-        role_permissions.append(RolePermission(role_id=role_map["admin"].id, permission_id=p.id))
-    # Gán quyền cho Manager
-    for p in manager_perms:
-        role_permissions.append(RolePermission(role_id=role_map["manager"].id, permission_id=p.id))
-    # Gán quyền cho Employee
-    for p in employee_perms:
-        role_permissions.append(RolePermission(role_id=role_map["employee"].id, permission_id=p.id))
-    # Gán quyền cho Guest
-    for p in guest_perms:
-        role_permissions.append(RolePermission(role_id=role_map["guest"].id, permission_id=p.id))
-
-    db.add_all(role_permissions)
+    db.add_all(global_admin_permissions)
     await db.flush()
 
     # 6. Khởi tạo tài khoản System Admin thuộc default Tenant
@@ -125,15 +104,14 @@ async def add_system_default_data(db: AsyncSession):
         full_name="System Administrator",
         password=hash_password("Admin@1234"),
         is_active=True,
-        tenant_id=tenant.id
     )
     db.add(admin_user)
     await db.flush()
 
-    # 7. Gán quyền 'admin' cho tài khoản Admin vừa tạo
+    # 7. Gán quyền 'global_admin' cho tài khoản Admin vừa tạo
     admin_role_mapping = UserRole(
         user_id=admin_user.id,
-        role_id=role_map["admin"].id,
+        role_id=role.id,
         assigned_by=admin_user.id
     )
     db.add(admin_role_mapping)

@@ -1,22 +1,29 @@
+import uuid_utils
 import math
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from app.models import Tenants, Role, Permission, RolePermission, User, UserRole
-from app.repositories import TenantRepository
+from typing import Dict
+from app.models import Tenants, Role, Permission, User, UserRole
+from app.repositories import TenantRepository, PermissionRepository
 from app.services.exceptions import TenantAlreadyExistsError, NotFoundError
 from app.utils.auth import hash_password
-from app.core.enum import TenantStatus
+from app.core.enum import (
+    TenantStatus, PermissionAction, PermissionResource,
+    DefaultRole
+)
+from app.core.default_roles import DEFAULT_ROLES
 from app.schemas import (
     TenantCreate, TenantResponse, TenantUpdate,
     TenantPaginatedResponse, TenantQuery, PaginationQuery,
     PaginationResponse
 )
-from app.core.logging import logger
 
 class TenantService:
-    def __init__(self, tenant_repo: TenantRepository, db: AsyncSession):
+    def __init__(
+        self,
+        tenant_repo: TenantRepository, 
+        permission_repo: PermissionRepository
+    ):
         self.tenant_repo = tenant_repo
-        self.db = db
+        self.permission_repo = permission_repo
 
     async def register_tenant(self, data: TenantCreate) -> TenantResponse:
         # Check if tenant already exists by email, or domain            
@@ -30,8 +37,31 @@ class TenantService:
                 raise TenantAlreadyExistsError("Tenant domain already registered")
 
         try:
-            # 1. Create the tenant
+            global_permissions = await self.permission_repo.get_all_permissions()
+
+            perm_map: Dict[str, Dict[str, Permission]] = {}
+            for p in global_permissions:
+                if p.resource not in perm_map:
+                    perm_map[p.resource] = {}
+                perm_map[p.resource][p.action] = p
+            
+            # Hàm phụ trợ bóc tách danh sách Object Permission dựa vào ma trận định sẵn
+            def filter_permissions(role_cfg: dict) -> list[Permission]:
+                matched_perms = []
+                cfg_perms: Dict[PermissionResource, list[PermissionAction]] = role_cfg.get("permissions", {})
+                for res, actions in cfg_perms.items():
+                    res_str = res.value if hasattr(res, 'value') else str(res)
+                    for act in actions:
+                        act_str = act.value if hasattr(act, 'value') else str(act)
+                        if res_str in perm_map and act_str in perm_map[res_str]:
+                            matched_perms.append(perm_map[res_str][act_str])
+                return matched_perms
+
+            tenant_id = str(uuid_utils.uuid7())
+            admin_user_id = str(uuid_utils.uuid7())
+            
             tenant = Tenants(
+                id=tenant_id,
                 tenant_domain=data.tenant_domain,
                 company_name=data.company_name,
                 company_description=data.company_description,
@@ -40,91 +70,47 @@ class TenantService:
                 company_address=data.company_address,
                 status=TenantStatus.ACTIVE.value
             )
-            self.db.add(tenant)
-            await self.db.flush() # Get tenant ID
 
-            # 2. Create default roles for this tenant
-            roles = [
-                Role(
-                    tenant_id=tenant.id,
-                    name="admin", 
-                    description="Quản trị viên hệ thống, toàn quyền truy cập", 
-                    access_level="managerial", 
-                    is_system=True
-                ),
-                Role(
-                    tenant_id=tenant.id,
-                    name="manager", 
-                    description="Quản lý Nhân sự", 
-                    access_level="managerial", 
-                    is_system=True
-                ),
-                Role(
-                    tenant_id=tenant.id,
-                    name="employee", 
-                    description="Nhân viên tiêu chuẩn, truy cập dữ liệu public/private", 
-                    access_level="private", 
-                    is_system=True
-                ),
-                Role(
-                    tenant_id=tenant.id,
-                    name="guest", 
-                    description="Khách hoặc Thực tập sinh, chỉ đọc dữ liệu public", 
-                    access_level="public", 
-                    is_system=True
+            roles_by_name: Dict[str, Role] = {}
+    
+            for r_key in [DefaultRole.ADMIN, DefaultRole.HR_MANAGER, DefaultRole.EMPLOYEE]:
+                r_cfg = DEFAULT_ROLES[r_key]
+                
+                role_obj = Role(
+                    id=str(uuid_utils.uuid7()),
+                    tenant_id=tenant_id,
+                    name=r_cfg["name"],
+                    description=r_cfg["description"],
+                    access_level=r_cfg["access_level"].value if hasattr(r_cfg["access_level"], 'value') else r_cfg["access_level"],
+                    is_system=True,
+                    permissions=filter_permissions(r_cfg) # Gán quan hệ Many-to-Many với Permissions qua bảng trung gian
                 )
-            ]
-            self.db.add_all(roles)
-            await self.db.flush()
-
-            # 3. Fetch global permissions
-            result = await self.db.execute(select(Permission))
-            permissions_data = result.scalars().all()
-
-            # 4. Map permissions to roles for this tenant
-            role_map = {r.name: r for r in roles}
-            
-            admin_perms = permissions_data
-            manager_perms = [p for p in permissions_data if p.resource in ["users", "documents", "reports", "chat", "tasks"] and p.action != "delete"]
-            employee_perms = [p for p in permissions_data if (p.resource == "documents" and p.action == "read") or (p.resource == "chat" and p.action == "read") or (p.resource == "tasks" and p.action == "execute")]
-            guest_perms = [p for p in permissions_data if p.resource == "documents" and p.action == "read"]
-
-            role_permissions = []
-            for p in admin_perms:
-                role_permissions.append(RolePermission(role_id=role_map["admin"].id, permission_id=p.id))
-            for p in manager_perms:
-                role_permissions.append(RolePermission(role_id=role_map["manager"].id, permission_id=p.id))
-            for p in employee_perms:
-                role_permissions.append(RolePermission(role_id=role_map["employee"].id, permission_id=p.id))
-            for p in guest_perms:
-                role_permissions.append(RolePermission(role_id=role_map["guest"].id, permission_id=p.id))
-
-            self.db.add_all(role_permissions)
-            await self.db.flush()
+                # Thêm vào collection của Tenant (SQLAlchemy sẽ tự nhận diện khi lưu Tenant)
+                tenant.roles.append(role_obj)
+                roles_by_name[r_key] = role_obj
 
             # 5. Create admin user for this tenant
             admin_user = User(
+                id=admin_user_id,
+                tenant_id=tenant_id,
                 employee_code=data.admin_employee_code,
                 email=data.admin_email,
                 full_name=data.admin_full_name,
                 password=hash_password(data.admin_password),
-                is_active=True,
-                tenant_id=tenant.id
+                is_active=True
             )
-            self.db.add(admin_user)
-            await self.db.flush()
 
-            # 6. Assign admin role to this user
             admin_role_mapping = UserRole(
-                user_id=admin_user.id,
-                role_id=role_map["admin"].id,
-                assigned_by=admin_user.id
+                user_id=admin_user_id,
+                role_id=roles_by_name[DefaultRole.ADMIN].id,
+                assigned_by=admin_user_id,
             )
-            self.db.add(admin_role_mapping)
+            
+            admin_user.role_associations.append(admin_role_mapping)
+            tenant.users.append(admin_user)
 
-            await self.db.commit()
-            await self.db.refresh(tenant)
-            return TenantResponse.model_validate(tenant)
+            new_tenant = await self.tenant_repo.create_tenant(tenant)
+            return TenantResponse.model_validate(new_tenant)
         except Exception as e:
             await self.db.rollback()
             raise e

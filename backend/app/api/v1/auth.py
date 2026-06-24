@@ -43,11 +43,11 @@ async def login(
     try:
         client_ip = request.client.host if request.client else None
         user, access_token, refresh_token = await auth_service.login(
-            data.tenant_domain,
             data.employee_code, 
             data.password,
             background_tasks,
-            client_ip
+            client_ip,
+            data.tenant_domain
         )
 
         user_roles = []
@@ -61,9 +61,9 @@ async def login(
             roles=user_roles,
             department=user.department.name if user.department else "",
             job_title=user.job_title.title_name if user.job_title else "",
-            tenant_id=user.tenant_id,
-            tenant_domain=user.tenant.tenant_domain,
-            company_name=user.tenant.company_name,
+            tenant_id=user.tenant_id if user.tenant else "",
+            tenant_domain=user.tenant.tenant_domain if user.tenant else "",
+            company_name=user.tenant.company_name if user.tenant else "",
             last_login=user.last_login,
         )
 

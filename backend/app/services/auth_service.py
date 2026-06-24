@@ -9,6 +9,7 @@ from app.services import (
 )
 from app.models import User, UserSession
 from app.utils.auth import create_access_token, create_refresh_token, verify_password, verify_token
+from app.core.enum import LogLevel, DefaultRole
 from app.core.logging import logger
 from app.schemas import UserResponse, RoleSimple
 from app.services.activity_log_service import ActivityLogService
@@ -25,43 +26,68 @@ class AuthService:
         self.tenant_repo = tenant_repo
 
     async def login(
-        self, tenant_domain: str, employee_code: str, 
+        self, employee_code: str, 
         password: str, background_tasks: BackgroundTasks, 
-        client_ip: str | None = None
+        client_ip: str | None = None,
+        tenant_domain: str | None = None
     ) -> User:
+        is_global_admin = False
+        if tenant_domain is None:
+            user = await self.user_repo.get_user_by_employee_code(
+                employee_code, get_user_roles=True
+            )
+            if user and DefaultRole.GLOBAL_ADMIN.value in [
+                role.role.name 
+                for role in user.role_associations
+            ]:
+                is_global_admin = True
+            else:
+                raise InvalidCredentialsError()
+            
+        else:
+            tenant = await self.tenant_repo.get_tenant_by_domain(tenant_domain)
+            if not tenant:
+                raise NotFoundError("Tenant not found")
 
-        tenant = await self.tenant_repo.get_tenant_by_domain(tenant_domain)
-        if not tenant:
-            raise NotFoundError("Tenant not found")
-
-        user = await self.user_repo.get_user_by_employee_code(
-            tenant.id, employee_code, get_user_roles=True, 
-            get_user_department=True, 
-            get_user_job_title=True,
-            get_user_tenant=True
-        )
+            user = await self.user_repo.get_user_by_employee_code(
+                employee_code, tenant_id=tenant.id,
+                get_user_roles=True, 
+                get_user_department=True, 
+                get_user_job_title=True,
+                get_user_tenant=True
+            )
 
         if not user or not verify_password(password, user.password):
             ActivityLogService.log(
                 background_tasks=None,
                 user_id=None,
-                tenant_id=tenant.id,
+                tenant_id=tenant.id if tenant else None,
                 action="user.login_failed",
                 resource="auth",
                 meta_data={
                     "employee_code": employee_code,
-                    "tenant_domain": tenant_domain
+                    "tenant_domain": tenant_domain if tenant_domain else "Global Admin"
                 },
                 ip_address=client_ip,
-                log_level="WARNING"
+                log_level=LogLevel.WARNING
             )
             raise InvalidCredentialsError()
         
         user_roles = []
-        for role in user.role_associations:
-            user_roles.append(role.role.name)
+        user_permissions = []
+        for role_assoc in user.role_associations:
+            role = role_assoc.role
+            user_roles.append(role.name)
+            for perm in role.permissions:
+                user_permissions.append(f"{perm.resource}:{perm.action}")
         
-        access_token = create_access_token(str(user.id), str(user.tenant_id), user_roles)
+        access_token = create_access_token(
+            user_id=str(user.id), 
+            user_roles=user_roles,
+            tenant_id=user.tenant_id, 
+            is_global_admin=is_global_admin,
+            permissions=user_permissions
+        )
         refresh_token = create_refresh_token(str(user.id))
 
         user_session = UserSession(
@@ -90,10 +116,10 @@ class AuthService:
             resource="auth",
             meta_data={
                 "employee_code": employee_code,
-                "tenant_domain": tenant_domain
+                "tenant_domain": tenant_domain if tenant_domain else "Global Admin"
             },
             ip_address=client_ip,
-            log_level="INFO"
+            log_level=LogLevel.INFO
         )
         
         return user, access_token, refresh_token

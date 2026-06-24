@@ -16,7 +16,7 @@ class User(Base):
 
     department_id = Column(String(36), ForeignKey("departments.id"), nullable=True)
     job_title_id = Column(String(36), ForeignKey("job_titles.id"), nullable=True)
-    tenant_id = Column(String(36), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(String(36), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True)
     
     is_active = Column(Boolean, default=True, nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
@@ -46,5 +46,7 @@ class User(Base):
         Index("uq_user_tenant_email_active", "tenant_id", "email", unique=True, postgresql_where=text("is_deleted = false")),
         Index("idx_users_department", "department_id"),
         Index("idx_users_job_title", "job_title_id"),
+        Index("uq_global_admin_employee_code", "employee_code", unique=True, postgresql_where=text("tenant_id IS NULL AND is_deleted = false")),
+        Index("uq_global_admin_email", "email", unique=True, postgresql_where=text("tenant_id IS NULL AND is_deleted = false")),
     )
 
