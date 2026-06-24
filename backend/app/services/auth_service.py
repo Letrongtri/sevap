@@ -131,6 +131,7 @@ class AuthService:
             full_name=user.full_name,
             employee_code=user.employee_code,
             roles=user_roles,
+            permissions=user_permissions,
             department=user.department.name if user.department else "",
             job_title=user.job_title.title_name if user.job_title else "",
             tenant_id=user.tenant_id if user.tenant else "",
