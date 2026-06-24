@@ -2,16 +2,23 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
 
-from app.dependencies import get_job_title_service
+from app.dependencies import get_job_title_service, check_permission
 from app.schemas import JobTitleCreate, JobTitleResponse, JobTitleUpdate, JobTitleSimple
 from app.services import JobTitleService, NotFoundError, JobTitleAlreadyExistsError
 from app.decorators import log_activity
 from app.core.logging import logger
+from app.core.enum import PermissionAction, PermissionResource
 
 
 router = APIRouter()
 
-@router.get("", response_model=List[JobTitleResponse])
+@router.get(
+    "", 
+    response_model=List[JobTitleResponse],
+    dependencies=[Depends(check_permission(
+        PermissionResource.JOB_TITLES, PermissionAction.READ
+    ))]
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_job_titles(
     request: Request,
@@ -27,7 +34,13 @@ async def get_all_job_titles(
         )
         raise HTTPException(status_code=422, detail="Failed to get all job_titles")
 
-@router.post("", response_model=JobTitleResponse)
+@router.post(
+    "", 
+    response_model=JobTitleResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.JOB_TITLES, PermissionAction.CREATE
+    ))]
+)
 @log_activity(
     action="job_title.create",
     resource="job_title",
@@ -57,7 +70,13 @@ async def create_job_title(
         )
         raise HTTPException(status_code=422, detail="Failed to create job title")
 
-@router.get("/simple", response_model=List[JobTitleSimple])
+@router.get(
+    "/simple", 
+    response_model=List[JobTitleSimple],
+    dependencies=[Depends(check_permission(
+        PermissionResource.JOB_TITLES, PermissionAction.READ
+    ))]
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_simple_job_titles(
     request: Request,
@@ -73,7 +92,13 @@ async def get_all_simple_job_titles(
         )
         raise HTTPException(status_code=422, detail="Failed to get all job_titles")
 
-@router.get("/{job_title_id}", response_model=JobTitleResponse)
+@router.get(
+    "/{job_title_id}", 
+    response_model=JobTitleResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.JOB_TITLES, PermissionAction.READ
+    ))]
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_job_title(
     request: Request, 
@@ -103,7 +128,13 @@ async def get_job_title(
         )
         raise HTTPException(status_code=422, detail="Failed to get job_title")
 
-@router.patch("/{job_title_id}", response_model=JobTitleResponse)
+@router.patch(
+    "/{job_title_id}", 
+    response_model=JobTitleResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.JOB_TITLES, PermissionAction.UPDATE
+    ))]
+)
 @log_activity(
     action="job_title.update",
     resource="job_title",
@@ -138,7 +169,13 @@ async def update_job_title(
         )
         raise HTTPException(status_code=422, detail="Failed to update job title")
 
-@router.delete("/{job_title_id}", response_model=JobTitleResponse)
+@router.delete(
+    "/{job_title_id}", 
+    response_model=JobTitleResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.JOB_TITLES, PermissionAction.DELETE
+    ))]
+)
 @log_activity(
     action="job_title.delete",
     resource="job_title",

@@ -8,12 +8,19 @@ from app.schemas import (
     ActivityLogResponse,
     PaginationQuery
 )
-from app.dependencies import get_activity_log_service
+from app.dependencies import get_activity_log_service, check_permission
 from app.core.logging import logger
+from app.core.enum import PermissionAction, PermissionResource
 
 router = APIRouter()
 
-@router.get("", response_model=ActivityLogPaginatedResponse)
+@router.get(
+    "", 
+    response_model=ActivityLogPaginatedResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.ACTIVITY_LOGS, PermissionAction.READ
+    ))]
+)
 async def get_tenant_activity_logs(
     request: Request,
     query: Annotated[ActivityLogQuery, Depends()],
@@ -53,7 +60,13 @@ async def get_tenant_activity_logs(
             detail="Failed to retrieve activity logs"
         )
 
-@router.get("/{log_id}", response_model=ActivityLogResponse)
+@router.get(
+    "/{log_id}", 
+    response_model=ActivityLogResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.ACTIVITY_LOGS, PermissionAction.READ
+    ))]
+)
 async def get_activity_log(
     request: Request,
     log_id: str,

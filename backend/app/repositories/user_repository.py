@@ -4,14 +4,15 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload, joinedload
 from sqlalchemy import delete, func, or_
 
-from app.models import User, UserRole
+from app.models import User, UserRole, Role
 
 class UserRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
     async def get_user_by_employee_code(
-        self, tenant_id: str, employee_code: str, 
+        self, employee_code: str, 
+        tenant_id: str | None = None,
         get_user_roles: bool = False, 
         get_user_department: bool = False, 
         get_user_job_title: bool = False,
@@ -28,6 +29,7 @@ class UserRepository:
                 stmt.options(
                     selectinload(User.role_associations)
                     .selectinload(UserRole.role)
+                    .selectinload(Role.permissions)
                 )
             )
         if get_user_department:
@@ -58,6 +60,7 @@ class UserRepository:
                 stmt.options(
                     selectinload(User.role_associations)
                     .selectinload(UserRole.role)
+                    .selectinload(Role.permissions)
                 )
             )
         if get_user_department:
@@ -87,6 +90,7 @@ class UserRepository:
             stmt = stmt.options(
                 selectinload(User.role_associations)
                 .selectinload(UserRole.role)
+                .selectinload(Role.permissions)
             )
         if get_user_department:
             stmt = stmt.options(selectinload(User.department))

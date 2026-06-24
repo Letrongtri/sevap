@@ -72,12 +72,14 @@ async def add_system_default_data(db: AsyncSession):
         Permission(resource=PermissionResource.DOCUMENTS, action=PermissionAction.UPDATE, description="Cập nhật thông tin tài liệu"),
         Permission(resource=PermissionResource.DOCUMENTS, action=PermissionAction.DELETE, description="Xóa tài liệu"),
         Permission(resource=PermissionResource.DOCUMENTS, action=PermissionAction.UPLOAD, description="Tải lên tài liệu"),
+        Permission(resource=PermissionResource.DOCUMENTS, action=PermissionAction.DOWNLOAD, description="Tải xuống tài liệu"),
         
         # Resource: department
         Permission(resource=PermissionResource.DEPARTMENTS, action=PermissionAction.CREATE, description="Tạo phòng ban mới"),
         Permission(resource=PermissionResource.DEPARTMENTS, action=PermissionAction.READ, description="Xem thông tin phòng ban"),
         Permission(resource=PermissionResource.DEPARTMENTS, action=PermissionAction.UPDATE, description="Cập nhật phòng ban"),
         Permission(resource=PermissionResource.DEPARTMENTS, action=PermissionAction.DELETE, description="Xóa phòng ban"),
+        Permission(resource=PermissionResource.DEPARTMENTS, action=PermissionAction.ASSIGN, description="Gán phòng ban cho người dùng"),
         
         # Resource: conversation
         Permission(resource=PermissionResource.CONVERSATIONS, action=PermissionAction.CREATE, description="Tạo cuộc trò chuyện mới"),

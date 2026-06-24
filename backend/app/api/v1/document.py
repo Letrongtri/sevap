@@ -22,14 +22,20 @@ from app.schemas import (
     DocumentPaginatedResponse,
     PaginationQuery
 )
-from app.dependencies import get_document_service
+from app.dependencies import get_document_service, check_permission
 from app.decorators import log_activity
 from app.core.logging import logger
-from app.core.enum import AccessLevel
+from app.core.enum import AccessLevel, PermissionAction, PermissionResource
 
 router = APIRouter()
 
-@router.post("", response_model=DocumentResponse)
+@router.post(
+    "",
+    response_model=DocumentResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.DOCUMENTS, PermissionAction.UPLOAD
+    ))]
+)
 @log_activity(
     action="document.upload",
     resource="document",
@@ -84,7 +90,13 @@ async def upload_document(
         )
         raise HTTPException(status_code=422, detail="Failed to upload document")
 
-@router.get("", response_model=DocumentPaginatedResponse)
+@router.get(
+    "", 
+    response_model=DocumentPaginatedResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.DOCUMENTS, PermissionAction.READ
+    ))]
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_documents(
     request: Request,
@@ -94,6 +106,8 @@ async def get_all_documents(
 ):
     try:
         tenant_id = request.state.tenant_id
+        # TODO: Lấy những tài liệu mà user có quyền đọc
+        
         return await document_service.get_all_documents(
             tenant_id, query, pagination
         )
@@ -107,7 +121,13 @@ async def get_all_documents(
         )
         raise HTTPException(status_code=422, detail="Failed to get all documents")
 
-@router.get("/{document_id}", response_model=DocumentResponse)
+@router.get(
+    "/{document_id}", 
+    response_model=DocumentResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.DOCUMENTS, PermissionAction.READ
+    ))]
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_document(
     request: Request, 
@@ -135,7 +155,12 @@ async def get_document(
         )
         raise HTTPException(status_code=422, detail="Failed to get document")
 
-@router.get("/{document_id}/file")
+@router.get(
+    "/{document_id}/file",
+    dependencies=[Depends(check_permission(
+        PermissionResource.DOCUMENTS, PermissionAction.DOWNLOAD
+    ))]
+)
 async def get_document_file(
     request: Request, 
     document_id: str,
@@ -177,7 +202,13 @@ async def get_document_file(
         )
         raise HTTPException(status_code=500, detail="Failed to retrieve document file")
 
-@router.put("/{document_id}", response_model=DocumentResponse)
+@router.put(
+    "/{document_id}", 
+    response_model=DocumentResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.DOCUMENTS, PermissionAction.UPDATE
+    ))]
+)
 @log_activity(
     action="document.update",
     resource="document",
@@ -216,7 +247,13 @@ async def update_document(
         )
         raise HTTPException(status_code=422, detail="Failed to upload document")
 
-@router.delete("/{document_id}", response_model=DocumentResponse)
+@router.delete(
+    "/{document_id}", 
+    response_model=DocumentResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.DOCUMENTS, PermissionAction.DELETE
+    ))]
+)
 @log_activity(
     action="document.delete",
     resource="document",

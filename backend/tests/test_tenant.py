@@ -41,7 +41,7 @@ async def test_register_tenant_success(async_client: AsyncClient, db_session: As
     roles = res_roles.scalars().all()
     role_names = [r.name for r in roles]
     assert "admin" in role_names
-    assert "manager" in role_names
+    assert "hr_manager" in role_names
     assert "employee" in role_names
     
     # 3. First admin user exists for this tenant

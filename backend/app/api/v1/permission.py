@@ -2,12 +2,19 @@ from fastapi import APIRouter, HTTPException, Depends, Request
 
 from app.services import PermissionService
 from app.schemas import PermissionResponse
-from app.dependencies import get_permission_service
+from app.dependencies import get_permission_service, check_permission
 from app.core.logging import logger
+from app.core.enum import PermissionAction, PermissionResource
 
 router = APIRouter()
 
-@router.get("", response_model=list[PermissionResponse])
+@router.get(
+    "", 
+    response_model=list[PermissionResponse],
+    dependencies=[Depends(check_permission(
+        PermissionResource.PERMISSIONS, PermissionAction.READ
+    ))]
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_permissions(
     request: Request,

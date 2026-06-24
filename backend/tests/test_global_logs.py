@@ -34,8 +34,8 @@ async def regular_user_headers(db_session: AsyncSession):
 
 
 @pytest.mark.asyncio
-async def test_global_log_endpoints(async_client: AsyncClient, db_session: AsyncSession, admin_headers):
-    headers = await admin_headers()
+async def test_global_log_endpoints(async_client: AsyncClient, db_session: AsyncSession, global_admin_headers):
+    headers = await global_admin_headers()
 
     # 1. Insert a global log
     global_log = ActivityLog(
@@ -69,9 +69,9 @@ async def test_global_log_endpoints(async_client: AsyncClient, db_session: Async
 async def test_tenant_log_privacy_redaction(
     async_client: AsyncClient, 
     db_session: AsyncSession, 
-    admin_headers
+    global_admin_headers
 ):
-    headers = await admin_headers()
+    headers = await global_admin_headers()
     
     # Fetch default tenant
     res_tenant = await db_session.execute(select(Tenants).filter_by(tenant_domain="system.hrnexus.com"))

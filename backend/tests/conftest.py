@@ -7,10 +7,13 @@ def resolve_db_host(url_str: str) -> str:
     url = make_url(url_str)
     host = url.host
     if host == "db":
-        try:
-            socket.gethostbyname("db")
-        except socket.gaierror:
+        if os.name == 'nt' or not os.path.exists('/.dockerenv'):
             url = url._replace(host="localhost")
+        else:
+            try:
+                socket.gethostbyname("db")
+            except socket.gaierror:
+                url = url._replace(host="localhost")
     return url.render_as_string(hide_password=False)
 
 orig_url = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@db:5432/hr_assistant")
@@ -83,8 +86,25 @@ async def clean_db_setup(event_loop):
     test_engine = create_async_engine(TEST_DATABASE_URL)
     async with test_engine.begin() as conn:
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+        await conn.execute(text("DROP TABLE IF EXISTS alembic_version CASCADE;"))
         await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
+
+    # Run migrations via alembic subprocess to avoid event loop conflicts
+    import subprocess
+    import sys
+    
+    env = os.environ.copy()
+    env["DATABASE_URL"] = TEST_DATABASE_URL
+    
+    result = subprocess.run(
+        [sys.executable, "-m", "alembic", "upgrade", "head"],
+        env=env,
+        capture_output=True,
+        text=True,
+        cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"Alembic migration failed: {result.stderr}\nOutput: {result.stdout}")
 
     # Seed default data (Tenant, roles, permissions, admin user)
     AsyncSessionLocal = sessionmaker(
@@ -94,6 +114,29 @@ async def clean_db_setup(event_loop):
     )
     async with AsyncSessionLocal() as db:
         await add_system_default_data(db)
+        
+        # Seed default test tenant 'system.hrnexus.com'
+        from app.repositories import TenantRepository, PermissionRepository
+        from app.services import TenantService
+        from app.schemas import TenantCreate
+        
+        tenant_repo = TenantRepository(db)
+        perm_repo = PermissionRepository(db)
+        tenant_service = TenantService(tenant_repo, perm_repo)
+        
+        tenant_data = TenantCreate(
+            tenant_domain="system.hrnexus.com",
+            company_name="System Default Co",
+            company_description="Default System Tenant",
+            company_email="info@system.hrnexus.com",
+            company_phone="0912345678",
+            company_address="123 System St",
+            admin_employee_code="admin",
+            admin_full_name="System Administrator",
+            admin_email="admin@company.local",
+            admin_password="Admin@1234"
+        )
+        await tenant_service.register_tenant(tenant_data)
 
     await test_engine.dispose()
 
@@ -119,21 +162,125 @@ async def async_client() -> AsyncGenerator[AsyncClient, None]:
 
 @pytest.fixture
 def admin_headers(db_session) -> dict:
-    """Generate auth headers for system default administrator."""
+    """Generate auth headers for system default tenant administrator."""
     async def _get_headers():
-        # Query admin user
-        from app.models import User
+        from app.models import User, UserRole, Role, Tenants
         from sqlalchemy.future import select
-        res = await db_session.execute(select(User).filter_by(employee_code="admin"))
+        from sqlalchemy.orm import selectinload
+        
+        # 1. Fetch tenant system.hrnexus.com
+        res_tenant = await db_session.execute(select(Tenants).filter_by(tenant_domain="system.hrnexus.com"))
+        tenant = res_tenant.scalars().first()
+        if not tenant:
+            raise ValueError("Default tenant system.hrnexus.com not found")
+            
+        # 2. Fetch admin user of this tenant
+        stmt = select(User).filter_by(
+            employee_code="admin",
+            tenant_id=tenant.id
+        ).options(
+            selectinload(User.role_associations)
+            .selectinload(UserRole.role)
+            .selectinload(Role.permissions)
+        )
+        res = await db_session.execute(stmt)
         admin = res.scalars().first()
         if not admin:
-            raise ValueError("Admin user not found in test db")
+            raise ValueError("Tenant admin user not found in test db")
             
+        user_roles = []
+        user_permissions = []
+        for role_assoc in admin.role_associations:
+            r = role_assoc.role
+            user_roles.append(r.name)
+            for perm in r.permissions:
+                user_permissions.append(f"{perm.resource}:{perm.action}")
+                
         token = create_access_token(
             user_id=str(admin.id),
-            tenant_id=str(admin.tenant_id),
-            user_roles=["admin"]
+            user_roles=user_roles,
+            tenant_id=str(tenant.id),
+            is_global_admin=False,
+            permissions=user_permissions
         )
         return {"Authorization": f"Bearer {token.token}"}
         
     return _get_headers
+
+@pytest.fixture
+def global_admin_headers(db_session) -> dict:
+    """Generate auth headers for system-wide Global Administrator."""
+    async def _get_headers():
+        from app.models import User, UserRole, Role
+        from sqlalchemy.future import select
+        from sqlalchemy.orm import selectinload
+        
+        stmt = select(User).filter_by(
+            employee_code="admin",
+            tenant_id=None
+        ).options(
+            selectinload(User.role_associations)
+            .selectinload(UserRole.role)
+            .selectinload(Role.permissions)
+        )
+        res = await db_session.execute(stmt)
+        admin = res.scalars().first()
+        if not admin:
+            raise ValueError("Global admin user not found in test db")
+            
+        user_roles = []
+        user_permissions = []
+        for role_assoc in admin.role_associations:
+            r = role_assoc.role
+            user_roles.append(r.name)
+            for perm in r.permissions:
+                user_permissions.append(f"{perm.resource}:{perm.action}")
+                
+        token = create_access_token(
+            user_id=str(admin.id),
+            user_roles=user_roles,
+            tenant_id=None,
+            is_global_admin=True,
+            permissions=user_permissions
+        )
+        return {"Authorization": f"Bearer {token.token}"}
+        
+    return _get_headers
+
+
+@pytest.fixture
+def employee_headers(db_session) -> dict:
+    """Generate auth headers for a standard tenant employee."""
+    async def _get_headers():
+        from app.models import Tenants
+        from sqlalchemy.future import select
+        from app.utils.auth import create_access_token
+        
+        # 1. Fetch tenant system.hrnexus.com
+        res_tenant = await db_session.execute(select(Tenants).filter_by(tenant_domain="system.hrnexus.com"))
+        tenant = res_tenant.scalars().first()
+        if not tenant:
+            raise ValueError("Default tenant system.hrnexus.com not found")
+            
+        token = create_access_token(
+            user_id="employee-test-id",
+            user_roles=["employee"],
+            tenant_id=str(tenant.id),
+            is_global_admin=False,
+            permissions=[
+                "users:read",
+                "roles:read",
+                "job_titles:read",
+                "departments:read",
+                "documents:read",
+                "conversations:create",
+                "conversations:read",
+                "conversations:update",
+                "conversations:delete",
+                "conversations:send"
+            ]
+        )
+        return {"Authorization": f"Bearer {token.token}"}
+        
+    return _get_headers
+

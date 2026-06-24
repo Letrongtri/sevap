@@ -23,7 +23,7 @@ async def get_test_tenant(db_session: AsyncSession) -> Tenants:
 @pytest.fixture
 async def seeded_document(db_session: AsyncSession) -> Document:
     tenant = await get_test_tenant(db_session)
-    res_user = await db_session.execute(select(User).filter_by(employee_code="admin"))
+    res_user = await db_session.execute(select(User).where(User.employee_code == "admin", User.tenant_id == tenant.id))
     admin = res_user.scalar_one()
     
     # Create dummy file on disk
@@ -163,3 +163,32 @@ async def test_delete_document(async_client: AsyncClient, db_session: AsyncSessi
     res_db = await db_session.execute(select(Document).filter_by(id=doc_id))
     doc = res_db.scalar_one()
     assert doc.is_deleted is True
+
+
+@pytest.mark.asyncio
+async def test_unauthorized_document_management(async_client: AsyncClient, db_session: AsyncSession, employee_headers, seeded_document):
+    # Standard employee should get 403 Forbidden on upload, update, delete documents
+    headers = await employee_headers()
+    
+    # 1. Try to upload document
+    files = {
+        "file": ("test_upload.docx", b"Hacker content", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    }
+    data = {
+        "access_level": AccessLevel.PUBLIC.value,
+        "title": "Hack Document"
+    }
+    res_upload = await async_client.post("/api/v1/documents", files=files, data=data, headers=headers)
+    assert res_upload.status_code == 403
+    
+    # 2. Try to update document
+    update_data = {
+        "title": "Hacked Title"
+    }
+    res_update = await async_client.put(f"/api/v1/documents/{seeded_document.id}", json=update_data, headers=headers)
+    assert res_update.status_code == 403
+    
+    # 3. Try to delete document
+    res_delete = await async_client.delete(f"/api/v1/documents/{seeded_document.id}", headers=headers)
+    assert res_delete.status_code == 403
+

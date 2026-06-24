@@ -4,6 +4,8 @@ from app.schemas import TenantCreate, TenantUpdate, TenantResponse
 from app.services import TenantService, TenantAlreadyExistsError, NotFoundError
 from app.decorators import log_activity
 from app.core.logging import logger
+from app.core.enum import PermissionAction, PermissionResource
+from app.dependencies import check_permission
 
 router = APIRouter()
 
@@ -32,7 +34,13 @@ async def register_tenant(
         logger.error("tenant_registration_failed_internal", error=str(e), exc_info=True)
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Failed to register tenant")
 
-@router.put("", response_model=TenantResponse)
+@router.put(
+    "", 
+    response_model=TenantResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.TENANTS, PermissionAction.UPDATE
+    ))]
+)
 @log_activity(
     action="tenant.update",
     resource="tenant",
@@ -58,7 +66,13 @@ async def update_tenant(
         logger.error("tenant_update_failed", tenant_id=tenant_id, error=str(e), exc_info=True)
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Failed to update tenant")
 
-@router.delete("", response_model=TenantResponse)
+@router.delete(
+    "", 
+    response_model=TenantResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.TENANTS, PermissionAction.DELETE
+    ))]
+)
 @log_activity(
     action="tenant.delete",
     resource="tenant",
@@ -80,7 +94,13 @@ async def soft_delete_tenant(
         logger.error("tenant_delete_failed", tenant_id=tenant_id, error=str(e), exc_info=True)
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Failed to delete tenant")
 
-@router.get("/info", response_model=TenantResponse)
+@router.get(
+    "/info", 
+    response_model=TenantResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.TENANTS, PermissionAction.READ
+    ))]
+)
 async def get_tenant_info(
     tenant_service: TenantService = Depends(get_tenant_service),
     current_user=Depends(get_current_user)

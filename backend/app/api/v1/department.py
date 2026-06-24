@@ -2,16 +2,23 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
 
-from app.dependencies import get_department_service
+from app.dependencies import get_department_service, check_permission
 from app.schemas import DepartmentCreate, DepartmentResponse, DepartmentUpdate, DepartmentSimple
 from app.services import DepartmentService, NotFoundError, DepartmentAlreadyExistsError
 from app.decorators import log_activity
 from app.core.logging import logger
+from app.core.enum import PermissionAction, PermissionResource
 
 
 router = APIRouter()
 
-@router.get("", response_model=List[DepartmentResponse])
+@router.get(
+    "",
+    response_model=List[DepartmentResponse],
+    dependencies=[Depends(check_permission(
+        PermissionResource.DEPARTMENTS, PermissionAction.READ
+    ))]
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_departments(
     request: Request,
@@ -27,7 +34,13 @@ async def get_all_departments(
         )
         raise HTTPException(status_code=422, detail="Failed to get all departments")
 
-@router.post("", response_model=DepartmentResponse)
+@router.post(
+    "",
+    response_model=DepartmentResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.DEPARTMENTS, PermissionAction.CREATE
+    ))]
+)
 @log_activity(
     action="department.create",
     resource="department",
@@ -60,7 +73,13 @@ async def create_department(
         )
         raise HTTPException(status_code=422, detail="Failed to create department")
 
-@router.get("/simple", response_model=List[DepartmentSimple])
+@router.get(
+    "/simple",
+    response_model=List[DepartmentSimple],
+    dependencies=[Depends(check_permission(
+        PermissionResource.DEPARTMENTS, PermissionAction.READ
+    ))]
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_simple_departments(
     request: Request,
@@ -76,7 +95,13 @@ async def get_all_simple_departments(
         )
         raise HTTPException(status_code=422, detail="Failed to get all departments")
 
-@router.get("/{department_id}", response_model=DepartmentResponse)
+@router.get(
+    "/{department_id}",
+    response_model=DepartmentResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.DEPARTMENTS, PermissionAction.READ
+    ))]
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_department(
     request: Request, 
@@ -108,7 +133,13 @@ async def get_department(
         )
         raise HTTPException(status_code=422, detail="Failed to get department")
 
-@router.patch("/{department_id}", response_model=DepartmentResponse)
+@router.patch(
+    "/{department_id}",
+    response_model=DepartmentResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.DEPARTMENTS, PermissionAction.UPDATE
+    ))]
+)
 @log_activity(
     action="department.update",
     resource="department",
@@ -141,7 +172,13 @@ async def update_department(
         )
         raise HTTPException(status_code=422, detail="Failed to update department")
 
-@router.delete("/{department_id}", response_model=DepartmentResponse)
+@router.delete(
+    "/{department_id}",
+    response_model=DepartmentResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.DEPARTMENTS, PermissionAction.DELETE
+    ))]
+)
 @log_activity(
     action="department.delete",
     resource="department",

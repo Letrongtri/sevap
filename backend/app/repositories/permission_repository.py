@@ -19,13 +19,8 @@ class PermissionRepository:
 
         return list(result.scalars().all())
 
-    async def get_all_permissions(self, get_tenant: bool = False) -> list[Permission]:
+    async def get_all_permissions(self) -> list[Permission]:
         stmt = select(Permission).order_by(Permission.id.asc())
-
-        if not get_tenant:
-            stmt = stmt.where(
-                Permission.resource != PermissionResource.TENANTS.value
-            )
 
         result = await self.db.execute(stmt)
 

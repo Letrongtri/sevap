@@ -117,3 +117,29 @@ async def test_delete_job_title_success(async_client: AsyncClient, db_session: A
     # Verify soft delete
     await db_session.refresh(custom_job_title)
     assert custom_job_title.is_deleted is True
+
+
+@pytest.mark.asyncio
+async def test_unauthorized_job_title_management(async_client: AsyncClient, db_session: AsyncSession, employee_headers, custom_job_title):
+    # Standard employee should get 403 Forbidden on create, update, delete job titles
+    headers = await employee_headers()
+    
+    # 1. Try to create job title
+    job_data = {
+        "title_name": "hacker_job",
+        "description": "Unauthorized creation attempt"
+    }
+    res_create = await async_client.post("/api/v1/job_titles", json=job_data, headers=headers)
+    assert res_create.status_code == 403
+    
+    # 2. Try to update job title
+    update_data = {
+        "description": "Hacked description"
+    }
+    res_update = await async_client.patch(f"/api/v1/job_titles/{custom_job_title.id}", json=update_data, headers=headers)
+    assert res_update.status_code == 403
+    
+    # 3. Try to delete job title
+    res_delete = await async_client.delete(f"/api/v1/job_titles/{custom_job_title.id}", headers=headers)
+    assert res_delete.status_code == 403
+

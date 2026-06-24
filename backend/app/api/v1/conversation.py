@@ -4,7 +4,12 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
 
-from app.dependencies import get_conversation_service, get_message_service
+from app.core.enum import PermissionAction, PermissionResource
+from app.dependencies import (
+    check_permission, 
+    get_conversation_service, 
+    get_message_service
+)
 from app.schemas import (
     ConversationPaginatedResponse, PaginationQuery,
     ConversationResponse, ConversationDetailResponse, 
@@ -20,7 +25,13 @@ from app.core.logging import logger
 
 router = APIRouter()
 
-@router.get("", response_model=ConversationPaginatedResponse)
+@router.get(
+    "",
+    response_model=ConversationPaginatedResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.CONVERSATIONS, PermissionAction.READ
+    ))]
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_personal_conversations(
     request: Request,
@@ -50,7 +61,12 @@ async def get_all_personal_conversations(
 # tạo cuộc hội thoại mới (nếu chưa có) ->
 # thêm câu hỏi vào cuộc hội thoại ->
 # stream câu trả lời từ AI brain token-by-token
-@router.post("/message")
+@router.post(
+    "/message",
+    dependencies=[Depends(check_permission(
+        PermissionResource.CONVERSATIONS, PermissionAction.SEND
+    ))]
+)
 @log_activity(
     action="chat.message_sent",
     resource="conversation",
@@ -96,7 +112,13 @@ async def send_message(
         raise HTTPException(status_code=422, detail="Failed to send message")
 
 
-@router.get("/{conversation_id}", response_model=ConversationDetailResponse)
+@router.get(
+    "/{conversation_id}",
+    response_model=ConversationDetailResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.CONVERSATIONS, PermissionAction.READ
+    ))]
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_conversation(
     request: Request, 
@@ -123,7 +145,13 @@ async def get_conversation(
         )
         raise HTTPException(status_code=422, detail="Failed to get conversation")
 
-@router.patch("/{conversation_id}", response_model=ConversationResponse)
+@router.patch(
+    "/{conversation_id}", 
+    response_model=ConversationResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.CONVERSATIONS, PermissionAction.UPDATE
+    ))]
+)
 @log_activity(
     action="conversation.update",
     resource="conversation",
@@ -158,7 +186,13 @@ async def update_conversation(
         )
         raise HTTPException(status_code=422, detail="Failed to update conversation")
 
-@router.delete("/{conversation_id}", response_model=ConversationResponse)
+@router.delete(
+    "/{conversation_id}", 
+    response_model=ConversationResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.CONVERSATIONS, PermissionAction.DELETE
+    ))]
+)
 @log_activity(
     action="conversation.delete",
     resource="conversation",
@@ -190,7 +224,13 @@ async def delete_conversation(
         )
         raise HTTPException(status_code=422, detail="Failed to delete conversation")
 
-@router.get("/{conversation_id}/messages", response_model=List[MessageResponse])
+@router.get(
+    "/{conversation_id}/messages",
+    response_model=List[MessageResponse],
+    dependencies=[Depends(check_permission(
+        PermissionResource.CONVERSATIONS, PermissionAction.READ
+    ))]
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_messages_by_conversation_id(
     request: Request,

@@ -3,7 +3,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status, Backgrou
 from fastapi.responses import StreamingResponse
 import json
 import asyncio
-from app.dependencies import get_tenant_service, get_global_admin_service
+from app.dependencies import (
+    get_tenant_service, get_global_admin_service, 
+    check_permission
+)
 from app.schemas import (
     TenantCreate, TenantUpdate, TenantResponse, 
     TenantPaginatedResponse, TenantQuery, PaginationQuery,
@@ -16,10 +19,18 @@ from app.services import (
     TenantAlreadyExistsError, NotFoundError
 )
 from app.core.logging import logger
+from app.core.enum import PermissionAction, PermissionResource
 
 router = APIRouter()
 
-@router.get("/tenants", response_model=TenantPaginatedResponse)
+@router.get(
+    "/tenants", 
+    response_model=TenantPaginatedResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.TENANTS, PermissionAction.READ,
+        require_global_admin=True
+    ))]
+)
 async def get_tenants(
     request: Request,
     query: Annotated[TenantQuery, Depends()],
@@ -35,7 +46,14 @@ async def get_tenants(
             detail="Failed to get tenants by admin"
         )
 
-@router.post("/tenants", response_model=TenantResponse)
+@router.post(
+    "/tenants", 
+    response_model=TenantResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.TENANTS, PermissionAction.CREATE,
+        require_global_admin=True
+    ))]
+)
 @log_activity(
     action="global_admin.tenant_create",
     resource="tenant",
@@ -70,7 +88,14 @@ async def create_tenant(
             detail="Failed to register tenant by admin"
         )
 
-@router.get("/tenants/{tenant_id}", response_model=TenantResponse)
+@router.get(
+    "/tenants/{tenant_id}", 
+    response_model=TenantResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.TENANTS, PermissionAction.READ,
+        require_global_admin=True
+    ))]
+)
 async def get_tenant_by_id(
     request: Request,
     tenant_id: str,
@@ -93,7 +118,14 @@ async def get_tenant_by_id(
             detail="Failed to get tenant info by admin"
         )
 
-@router.put("/tenants/{tenant_id}", response_model=TenantResponse)
+@router.put(
+    "/tenants/{tenant_id}", 
+    response_model=TenantResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.TENANTS, PermissionAction.UPDATE,
+        require_global_admin=True
+    ))]
+)
 @log_activity(
     action="global_admin.tenant_update",
     resource="tenant",
@@ -124,7 +156,14 @@ async def update_tenant(
             detail="Failed to update tenant by admin"
         )
 
-@router.delete("/tenants/{tenant_id}", response_model=TenantResponse)
+@router.delete(
+    "/tenants/{tenant_id}", 
+    response_model=TenantResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.TENANTS, PermissionAction.DELETE,
+        require_global_admin=True
+    ))]
+)
 @log_activity(
     action="global_admin.tenant_delete",
     resource="tenant",
@@ -157,7 +196,14 @@ async def delete_tenant(
             detail="Failed to delete tenant"
         )
 
-@router.get("/dashboard/tenants/summary", response_model=TenantSummaryResponse)
+@router.get(
+    "/dashboard/tenants/summary", 
+    response_model=TenantSummaryResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.TENANTS, PermissionAction.READ,
+        require_global_admin=True
+    ))]
+)
 async def get_tenant_summary(
     global_admin_service: GlobalAdminService = Depends(get_global_admin_service),
 ):
@@ -174,7 +220,14 @@ async def get_tenant_summary(
             detail="Failed to get tenant summary"
         )
 
-@router.get("/dashboard/resources/vector-storage", response_model=VectorStorageResponse)
+@router.get(
+    "/dashboard/resources/vector-storage", 
+    response_model=VectorStorageResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.TENANTS, PermissionAction.READ,
+        require_global_admin=True
+    ))]
+)
 async def get_vector_storage_info(
     global_admin_service: GlobalAdminService = Depends(get_global_admin_service),
 ):
@@ -187,7 +240,14 @@ async def get_vector_storage_info(
             detail="Failed to get vector storage info"
         )
 
-@router.get("/dashboard/resources/llm-metrics", response_model=LLMMetricsResponse)
+@router.get(
+    "/dashboard/resources/llm-metrics", 
+    response_model=LLMMetricsResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.TENANTS, PermissionAction.READ,
+        require_global_admin=True
+    ))]
+)
 async def get_llm_metrics(
     global_admin_service: GlobalAdminService = Depends(get_global_admin_service),
 ):
@@ -203,7 +263,14 @@ async def get_llm_metrics(
             detail="Failed to get LLM metrics"
         )
 
-@router.get("/dashboard/stats", response_model=DashboardStatsResponse)
+@router.get(
+    "/dashboard/stats", 
+    response_model=DashboardStatsResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.TENANTS, PermissionAction.READ,
+        require_global_admin=True
+    ))]
+)
 async def get_dashboard_stats(
     global_admin_service: GlobalAdminService = Depends(get_global_admin_service),
 ):
@@ -219,7 +286,13 @@ async def get_dashboard_stats(
             detail="Failed to retrieve dashboard statistics"
         )
 
-@router.get("/dashboard/realtime")
+@router.get(
+    "/dashboard/realtime",
+    dependencies=[Depends(check_permission(
+        PermissionResource.TENANTS, PermissionAction.READ,
+        require_global_admin=True
+    ))]
+)
 async def get_dashboard_realtime(
     request: Request,
     global_admin_service: GlobalAdminService = Depends(get_global_admin_service),

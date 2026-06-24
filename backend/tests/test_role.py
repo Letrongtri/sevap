@@ -100,7 +100,7 @@ async def test_get_role_detail_not_found(async_client: AsyncClient, db_session: 
 async def test_update_role_success(async_client: AsyncClient, db_session: AsyncSession, admin_headers):
     # Fetch admin user and their tenant_id
     from app.models import User
-    res_admin = await db_session.execute(select(User).filter_by(employee_code="admin"))
+    res_admin = await db_session.execute(select(User).where(User.employee_code == "admin", User.tenant_id.isnot(None)))
     admin = res_admin.scalars().first()
     
     # Create a custom role to update (since system roles cannot change names or be deleted)
@@ -140,7 +140,7 @@ async def test_update_role_success(async_client: AsyncClient, db_session: AsyncS
 @pytest.mark.asyncio
 async def test_delete_role_success(async_client: AsyncClient, db_session: AsyncSession, admin_headers):
     from app.models import User
-    res_admin = await db_session.execute(select(User).filter_by(employee_code="admin"))
+    res_admin = await db_session.execute(select(User).where(User.employee_code == "admin", User.tenant_id.isnot(None)))
     admin = res_admin.scalars().first()
     
     # Create custom role to delete (cannot delete system roles)
@@ -161,3 +161,36 @@ async def test_delete_role_success(async_client: AsyncClient, db_session: AsyncS
     # Verify in DB (soft delete is used in repo)
     await db_session.refresh(custom_role)
     assert custom_role.is_deleted is True
+
+
+@pytest.mark.asyncio
+async def test_unauthorized_role_management(async_client: AsyncClient, db_session: AsyncSession, employee_headers):
+    # Standard employee should get 403 Forbidden on create, update, delete roles
+    headers = await employee_headers()
+    
+    # 1. Try to create role
+    role_data = {
+        "name": "hacker_role",
+        "description": "Unauthorized creation attempt",
+        "access_level": "public",
+        "permissions": []
+    }
+    res_create = await async_client.post("/api/v1/roles", json=role_data, headers=headers)
+    assert res_create.status_code == 403
+    
+    # Fetch admin role to try updating/deleting
+    res_role = await db_session.execute(select(Role).filter_by(name="admin"))
+    admin_role = res_role.scalars().first()
+    assert admin_role is not None
+    
+    # 2. Try to update role
+    update_data = {
+        "description": "Hacked description"
+    }
+    res_update = await async_client.patch(f"/api/v1/roles/{admin_role.id}", json=update_data, headers=headers)
+    assert res_update.status_code == 403
+    
+    # 3. Try to delete role
+    res_delete = await async_client.delete(f"/api/v1/roles/{admin_role.id}", headers=headers)
+    assert res_delete.status_code == 403
+

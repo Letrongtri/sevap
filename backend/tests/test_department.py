@@ -117,3 +117,30 @@ async def test_delete_department_success(async_client: AsyncClient, db_session: 
     # Verify soft delete
     await db_session.refresh(custom_department)
     assert custom_department.is_deleted is True
+
+
+@pytest.mark.asyncio
+async def test_unauthorized_department_management(async_client: AsyncClient, db_session: AsyncSession, employee_headers, custom_department):
+    # Standard employee should get 403 Forbidden on create, update, delete departments
+    headers = await employee_headers()
+    
+    # 1. Try to create department
+    dept_data = {
+        "name": "hacker_dept",
+        "code": "HACK",
+        "description": "Unauthorized creation attempt"
+    }
+    res_create = await async_client.post("/api/v1/departments", json=dept_data, headers=headers)
+    assert res_create.status_code == 403
+    
+    # 2. Try to update department
+    update_data = {
+        "description": "Hacked description"
+    }
+    res_update = await async_client.patch(f"/api/v1/departments/{custom_department.id}", json=update_data, headers=headers)
+    assert res_update.status_code == 403
+    
+    # 3. Try to delete department
+    res_delete = await async_client.delete(f"/api/v1/departments/{custom_department.id}", headers=headers)
+    assert res_delete.status_code == 403
+

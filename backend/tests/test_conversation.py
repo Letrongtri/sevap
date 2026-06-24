@@ -34,7 +34,7 @@ async def get_test_tenant(db_session: AsyncSession) -> Tenants:
 @pytest.fixture
 async def seeded_conversation(db_session: AsyncSession) -> Conversation:
     tenant = await get_test_tenant(db_session)
-    res_user = await db_session.execute(select(User).filter_by(employee_code="admin"))
+    res_user = await db_session.execute(select(User).where(User.employee_code == "admin", User.tenant_id == tenant.id))
     admin = res_user.scalar_one()
 
     conv = Conversation(

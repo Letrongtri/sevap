@@ -17,13 +17,20 @@ from app.schemas import (
     UserPaginatedResponse,
     UserSimplePaginatedResponse
 )
-from app.dependencies import get_user_service, get_current_user
+from app.dependencies import get_user_service, check_permission
+from app.core.enum import PermissionResource, PermissionAction
 from app.decorators import log_activity
 from app.core.logging import logger
 
 router = APIRouter()
 
-@router.get("/options", response_model=UserSimplePaginatedResponse)
+@router.get(
+    "/options", 
+    response_model=UserSimplePaginatedResponse, 
+    dependencies=[Depends(check_permission(
+        PermissionResource.USERS, PermissionAction.READ
+    ))]
+)
 async def get_user_options(
     request: Request,
     pagination: Annotated[PaginationQuery, Depends()],
@@ -44,7 +51,13 @@ async def get_user_options(
         )
         raise HTTPException(status_code=422, detail="Failed to get user options")
 
-@router.get("", response_model=UserPaginatedResponse)
+@router.get(
+    "", 
+    response_model=UserPaginatedResponse, 
+    dependencies=[Depends(check_permission(
+        PermissionResource.USERS, PermissionAction.READ
+    ))]
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_users(
     request: Request,
@@ -75,7 +88,13 @@ async def get_all_users(
         )
         raise HTTPException(status_code=422, detail="Failed to get all users")
 
-@router.post("", response_model=UserResponse)
+@router.post(
+    "", 
+    response_model=UserResponse, 
+    dependencies=[Depends(check_permission(
+        PermissionResource.USERS, PermissionAction.CREATE
+    ))]
+)
 @log_activity(
     action="user.create",
     resource="user",
@@ -108,7 +127,13 @@ async def create_user(
         )
         raise HTTPException(status_code=422, detail="Failed to create user")
 
-@router.get("/{user_id}", response_model=UserResponse)
+@router.get(
+    "/{user_id}", 
+    response_model=UserResponse, 
+    dependencies=[Depends(check_permission(
+        PermissionResource.USERS, PermissionAction.READ
+    ))]
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_user(
     request: Request, 
@@ -138,7 +163,13 @@ async def get_user(
         )
         raise HTTPException(status_code=422, detail="Failed to get user")
 
-@router.put("/{user_id}", response_model=UserResponse)
+@router.put(
+    "/{user_id}", 
+    response_model=UserResponse, 
+    dependencies=[Depends(check_permission(
+        PermissionResource.USERS, PermissionAction.UPDATE
+    ))]
+)
 @log_activity(
     action="user.update",
     resource="user",
@@ -171,7 +202,13 @@ async def update_user(
         )
         raise HTTPException(status_code=422, detail="Failed to update user")
 
-@router.delete("/{user_id}", response_model=UserResponse)
+@router.delete(
+    "/{user_id}", 
+    response_model=UserResponse, 
+    dependencies=[Depends(check_permission(
+        PermissionResource.USERS, PermissionAction.DELETE
+    ))]
+)
 @log_activity(
     action="user.delete",
     resource="user",
@@ -209,7 +246,13 @@ async def delete_user(
         )
         raise HTTPException(status_code=422, detail="Failed to delete user")
 
-@router.patch("/{user_id}/activate", response_model=UserResponse)
+@router.patch(
+    "/{user_id}/activate", 
+    response_model=UserResponse, 
+    dependencies=[Depends(check_permission(
+        PermissionResource.USERS, PermissionAction.SUSPEND
+    ))]
+)
 @log_activity(
     action="user.activate",
     resource="user",
@@ -247,7 +290,13 @@ async def activate_user(
         )
         raise HTTPException(status_code=422, detail="Failed to activate user")
 
-@router.patch("/{user_id}/deactivate", response_model=UserResponse)
+@router.patch(
+    "/{user_id}/deactivate", 
+    response_model=UserResponse, 
+    dependencies=[Depends(check_permission(
+        PermissionResource.USERS, PermissionAction.SUSPEND
+    ))]
+)
 @log_activity(
     action="user.deactivate",
     resource="user",
@@ -285,7 +334,13 @@ async def deactivate_user(
         )
         raise HTTPException(status_code=422, detail="Failed to deactivate user")
 
-@router.patch("/{user_id}/reset-password", response_model=UserResponse)
+@router.patch(
+    "/{user_id}/reset-password", 
+    response_model=UserResponse, 
+    dependencies=[Depends(check_permission(
+        PermissionResource.USERS, PermissionAction.SUSPEND
+    ))]
+)
 @log_activity(
     action="user.reset_password",
     resource="user",
@@ -323,7 +378,13 @@ async def reset_user_password(
         )
         raise HTTPException(status_code=422, detail="Failed to reset user password")
 
-@router.put("/{user_id}/change-password", response_model=UserResponse)
+@router.put(
+    "/{user_id}/change-password", 
+    response_model=UserResponse, 
+    dependencies=[Depends(check_permission(
+        PermissionResource.USERS, PermissionAction.UPDATE
+    ))]
+)
 @log_activity(
     action="user.change_password",
     resource="user",

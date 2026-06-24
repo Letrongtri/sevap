@@ -16,13 +16,20 @@ from app.schemas import (
     RolePaginatedResponse,
     PaginationQuery
 )
-from app.dependencies import get_role_service
+from app.dependencies import get_role_service, check_permission
 from app.decorators import log_activity
 from app.core.logging import logger
+from app.core.enum import PermissionAction, PermissionResource
 
 router = APIRouter()
 
-@router.get("", response_model=RolePaginatedResponse)
+@router.get(
+    "", 
+    response_model=RolePaginatedResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.ROLES, PermissionAction.READ
+    ))]
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_roles(
     request: Request,
@@ -53,7 +60,13 @@ async def get_all_roles(
         )
         raise HTTPException(status_code=422, detail="Failed to get all roles")
 
-@router.post("", response_model=RoleResponse)
+@router.post(
+    "", 
+    response_model=RoleResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.ROLES, PermissionAction.CREATE
+    ))]
+)
 @log_activity(
     action="role.create",
     resource="role",
@@ -83,7 +96,13 @@ async def create_role(
         )
         raise HTTPException(status_code=422, detail="Failed to create role")
 
-@router.get("/simple", response_model=List[RoleSimple])
+@router.get(
+    "/simple", 
+    response_model=List[RoleSimple],
+    dependencies=[Depends(check_permission(
+        PermissionResource.ROLES, PermissionAction.READ
+    ))]
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_simple_roles(
     request: Request,
@@ -100,7 +119,13 @@ async def get_all_simple_roles(
         raise HTTPException(status_code=422, detail="Failed to get all roles")
 
 
-@router.get("/{role_id}", response_model=RoleResponse)
+@router.get(
+    "/{role_id}", 
+    response_model=RoleResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.ROLES, PermissionAction.READ
+    ))]
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_role(
     request: Request, 
@@ -130,7 +155,13 @@ async def get_role(
         )
         raise HTTPException(status_code=422, detail="Failed to get role")
 
-@router.patch("/{role_id}", response_model=RoleResponse)
+@router.patch(
+    "/{role_id}", 
+    response_model=RoleResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.ROLES, PermissionAction.UPDATE
+    ))]
+)
 @log_activity(
     action="role.update",
     resource="role",
@@ -161,7 +192,13 @@ async def update_role(
         )
         raise HTTPException(status_code=422, detail="Failed to update role")
 
-@router.delete("/{role_id}", response_model=RoleResponse)
+@router.delete(
+    "/{role_id}", 
+    response_model=RoleResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.ROLES, PermissionAction.DELETE
+    ))]
+)
 @log_activity(
     action="role.delete",
     resource="role",

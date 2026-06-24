@@ -8,12 +8,20 @@ from app.schemas import (
     ActivityLogResponse,
     PaginationQuery
 )
-from app.dependencies import get_activity_log_service
+from app.dependencies import get_activity_log_service, check_permission
 from app.core.logging import logger
+from app.core.enum import PermissionAction, PermissionResource
 
 router = APIRouter()
 
-@router.get("", response_model=ActivityLogPaginatedResponse)
+@router.get(
+    "", 
+    response_model=ActivityLogPaginatedResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.ACTIVITY_LOGS, PermissionAction.READ,
+        require_global_admin=True
+    ))]
+)
 async def get_global_activity_logs(
     query: Annotated[ActivityLogQuery, Depends()],
     pagination: Annotated[PaginationQuery, Depends()],
@@ -34,7 +42,14 @@ async def get_global_activity_logs(
             detail="Failed to retrieve global activity logs"
         )
 
-@router.get("/{log_id}", response_model=ActivityLogResponse)
+@router.get(
+    "/{log_id}", 
+    response_model=ActivityLogResponse,
+    dependencies=[Depends(check_permission(
+        PermissionResource.ACTIVITY_LOGS, PermissionAction.READ,
+        require_global_admin=True
+    ))]
+)
 async def get_global_activity_log(
     log_id: str,
     activity_log_service: ActivityLogService = Depends(get_activity_log_service),

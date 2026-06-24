@@ -97,7 +97,7 @@ async def test_create_user_already_exists(async_client: AsyncClient, db_session:
 @pytest.mark.asyncio
 async def test_get_user_detail_success(async_client: AsyncClient, db_session: AsyncSession, admin_headers):
     # Fetch seeded admin user
-    res_db = await db_session.execute(select(User).filter_by(employee_code="admin"))
+    res_db = await db_session.execute(select(User).where(User.employee_code == "admin", User.tenant_id.isnot(None)))
     admin_user = res_db.scalar_one()
     
     headers = await admin_headers()
@@ -119,7 +119,7 @@ async def test_get_user_detail_not_found(async_client: AsyncClient, db_session: 
 @pytest.mark.asyncio
 async def test_update_user_success(async_client: AsyncClient, db_session: AsyncSession, admin_headers):
     # Fetch seeded admin user
-    res_db = await db_session.execute(select(User).filter_by(employee_code="admin"))
+    res_db = await db_session.execute(select(User).where(User.employee_code == "admin", User.tenant_id.isnot(None)))
     admin_user = res_db.scalar_one()
     
     headers = await admin_headers()
@@ -138,7 +138,7 @@ async def test_update_user_success(async_client: AsyncClient, db_session: AsyncS
 @pytest.mark.asyncio
 async def test_activate_deactivate_user(async_client: AsyncClient, db_session: AsyncSession, admin_headers):
     # Fetch seeded admin user
-    res_db = await db_session.execute(select(User).filter_by(employee_code="admin"))
+    res_db = await db_session.execute(select(User).where(User.employee_code == "admin", User.tenant_id.isnot(None)))
     admin_user = res_db.scalar_one()
     
     headers = await admin_headers()
@@ -156,7 +156,7 @@ async def test_activate_deactivate_user(async_client: AsyncClient, db_session: A
 @pytest.mark.asyncio
 async def test_reset_user_password(async_client: AsyncClient, db_session: AsyncSession, admin_headers):
     # Fetch seeded admin user
-    res_db = await db_session.execute(select(User).filter_by(employee_code="admin"))
+    res_db = await db_session.execute(select(User).where(User.employee_code == "admin", User.tenant_id.isnot(None)))
     admin_user = res_db.scalar_one()
     
     headers = await admin_headers()
@@ -171,7 +171,7 @@ async def test_reset_user_password(async_client: AsyncClient, db_session: AsyncS
 @pytest.mark.asyncio
 async def test_change_user_password_success(async_client: AsyncClient, db_session: AsyncSession, admin_headers):
     # Fetch seeded admin user
-    res_db = await db_session.execute(select(User).filter_by(employee_code="admin"))
+    res_db = await db_session.execute(select(User).where(User.employee_code == "admin", User.tenant_id.isnot(None)))
     admin_user = res_db.scalar_one()
     
     # First reset to a strong password to know the exact password and pass Pydantic strength checks
@@ -195,7 +195,7 @@ async def test_change_user_password_success(async_client: AsyncClient, db_sessio
 
 @pytest.mark.asyncio
 async def test_change_user_password_invalid_old(async_client: AsyncClient, db_session: AsyncSession, admin_headers):
-    res_db = await db_session.execute(select(User).filter_by(employee_code="admin"))
+    res_db = await db_session.execute(select(User).where(User.employee_code == "admin", User.tenant_id.isnot(None)))
     admin_user = res_db.scalar_one()
     
     headers = await admin_headers()
@@ -236,3 +236,36 @@ async def test_delete_user_success(async_client: AsyncClient, db_session: AsyncS
     res_db_ref = await db_session.execute(select(User).filter_by(id=user_id))
     db_user = res_db_ref.scalar_one()
     assert db_user.is_deleted is True
+
+
+@pytest.mark.asyncio
+async def test_unauthorized_user_management(async_client: AsyncClient, db_session: AsyncSession, employee_headers):
+    # Standard employee should get 403 Forbidden on create, update, delete users
+    headers = await employee_headers()
+    
+    # 1. Try to create user
+    create_data = {
+        "employee_code": "unauth_emp",
+        "full_name": "Unauthorized User",
+        "email": "unauth@system.local",
+        "password": "SecurePassword@123",
+        "role_ids": []
+    }
+    res_create = await async_client.post("/api/v1/users", json=create_data, headers=headers)
+    assert res_create.status_code == 403
+    
+    # Fetch seeded admin to try updating/deleting
+    res_db = await db_session.execute(select(User).where(User.employee_code == "admin", User.tenant_id.isnot(None)))
+    admin_user = res_db.scalar_one()
+    
+    # 2. Try to update user
+    update_data = {
+        "full_name": "Hack Name"
+    }
+    res_update = await async_client.put(f"/api/v1/users/{admin_user.id}", json=update_data, headers=headers)
+    assert res_update.status_code == 403
+    
+    # 3. Try to delete user
+    res_delete = await async_client.delete(f"/api/v1/users/{admin_user.id}", headers=headers)
+    assert res_delete.status_code == 403
+

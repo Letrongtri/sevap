@@ -26,6 +26,11 @@ DEFAULT_ROLES = {
         "description": "Quản trị viên",
         "access_level": AccessLevel.MANAGERIAL,
         "permissions": {
+            PermissionResource.TENANTS: [
+                PermissionAction.READ,
+                PermissionAction.UPDATE,
+                PermissionAction.DELETE
+            ],
             PermissionResource.USERS: [
                 PermissionAction.CREATE,
                 PermissionAction.READ,
