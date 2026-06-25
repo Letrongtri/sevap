@@ -177,9 +177,14 @@ class AuthService:
         if not user or user.is_deleted:
             raise NotFoundError()
 
-        # Verify that the tenant ID and is_global_admin in the token match the user's data
-        if token_payload.get("tenant_id") != user.tenant_id or \
-           (token_payload.get("is_global_admin") is not True and user.tenant_id is not None):
+        db_is_global_admin = DefaultRole.GLOBAL_ADMIN.value in [
+            role_assoc.role.name for role_assoc in user.role_associations if role_assoc.role
+        ]
+
+        if token_payload.get("is_global_admin") != db_is_global_admin:
+            raise InvalidTokenError()
+
+        if token_payload.get("tenant_id") != user.tenant_id:
             raise InvalidTokenError()
         
         user_roles = []
