@@ -160,8 +160,17 @@ class UserRepository:
 
     async def get_user_options(
         self, tenant_id: str, query: str | None = None, 
+        department_id: str | None = None, role_id: str | None = None, 
+        job_title_id: str | None = None, get_department: bool = False, 
+        get_job_title: bool = False, get_role: bool = False,
         skip: int = 0, limit: int = 10
     ) -> tuple[list[User], int]:
+        count_stmt = select(func.count(User.id)).where(
+            User.tenant_id == tenant_id,
+            User.is_deleted == False,
+            User.is_active == True
+        )
+
         stmt = select(User).where(
             User.tenant_id == tenant_id, 
             User.is_deleted == False, 
@@ -169,21 +178,45 @@ class UserRepository:
         )
 
         if query is not None and query.strip() != '':
-            stmt = stmt.filter(
-                or_(
-                    User.full_name.ilike(f"%{query}%"),
-                    User.email.ilike(f"%{query}%"),
-                    User.employee_code.ilike(f"%{query}%")
-                )
+            search_filter = or_(
+                User.full_name.ilike(f"%{query}%"),
+                User.email.ilike(f"%{query}%"),
+                User.employee_code.ilike(f"%{query}%")
+            )
+            stmt = stmt.filter(search_filter)
+            count_stmt = count_stmt.filter(search_filter)
+
+        if department_id is not None:
+            stmt = stmt.where(User.department_id == department_id)
+            count_stmt = count_stmt.where(User.department_id == department_id)
+        if job_title_id is not None:
+            stmt = stmt.where(User.job_title_id == job_title_id)
+            count_stmt = count_stmt.where(User.job_title_id == job_title_id)
+        if role_id is not None:
+            stmt = (
+                stmt.join(User.role_associations)
+                .where(UserRole.role_id == role_id)
+            )
+            count_stmt = (
+                count_stmt.join(User.role_associations)
+                .where(UserRole.role_id == role_id)
             )
 
-        count_stmt = select(func.count()).select_from(stmt.subquery())
-        total_records = await self.db.scalar(count_stmt)
+        total_records = await self.db.scalar(count_stmt) or 0
+
+        if get_department:
+            stmt = stmt.options(joinedload(User.department))
+        if get_job_title:
+            stmt = stmt.options(joinedload(User.job_title))
+        if get_role:
+            stmt = stmt.options(
+                selectinload(User.role_associations).joinedload(UserRole.role)
+            )
 
         stmt = stmt.order_by(User.full_name.asc()).offset(skip).limit(limit)
 
         result = await self.db.execute(stmt)
-        users = result.scalars().all()
+        users = result.unique().scalars().all()
 
         return list(users), total_records
     

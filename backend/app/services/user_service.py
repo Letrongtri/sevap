@@ -6,7 +6,8 @@ from app.repositories import UserRepository
 from app.schemas import (
     UserCreate, RoleSimple, PaginationQuery, UserQuery, 
     UserResponse, UserPaginatedResponse, PaginationResponse,
-    UserSimple, UserSimplePaginatedResponse
+    UserSimple, UserSimplePaginatedResponse,
+    UserSimpleQuery
 )
 from app.services.exceptions import (
     UserAlreadyExistsError, 
@@ -176,14 +177,20 @@ class UserService:
         )
 
     async def get_user_options(
-        self, tenant_id: str, query: str | None, 
+        self, tenant_id: str, query: UserSimpleQuery, 
         pagination: PaginationQuery
     ) -> UserSimplePaginatedResponse:
         skip = (pagination.page - 1) * pagination.limit
 
         users_data, total_records = await self.repo.get_user_options(
             tenant_id=tenant_id,
-            query=query,
+            query=query.query,
+            department_id=query.department_id,
+            job_title_id=query.job_title_id,
+            role_id=query.role_id,
+            get_department=query.get_department,
+            get_job_title=query.get_job_title,
+            get_role=query.get_role,
             skip=skip,
             limit=pagination.limit
         )
@@ -193,9 +200,30 @@ class UserService:
             if total_records > 0 else 0
         )
 
-        user_responses = [
-            UserSimple.model_validate(user) for user in users_data
-        ]
+        user_responses = []
+        for user in users_data:
+            roles = []
+            if query.get_role and user.role_associations:
+                for role_association in user.role_associations:
+                    if role_association.role:
+                        roles.append(role_association.role.name)
+            
+            user_resp = UserSimple(
+                id=user.id,
+                employee_code=user.employee_code,
+                full_name=user.full_name,
+                email=user.email,
+                department=
+                    user.department.name 
+                    if query.get_department and user.department 
+                    else None,
+                job_title=
+                    user.job_title.name 
+                    if query.get_job_title and user.job_title 
+                    else None,
+                roles=roles
+            )
+            user_responses.append(user_resp)
 
         return UserSimplePaginatedResponse(
             users=user_responses,

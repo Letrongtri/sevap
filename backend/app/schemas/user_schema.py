@@ -51,6 +51,9 @@ class UserSimple(BaseModel):
     employee_code: str
     full_name: str
     email: str | None
+    department: str | None = None
+    job_title: str | None = None
+    roles: list[str] | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -60,6 +63,15 @@ class UserQuery(BaseModel):
     job_title_id: str | None = None
     role_id: str | None = None
     status: str | None = None
+
+class UserSimpleQuery(BaseModel):
+    query: str | None = None
+    get_department: bool = False
+    get_job_title: bool = False
+    get_role: bool = False
+    department_id: str | None = None
+    job_title_id: str | None = None
+    role_id: str | None = None
 
 # Schema cho dữ liệu trả về (ẨN MẬT KHẨU)
 class UserResponse(BaseModel):

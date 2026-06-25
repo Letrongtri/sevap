@@ -15,7 +15,8 @@ from app.schemas import (
     PaginationQuery,
     UserQuery,
     UserPaginatedResponse,
-    UserSimplePaginatedResponse
+    UserSimplePaginatedResponse,
+    UserSimpleQuery
 )
 from app.dependencies import get_user_service, check_permission
 from app.core.enum import PermissionResource, PermissionAction
@@ -34,7 +35,7 @@ router = APIRouter()
 async def get_user_options(
     request: Request,
     pagination: Annotated[PaginationQuery, Depends()],
-    query: str | None = None,
+    query: Annotated[UserSimpleQuery, Depends()],
     user_service: UserService = Depends(get_user_service),
 ):
     """ Get lightweight search options for users. """
