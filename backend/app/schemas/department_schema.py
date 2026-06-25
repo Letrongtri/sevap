@@ -1,6 +1,8 @@
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from datetime import datetime
 
+from app.schemas.base_schema import PaginationResponse
+
 # Schema cho dữ liệu gửi lên khi tạo Department
 class DepartmentCreate(BaseModel):
     name: str
@@ -48,3 +50,13 @@ class DepartmentResponse(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class DepartmentQuery(BaseModel):
+    query: str | None = None
+    
+class DepartmentPaginatedResponse(BaseModel):
+    departments: list[DepartmentResponse]
+    pagination: PaginationResponse
+
+    model_config = ConfigDict(from_attributes=True)
+

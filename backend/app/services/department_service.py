@@ -1,3 +1,4 @@
+import math
 from typing import List
 
 from app.models import Department
@@ -7,10 +8,9 @@ from app.services.exceptions import (
     NotFoundError,
 )
 from app.schemas import (
-    DepartmentSimple,
-    DepartmentResponse,
-    DepartmentCreate,
-    DepartmentUpdate,
+    DepartmentSimple, DepartmentResponse, DepartmentCreate,
+    DepartmentUpdate, PaginationQuery, DepartmentQuery, 
+    DepartmentPaginatedResponse, PaginationResponse
 )
 
 class DepartmentService:
@@ -18,14 +18,34 @@ class DepartmentService:
         self.repo = repo
     
     async def get_all_departments(self, 
-        tenant_id: str
-    ) -> List[DepartmentResponse]:
+        tenant_id: str, 
+        pagination: PaginationQuery,
+        query: DepartmentQuery
+    ) -> DepartmentPaginatedResponse:
+        skip = (pagination.page - 1) * pagination.limit
 
-        departments = await self.repo.get_all_departments(tenant_id)
-        return [
-            DepartmentResponse.model_validate(department) 
-            for department in departments
-        ]
+        departments, total_records = await self.repo.get_all_departments(
+            tenant_id, query=query.query,
+            skip=skip, limit=pagination.limit
+        )
+
+        total_pages = (
+            math.ceil(total_records / pagination.limit) 
+            if total_records > 0 else 0
+        )
+
+        return DepartmentPaginatedResponse(
+            departments=[
+                DepartmentResponse.model_validate(department) 
+                for department in departments
+            ],
+            pagination=PaginationResponse(
+                total=total_records,
+                page=pagination.page,
+                limit=pagination.limit,
+                total_pages=total_pages
+            )
+        )
 
     async def get_all_simple_departments(self, 
         tenant_id: str

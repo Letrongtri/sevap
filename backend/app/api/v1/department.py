@@ -1,9 +1,13 @@
+from typing import Annotated
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
 
 from app.dependencies import get_department_service, check_permission
-from app.schemas import DepartmentCreate, DepartmentResponse, DepartmentUpdate, DepartmentSimple
+from app.schemas import (
+    DepartmentCreate, DepartmentResponse, DepartmentUpdate, DepartmentSimple,
+    DepartmentQuery, DepartmentPaginatedResponse, PaginationQuery
+)
 from app.services import DepartmentService, NotFoundError, DepartmentAlreadyExistsError
 from app.decorators import log_activity
 from app.core.logging import logger
@@ -14,7 +18,7 @@ router = APIRouter()
 
 @router.get(
     "",
-    response_model=List[DepartmentResponse],
+    response_model=DepartmentPaginatedResponse,
     dependencies=[Depends(check_permission(
         PermissionResource.DEPARTMENTS, PermissionAction.READ
     ))]
@@ -22,11 +26,15 @@ router = APIRouter()
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_departments(
     request: Request,
+    pagination: Annotated[PaginationQuery, Depends()],
+    query: Annotated[DepartmentQuery, Depends()],
     department_service: DepartmentService = Depends(get_department_service),
 ):
     try:
         tenant_id = request.state.tenant_id
-        return await department_service.get_all_departments(tenant_id)
+        return await department_service.get_all_departments(
+            tenant_id, pagination, query
+        )
     except Exception:
         logger.error(
             "get_all_departments_failed",
