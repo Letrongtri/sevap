@@ -7,11 +7,17 @@ from app.services import (
     InvalidTokenError, 
     NotFoundError,
 )
-from app.models import User, UserSession
-from app.utils.auth import create_access_token, create_refresh_token, verify_password, verify_token
+from app.models import UserSession
+from app.utils.auth import (
+    create_access_token, create_refresh_token,
+    verify_password, verify_token
+)
 from app.core.enum import LogLevel, DefaultRole
 from app.core.logging import logger
-from app.schemas import UserResponse, RoleSimple, UserInfoResponse, LoginResponse, RefreshTokenResponse
+from app.schemas import (
+    UserResponse, RoleSimple, UserInfoResponse, LoginResponse, 
+    RefreshTokenResponse, RefreshTokenRequest
+)
 from app.services.activity_log_service import ActivityLogService
 
 class AuthService:
@@ -88,7 +94,11 @@ class AuthService:
             is_global_admin=is_global_admin,
             permissions=user_permissions
         )
-        refresh_token = create_refresh_token(str(user.id))
+        refresh_token = create_refresh_token(
+            user_id=str(user.id),
+            tenant_id=user.tenant_id,
+            is_global_admin=is_global_admin
+        )
 
         user_session = UserSession(
             user_id=user.id,
@@ -150,9 +160,12 @@ class AuthService:
             user=user_info
         )
 
-    async def refresh_token(self, refresh_token: str) -> RefreshTokenResponse:
-        token_payload = verify_token(refresh_token)
+    async def refresh_token(self, data: RefreshTokenRequest) -> RefreshTokenResponse:
+        token_payload = verify_token(data.refresh_token)
         if not token_payload:
+            raise InvalidTokenError()
+
+        if token_payload.get("tenant_id") is None and token_payload.get("is_global_admin") is not True:
             raise InvalidTokenError()
 
         session = await self.session_repo.get_user_session_by_jti(token_payload["jti"])
@@ -163,15 +176,30 @@ class AuthService:
         user = await self.user_repo.get_user_by_id(session.user_id, get_user_roles=True)
         if not user or user.is_deleted:
             raise NotFoundError()
+
+        # Verify that the tenant ID and is_global_admin in the token match the user's data
+        if token_payload.get("tenant_id") != user.tenant_id or \
+           (token_payload.get("is_global_admin") is not True and user.tenant_id is not None):
+            raise InvalidTokenError()
         
-        roles = []
-        for role in user.role_associations:
-            roles.append(role.role.name)
+        user_roles = []
+        user_permissions = []
+        for role_assoc in user.role_associations:
+            role = role_assoc.role
+            user_roles.append(role.name)
+            for perm in role.permissions:
+                user_permissions.append(f"{perm.resource}:{perm.action}")
+        
+        is_global_admin = False
+        if DefaultRole.GLOBAL_ADMIN.value in user_roles:
+            is_global_admin = True
         
         new_access_token = create_access_token(
             user_id=session.user_id, 
             tenant_id=user.tenant_id, 
-            user_roles=roles
+            user_roles=user_roles,
+            is_global_admin=is_global_admin,
+            permissions=user_permissions
         )
 
         return RefreshTokenResponse(

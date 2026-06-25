@@ -69,7 +69,7 @@ async def refresh_token(
     auth_service: AuthService = Depends(get_auth_service)
 ):
     try:
-        return await auth_service.refresh_token(data.refresh_token)
+        return await auth_service.refresh_token(data)
     except InvalidTokenError:
         logger.error("refresh_token_invalid", exc_info=True)
         raise HTTPException(status_code=401, detail="Invalid refresh token")

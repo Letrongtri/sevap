@@ -47,7 +47,6 @@ class LoginForm(BaseModel):
         return v
 
 class RefreshTokenRequest(BaseModel):
-    tenant_domain: str = Field(..., description="The tenant domain of the user")
     refresh_token: str = Field(..., description="The JWT refresh token")
 
 class RefreshTokenResponse(BaseModel):

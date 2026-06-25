@@ -61,11 +61,18 @@ def create_access_token(
 
     return Token(jti=jti, token=encoded_jwt, expires_at=expire)
 
-def create_refresh_token(user_id: str, expires_delta: Optional[timedelta] = None) -> Token:
+def create_refresh_token(
+    user_id: str,
+    tenant_id: Optional[str] = None,
+    is_global_admin: bool = False,
+    expires_delta: Optional[timedelta] = None
+) -> Token:
     """Create a new refresh token for a thread.
 
     Args:
         user_id: The unique thread ID for the conversation.
+        tenant_id: The tenant ID of the user.
+        is_global_admin: Whether the user is a global admin.
         expires_delta: Optional expiration time delta.
 
     Returns:
@@ -76,10 +83,12 @@ def create_refresh_token(user_id: str, expires_delta: Optional[timedelta] = None
     else:
         expire = datetime.now(UTC) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
 
-    jti = sanitize_string(f"{user_id}-{datetime.now(UTC).timestamp()}")  # Add unique token identifier
+    jti = sanitize_string(f"{user_id}-{tenant_id}-{is_global_admin}-{datetime.now(UTC).timestamp()}")  # Add unique token identifier
 
     to_encode = {
         "sub": user_id, # User ID
+        "tenant_id": tenant_id,
+        "is_global_admin": is_global_admin,
         "exp": expire,
         "iat": datetime.now(UTC),
         "jti": jti
@@ -87,7 +96,7 @@ def create_refresh_token(user_id: str, expires_delta: Optional[timedelta] = None
 
     encoded_jwt = jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
-    logger.info("refresh_token_created", user_id=user_id, expires_at=expire.isoformat())
+    logger.info("refresh_token_created", user_id=user_id, tenant_id=tenant_id, expires_at=expire.isoformat())
 
     return Token(jti=jti, token=encoded_jwt, expires_at=expire)
 
