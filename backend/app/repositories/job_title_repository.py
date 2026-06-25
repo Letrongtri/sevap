@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import or_, func
 
 from app.models import JobTitle
 
@@ -7,13 +8,30 @@ class JobTitleRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
     
-    async def get_all_job_titles(self, tenant_id: str):
+    async def get_all_job_titles(
+        self, tenant_id: str, query: str | None = None,
+        skip: int = 0, limit: int = 10
+    ) -> tuple[list[JobTitle], int]:
         stmt = select(JobTitle).where(
             JobTitle.is_deleted == False, 
             JobTitle.tenant_id == tenant_id
         )
+        if query is not None:
+            stmt = stmt.filter(
+                or_(
+                    JobTitle.title_name.ilike(f"%{query}%"),
+                    JobTitle.code.ilike(f"%{query}%"),
+                )
+            )
+        
+        count_stmt = select(func.count()).select_from(stmt.subquery())
+        total_records = await self.db.scalar(count_stmt)
+        
+        stmt = stmt.offset(skip).limit(limit)
         result = await self.db.execute(stmt)
-        return result.scalars().all()
+        items = result.scalars().all()
+        
+        return items, total_records
 
     async def get_all_simple_job_titles(self, tenant_id: str):
         stmt = select(

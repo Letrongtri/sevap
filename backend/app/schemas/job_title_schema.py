@@ -1,5 +1,6 @@
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, model_validator
 from datetime import datetime
+from app.schemas.base_schema import PaginationResponse
 
 class JobTitleCreate(BaseModel):
     title_name: str
@@ -45,5 +46,14 @@ class JobTitleResponse(BaseModel):
 
     created_at: datetime
     updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+class JobTitleQuery(BaseModel):
+    query: str | None = None
+
+class JobTitlePaginatedResponse(BaseModel):
+    job_titles: list[JobTitleResponse]
+    pagination: PaginationResponse
 
     model_config = ConfigDict(from_attributes=True)

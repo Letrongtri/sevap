@@ -1,9 +1,13 @@
+from typing import Annotated
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
 
 from app.dependencies import get_job_title_service, check_permission
-from app.schemas import JobTitleCreate, JobTitleResponse, JobTitleUpdate, JobTitleSimple
+from app.schemas import (
+    JobTitleCreate, JobTitleResponse, JobTitleUpdate, JobTitleSimple,
+    JobTitlePaginatedResponse, JobTitleQuery, PaginationQuery
+)
 from app.services import JobTitleService, NotFoundError, JobTitleAlreadyExistsError
 from app.decorators import log_activity
 from app.core.logging import logger
@@ -14,7 +18,7 @@ router = APIRouter()
 
 @router.get(
     "", 
-    response_model=List[JobTitleResponse],
+    response_model=JobTitlePaginatedResponse,
     dependencies=[Depends(check_permission(
         PermissionResource.JOB_TITLES, PermissionAction.READ
     ))]
@@ -22,11 +26,13 @@ router = APIRouter()
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_job_titles(
     request: Request,
+    query: Annotated[JobTitleQuery, Depends()],
+    pagination: Annotated[PaginationQuery, Depends()],
     job_title_service: JobTitleService = Depends(get_job_title_service),
 ):
     try:
         tenant_id = request.state.tenant_id
-        return await job_title_service.get_all_job_titles(tenant_id)
+        return await job_title_service.get_all_job_titles(tenant_id, query, pagination)
     except Exception:
         logger.error(
             "get_all_job_titles_failed",

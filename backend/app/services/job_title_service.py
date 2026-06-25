@@ -1,3 +1,4 @@
+import math
 from typing import List
 
 from app.models import JobTitle
@@ -10,19 +11,44 @@ from app.schemas import (
     JobTitleSimple, 
     JobTitleCreate, 
     JobTitleResponse, 
-    JobTitleUpdate
+    JobTitleUpdate,
+    JobTitleQuery, 
+    JobTitlePaginatedResponse,
+    PaginationQuery,
+    PaginationResponse
 )
 
 class JobTitleService:
     def __init__(self, repo: JobTitleRepository):
         self.repo = repo
     
-    async def get_all_job_titles(self, tenant_id: str) -> List[JobTitleResponse]:
-        jobs = await self.repo.get_all_job_titles(tenant_id)
-        return [
-            JobTitleResponse.model_validate(job_title) 
-            for job_title in jobs
-        ]
+    async def get_all_job_titles(
+        self, tenant_id: str, query: JobTitleQuery, pagination: PaginationQuery
+    ) -> JobTitlePaginatedResponse:
+        skip = (pagination.page - 1) * pagination.limit
+
+        jobs, total_records = await self.repo.get_all_job_titles(
+            tenant_id, query=query.query, skip=skip, limit=pagination.limit
+        )
+
+        total_pages = (
+            math.ceil(total_records / pagination.limit)
+            if total_records > 0
+            else 0
+        )
+
+        return JobTitlePaginatedResponse(
+            job_titles=[
+                JobTitleResponse.model_validate(job_title) 
+                for job_title in jobs
+            ],
+            pagination=PaginationResponse(
+                total=total_records,
+                page=pagination.page,
+                limit=pagination.limit,
+                total_pages=total_pages
+            )
+        )
 
     async def get_all_simple_job_titles(self, tenant_id: str) -> List[JobTitleSimple]:
         job_titles = await self.repo.get_all_simple_job_titles(tenant_id)
