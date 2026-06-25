@@ -8,6 +8,9 @@ export interface UserSimple {
     employee_code: string
     full_name: string
     email: string | null
+    department?: string | null
+    job_title?: string | null
+    roles?: string[] | null
 }
 
 export interface User {

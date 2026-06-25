@@ -93,13 +93,21 @@ export const resetUserPassword = async (id: ID): Promise<User> => {
 export const fetchUserOptions = async (
     query?: string | null,
     page?: number | null,
-    limit: number = 10
+    limit: number = 10,
+    departmentId?: string | null,
+    jobTitleId?: string | null,
+    getDepartment: boolean = false,
+    getJobTitle: boolean = false
 ): Promise<UserSimplePaginatedResponse> => {
     const res = await axiosClient.get('/users/options', {
         params: {
             query,
             page,
             limit,
+            department_id: departmentId,
+            job_title_id: jobTitleId,
+            get_department: getDepartment,
+            get_job_title: getJobTitle,
         },
     })
     return res.data
