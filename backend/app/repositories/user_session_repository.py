@@ -29,6 +29,23 @@ class UserSessionRepository:
         stmt = select(UserSession).where(UserSession.jti == jti)
         result = await self.db.execute(stmt)
         return result.scalars().first()
+
+    async def get_user_session(
+        self, 
+        session_id: str,
+        tenant_id: str | None = None,
+        user_id: str | None = None
+    ):
+        stmt = select(UserSession).where(UserSession.id == session_id)
+        
+        if tenant_id:
+            stmt = stmt.where(UserSession.tenant_id == tenant_id)
+        if user_id:
+            stmt = stmt.where(UserSession.user_id == user_id)
+            
+        result = await self.db.execute(stmt)
+        return result.scalars().first()
+
     async def get_user_sessions(
         self, user_id: str, skip: int, limit: int,
         tenant_id: str | None = None

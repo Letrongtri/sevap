@@ -64,3 +64,50 @@ class UserSessionService:
             )
         )
 
+    async def revoke_session(
+        self,
+        session_id: str,
+        user_id: str,
+        tenant_id: str | None,
+        jti: str,
+        client_ip: str | None,
+        background_tasks: BackgroundTasks
+    ):
+        # Check if session belongs to user
+        session = await self.session_repo.get_user_session(
+            session_id, tenant_id=tenant_id, user_id=user_id
+        )
+
+        if (not session 
+            or session.revoked_at is not None 
+            or session.expires_at < datetime.now(timezone.utc)
+        ):
+            ActivityLogService.log(
+                background_tasks=background_tasks,
+                user_id=user_id,
+                tenant_id=tenant_id,
+                action="session.revoke.fail",
+                resource="session",
+                meta_data={"session_id": session_id},
+                ip_address=client_ip
+            )
+            raise NotFoundError()
+        
+        session.revoked_at = datetime.now(timezone.utc)
+        
+        await self.session_repo.save(session)
+
+        ActivityLogService.log(
+            background_tasks=background_tasks,
+            user_id=user_id,
+            tenant_id=tenant_id,
+            action="session.revoke.success",
+            resource="session",
+            meta_data={"session_id": session_id},
+            ip_address=client_ip
+        )
+
+        return {
+            "is_current_session": session.jti == jti
+        }
+        
