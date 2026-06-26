@@ -16,7 +16,7 @@ from app.core.enum import LogLevel, DefaultRole
 from app.core.logging import logger
 from app.schemas import (
     UserResponse, RoleSimple, UserInfoResponse, LoginResponse, 
-    RefreshTokenResponse, RefreshTokenRequest
+    RefreshTokenResponse, RefreshTokenRequest, TenantSimple
 )
 from app.services.activity_log_service import ActivityLogService
 
@@ -295,6 +295,7 @@ class AuthService:
             department_id=user.department_id,
             job_title=user.job_title,
             department=user.department,
-            roles=roles
+            roles=roles,
+            tenant=TenantSimple.model_validate(user.tenant)
         )
 
