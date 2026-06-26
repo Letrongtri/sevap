@@ -1,6 +1,7 @@
 """This file contains the authentication utilities for the application."""
 
 import re
+import uuid
 from datetime import UTC, datetime, timedelta
 from typing import List, Optional
 from jose import JWTError, jwt
@@ -8,7 +9,6 @@ from jose import JWTError, jwt
 from app.core.config import settings
 from app.core.logging import logger
 from app.schemas import Token
-from app.utils.sanitization import sanitize_string
 
 from pwdlib import PasswordHash
 
@@ -21,8 +21,11 @@ def verify_password(password: str, hashed_password: str) -> bool:
 def hash_password(password: str) -> str:
     return password_hash.hash(password)
 
+def generate_jti() -> str:
+    return str(uuid.uuid7())
+
 def create_access_token(
-    user_id: str, user_roles: List[str],
+    user_id: str, jti: str, user_roles: List[str],
     tenant_id: Optional[str] = None,
     is_global_admin: bool = False,
     permissions: Optional[List[str]] = None, 
@@ -41,8 +44,6 @@ def create_access_token(
         expire = datetime.now(UTC) + expires_delta
     else:
         expire = datetime.now(UTC) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-
-    jti = sanitize_string(f"{user_id}-{datetime.now(UTC).timestamp()}")  # Add unique token identifier
 
     to_encode = {
         "sub": user_id, # User ID
@@ -63,6 +64,7 @@ def create_access_token(
 
 def create_refresh_token(
     user_id: str,
+    jti: str,
     tenant_id: Optional[str] = None,
     is_global_admin: bool = False,
     expires_delta: Optional[timedelta] = None
@@ -82,8 +84,6 @@ def create_refresh_token(
         expire = datetime.now(UTC) + expires_delta
     else:
         expire = datetime.now(UTC) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-
-    jti = sanitize_string(f"{user_id}-{tenant_id}-{is_global_admin}-{datetime.now(UTC).timestamp()}")  # Add unique token identifier
 
     to_encode = {
         "sub": user_id, # User ID

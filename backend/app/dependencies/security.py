@@ -1,10 +1,7 @@
 from fastapi import Depends, HTTPException, Request, status, BackgroundTasks
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.dependencies.db import get_db
-from app.repositories import TenantRepository
 from app.utils.auth import verify_token
 from app.core.enum import LogLevel, PermissionResource, PermissionAction
 from app.services.activity_log_service import ActivityLogService
@@ -15,7 +12,6 @@ async def get_current_user(
     request: Request,
     background_tasks: BackgroundTasks,
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
-    db: AsyncSession = Depends(get_db)
 ):
     try:
         token = None
@@ -38,58 +34,46 @@ async def get_current_user(
             )
 
         user_id = payload.get("sub")
+        jti = payload.get("jti")
         roles = payload.get("roles", [])
         permissions = payload.get("permissions", [])
         tenant_id = payload.get("tenant_id")
         is_global_admin = payload.get("is_global_admin", False)
 
-        if user_id is None:
+        if user_id is None or jti is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token",
             )
 
-        if is_global_admin:
-            request.state.user = {
-                "id": user_id,
-                "roles": roles,
-                "permissions": permissions,
-                "is_global_admin": True
-            }
-            request.state.tenant_id = None
-            
-            return {
-                "user_id": user_id,
-                "roles": roles,
-                "permissions": permissions,
-                "tenant_id": None,
-                "is_global_admin": True
-            }
+        if is_global_admin and tenant_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token",
+            )
 
-        else:
-            tenant_repo = TenantRepository(db)
-            tenant = await tenant_repo.get_tenant_by_id(tenant_id)
+        if not is_global_admin and not tenant_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token",
+            )
 
-            if tenant is None:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Invalid token",
-                )
-
-            request.state.user = {
-                "id": user_id,
-                "roles": roles,
-                "permissions": permissions
-            }
-            request.state.tenant_id = tenant_id
-
-            return {
-                "user_id": user_id,
-                "roles": roles,
-                "permissions": permissions,
-                "tenant_id": tenant_id
-            }
-
+        request.state.user = {
+            "id": user_id,
+            "roles": roles,
+            "permissions": permissions,
+            "is_global_admin": is_global_admin
+        }
+        request.state.tenant_id = tenant_id
+        request.state.jti = jti
+        return {
+            "user_id": user_id,
+            "jti": jti,
+            "roles": roles,
+            "permissions": permissions,
+            "tenant_id": tenant_id,
+            "is_global_admin": is_global_admin
+        }
     except JWTError as e:
         ActivityLogService.log(
             background_tasks=None,

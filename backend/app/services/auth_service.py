@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 from fastapi import BackgroundTasks
 
 from app.repositories import UserRepository, UserSessionRepository, TenantRepository
@@ -10,7 +10,7 @@ from app.services import (
 from app.models import UserSession
 from app.utils.auth import (
     create_access_token, create_refresh_token,
-    verify_password, verify_token
+    verify_password, verify_token, generate_jti
 )
 from app.core.enum import LogLevel, DefaultRole
 from app.core.logging import logger
@@ -35,6 +35,7 @@ class AuthService:
         self, employee_code: str, 
         password: str, background_tasks: BackgroundTasks, 
         client_ip: str | None = None,
+        raw_user_agent: str | None = None,
         tenant_domain: str | None = None
     ) -> LoginResponse:
         is_global_admin = False
@@ -86,9 +87,12 @@ class AuthService:
             user_roles.append(role.name)
             for perm in role.permissions:
                 user_permissions.append(f"{perm.resource}:{perm.action}")
+
+        jti = generate_jti()  # Add unique token identifier
         
         access_token = create_access_token(
             user_id=str(user.id), 
+            jti=jti, 
             user_roles=user_roles,
             tenant_id=user.tenant_id, 
             is_global_admin=is_global_admin,
@@ -96,6 +100,7 @@ class AuthService:
         )
         refresh_token = create_refresh_token(
             user_id=str(user.id),
+            jti=jti,
             tenant_id=user.tenant_id,
             is_global_admin=is_global_admin
         )
@@ -103,8 +108,9 @@ class AuthService:
         user_session = UserSession(
             user_id=user.id,
             tenant_id=user.tenant_id,
-            jti=refresh_token.jti,
+            jti=jti,
             ip_address=client_ip,
+            user_agent=raw_user_agent,
             expires_at=refresh_token.expires_at
         )
 
@@ -165,10 +171,14 @@ class AuthService:
         if not token_payload:
             raise InvalidTokenError()
 
-        if token_payload.get("tenant_id") is None and token_payload.get("is_global_admin") is not True:
+        jti = token_payload["jti"]
+        tenant_id = token_payload["tenant_id"]
+        is_global_admin = token_payload["is_global_admin"]
+
+        if tenant_id is None and is_global_admin is not True:
             raise InvalidTokenError()
 
-        session = await self.session_repo.get_user_session_by_jti(token_payload["jti"])
+        session = await self.session_repo.get_user_session_by_jti(jti)
 
         if not session or session.revoked_at is not None or session.expires_at < datetime.now(timezone.utc):
             raise InvalidTokenError()
@@ -198,18 +208,31 @@ class AuthService:
         is_global_admin = False
         if DefaultRole.GLOBAL_ADMIN.value in user_roles:
             is_global_admin = True
+
+        new_jti = generate_jti()
+        session.jti = new_jti
+        await self.session_repo.save(session)
         
         new_access_token = create_access_token(
             user_id=session.user_id, 
-            tenant_id=user.tenant_id, 
+            tenant_id=user.tenant_id,
+            jti=new_jti,
             user_roles=user_roles,
             is_global_admin=is_global_admin,
             permissions=user_permissions
         )
 
+        new_refresh_token = create_refresh_token(
+            user_id=session.user_id,
+            tenant_id=user.tenant_id,
+            is_global_admin=is_global_admin,
+            jti=new_jti
+        )
+
         return RefreshTokenResponse(
             access_token=new_access_token.token,
             access_token_expires_at=new_access_token.expires_at,
+            refresh_token=new_refresh_token.token,
             token_type="bearer"
         )
         

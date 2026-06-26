@@ -41,12 +41,19 @@ async def login(
         HTTPException: If credentials are invalid
     """
     try:
-        client_ip = request.client.host if request.client else None
+        forwarded_for = request.headers.get("x-forwarded-for")
+        if forwarded_for:
+            client_ip = forwarded_for.split(",")[0].strip()
+        else:
+            client_ip = request.client.host if request.client else None
+
+        raw_user_agent = request.headers.get("user-agent", "Unknown Agent")
         return await auth_service.login(
             data.employee_code, 
             data.password,
             background_tasks,
             client_ip,
+            raw_user_agent,
             data.tenant_domain
         )    
     except InvalidCredentialsError:
