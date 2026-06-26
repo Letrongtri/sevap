@@ -3,6 +3,7 @@ from typing import Annotated
 
 from app.services import (
     UserService,
+    UserSessionService,
     UserAlreadyExistsError,
     InvalidPasswordError,
     NotFoundError,
@@ -18,12 +19,14 @@ from app.schemas import (
     UserSimplePaginatedResponse,
     UserSimpleQuery,
     MyProfileUpdate,
+    UserSessionPaginatedResponse
+)
 from app.dependencies import (
     get_user_service,
     check_permission, 
     get_current_user,
+    get_user_session_service
 )
-from app.dependencies import get_user_service, check_permission
 from app.core.enum import PermissionResource, PermissionAction
 from app.decorators import log_activity
 from app.core.logging import logger
@@ -98,6 +101,29 @@ async def change_my_password(
             exc_info=True
         )
         raise HTTPException(status_code=422, detail="Failed to change user password")
+
+
+@router.get("/sessions", response_model=UserSessionPaginatedResponse)
+async def get_my_user_sessions(
+    request: Request,
+    pagination: Annotated[PaginationQuery, Depends()],
+    user_session_service: UserSessionService = Depends(get_user_session_service),
+):
+    """Get all active sessions for the current user (Web, Mobile, Desktop)."""
+    user_id = request.state.user["id"]
+    tenant_id = request.state.tenant_id
+    current_jti = request.state.jti
+    try:
+        return await user_session_service.get_user_sessions(
+            user_id, tenant_id, current_jti, pagination
+        )
+    except Exception as exc:
+        logger.error(
+            "get_my_user_sessions_failed",
+            user_id=user_id,  
+            exc_info=True
+        )
+        raise HTTPException(status_code=422, detail="Failed to get my user sessions")
 
 @router.get(
     "/options", 

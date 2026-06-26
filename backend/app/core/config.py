@@ -134,6 +134,7 @@ class Settings:
 
         self.BASE_DIR = Path(__file__).resolve().parent.parent.parent
         self.UPLOAD_DIR = self.BASE_DIR / "data" / "uploads"
+        self.GEOIP_DB_PATH = self.BASE_DIR / "data" / "geolite2" / "GeoLite2-City.mmdb"
 
         self.MAX_CAPACITY_TB = float(os.getenv("MAX_CAPACITY_TB", "4.0"))
 

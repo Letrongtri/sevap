@@ -44,6 +44,9 @@ from .activity_log_schema import (
     ActivityLogQuery, ActivityLogPaginatedResponse
 )
 from .directory_schema import DirectoryOverviewResponse
+from .user_session_schema import (
+    UserSessionResponse, UserSessionPaginatedResponse
+)
 
 UserResponse.model_rebuild()
 DepartmentResponse.model_rebuild()

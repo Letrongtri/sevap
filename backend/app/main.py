@@ -14,6 +14,7 @@ from app.db.init_db import add_system_default_data
 from app.core.logging import logger
 from app.core.config import settings
 from app.api.v1.api import api_router
+from app.services import geoip_service
 
 # Load environment variables from .env file
 load_dotenv()
@@ -29,8 +30,13 @@ async def lifespan(app: FastAPI):
     )
     async with AsyncSessionLocal() as db:
         await add_system_default_data(db)
+
+    GEOIP_DB_PATH = settings.GEOIP_DB_PATH
+    geoip_service.initialize(db_path=GEOIP_DB_PATH)
+    
     yield
     logger.info("application_shutdown")
+    geoip_service.close()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
