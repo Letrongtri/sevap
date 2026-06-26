@@ -1,4 +1,3 @@
-from app.schemas import UserUpdate
 import math
 
 from app.models import User
@@ -7,7 +6,7 @@ from app.schemas import (
     UserCreate, RoleSimple, PaginationQuery, UserQuery, 
     UserResponse, UserPaginatedResponse, PaginationResponse,
     UserSimple, UserSimplePaginatedResponse,
-    UserSimpleQuery
+    UserSimpleQuery, UserUpdate, MyProfileUpdate
 )
 from app.services.exceptions import (
     UserAlreadyExistsError, 
@@ -16,6 +15,8 @@ from app.services.exceptions import (
 )
 from app.core.config import settings
 from app.utils.auth import hash_password, verify_password
+from app.services.activity_log_service import ActivityLogService
+from app.core.enum import LogLevel
 
 class UserService:
     def __init__(self, repo: UserRepository):
@@ -236,29 +237,59 @@ class UserService:
         )
 
     async def update_user(
-        self, tenant_id: str, user_id: str, data: UserUpdate
+        self, user_id: str, data: UserUpdate | MyProfileUpdate, tenant_id: str | None = None,
+        update_my_profile: bool = False, client_ip: str | None = None
     ) -> UserResponse:
         existing = await self.repo.get_user_by_id(user_id)
         if existing is None or existing.tenant_id != tenant_id:
+            if update_my_profile:
+                ActivityLogService.log(
+                    background_tasks=None,
+                    user_id=user_id,
+                    tenant_id=tenant_id,
+                    action="user.update_my_profile_failed",
+                    resource="user",
+                    meta_data={
+                        "user_id": user_id,
+                        "tenant_id": tenant_id
+                    },
+                    ip_address=client_ip,
+                    log_level=LogLevel.WARNING
+                )
             raise NotFoundError()
         
-        if data.full_name is not None:
+        if getattr(data, "full_name", None) is not None:
             existing.full_name = data.full_name
-        if data.email is not None:
+        if getattr(data, "email", None) is not None:
             if existing.email != data.email:
                 existing_by_email = await self.repo.get_user_by_email(
-                    tenant_id=tenant_id, email=data.email
+                    email=data.email, 
+                    tenant_id=tenant_id
                 )
                 if existing_by_email is not None:
+                    if update_my_profile:
+                        ActivityLogService.log(
+                            background_tasks=None,
+                            user_id=user_id,
+                            tenant_id=tenant_id,
+                            action="user.update_my_profile_failed",
+                            resource="user",
+                            meta_data={
+                                "user_id": user_id,
+                                "tenant_id": tenant_id
+                            },
+                            ip_address=client_ip,
+                            log_level=LogLevel.WARNING
+                        )
                     raise UserAlreadyExistsError()
             existing.email = data.email
-        if data.job_title_id is not None:
+        if getattr(data, "job_title_id", None) is not None:
             existing.job_title_id = data.job_title_id
-        if data.department_id is not None:
+        if getattr(data, "department_id", None) is not None:
             existing.department_id = data.department_id
 
         # Update roles if provided
-        if data.role_ids is not None:
+        if getattr(data, "role_ids", None) is not None:
             await self.repo.update_user_roles(user_id, data.role_ids)
 
         await self.repo.save(user=existing)
@@ -410,15 +441,41 @@ class UserService:
         )
         return user_resp
     
-    async def change_user_password(
-        self, tenant_id: str, user_id: str, 
-        old_password: str, new_password: str
+    async def change_my_password(
+        self, user_id: str, old_password: str, new_password: str,
+        tenant_id: str | None = None, client_ip: str | None = None
     ) -> UserResponse:
         existing = await self.repo.get_user_by_id(user_id)
         if existing is None or existing.tenant_id != tenant_id:
+            ActivityLogService.log(
+                background_tasks=None,
+                user_id=user_id,
+                tenant_id=tenant_id,
+                action="user.change_my_password_failed",
+                resource="user",
+                meta_data={
+                    "user_id": user_id,
+                    "tenant_id": tenant_id
+                },
+                ip_address=client_ip,
+                log_level=LogLevel.WARNING
+            )
             raise NotFoundError()
         
         if not verify_password(old_password, existing.password):
+            ActivityLogService.log(
+                background_tasks=None,
+                user_id=user_id,
+                tenant_id=tenant_id,
+                action="user.change_my_password_failed",
+                resource="user",
+                meta_data={
+                    "user_id": user_id,
+                    "tenant_id": tenant_id
+                },
+                ip_address=client_ip,
+                log_level=LogLevel.WARNING
+            )
             raise InvalidPasswordError()
         
         existing.password = hash_password(new_password)

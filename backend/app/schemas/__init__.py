@@ -1,7 +1,7 @@
 from .user_schema import (
     UserCreate, UserUpdate, UserUpdatePassword, UserResponse, 
     UserQuery, UserPaginatedResponse, UserSimple, 
-    UserSimplePaginatedResponse, UserSimpleQuery
+    UserSimplePaginatedResponse, UserSimpleQuery, MyProfileUpdate
 )
 from .role_schema import (
     RoleCreate, RoleUpdate, RoleQuery, RoleResponse, 

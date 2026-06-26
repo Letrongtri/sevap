@@ -43,7 +43,8 @@ class UserRepository:
         return result.scalar_one_or_none()
     
     async def get_user_by_email(
-        self, tenant_id: str, email: str, 
+        self, email: str, 
+        tenant_id: str | None = None, 
         get_user_roles: bool = False, 
         get_user_department: bool = False, 
         get_user_job_title: bool = False,

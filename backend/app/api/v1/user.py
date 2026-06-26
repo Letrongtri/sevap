@@ -16,7 +16,12 @@ from app.schemas import (
     UserQuery,
     UserPaginatedResponse,
     UserSimplePaginatedResponse,
-    UserSimpleQuery
+    UserSimpleQuery,
+    MyProfileUpdate,
+from app.dependencies import (
+    get_user_service,
+    check_permission, 
+    get_current_user,
 )
 from app.dependencies import get_user_service, check_permission
 from app.core.enum import PermissionResource, PermissionAction
@@ -24,6 +29,75 @@ from app.decorators import log_activity
 from app.core.logging import logger
 
 router = APIRouter()
+
+@router.patch("", response_model=UserResponse)
+# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+async def update_my_profile(
+    request: Request,
+    data: MyProfileUpdate,
+    current_user: dict = Depends(get_current_user),
+    user_service: UserService = Depends(get_user_service),
+):
+    user_id = current_user["user_id"]
+    tenant_id = current_user.get("tenant_id")
+    try:
+        return await user_service.update_user(
+            user_id, data, tenant_id, update_my_profile=True, 
+            client_ip=request.client.host
+        )
+    except NotFoundError:
+        logger.error("update_my_profile_not_found", user_id=user_id)
+        raise HTTPException(status_code=404, detail="User not found")
+    except UserAlreadyExistsError:
+        logger.error("update_my_profile_already_exists", user_id=user_id)
+        raise HTTPException(status_code=409, detail="User already exists")
+    except Exception:
+        logger.error(
+            "update_user_failed", 
+            user_id=user_id, 
+            exc_info=True
+        )
+        raise HTTPException(status_code=422, detail="Failed to update user")
+
+
+@router.patch("/change-password", response_model=UserResponse)
+# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+async def change_my_password(
+    request: Request,
+    data: UserUpdatePassword,
+    current_user: dict = Depends(get_current_user),
+    user_service: UserService = Depends(get_user_service),
+):
+    """Change user password.
+
+    Args:
+        request: The FastAPI request object for rate limiting.
+        new_password: User's new password
+        old_password: User's old password
+
+    Returns:
+        UserResponse: User information
+    """
+    user_id = current_user["user_id"]
+    tenant_id = current_user.get("tenant_id")
+    try:
+        return await user_service.change_my_password(
+            user_id, data.old_password, data.new_password,
+            tenant_id, client_ip=request.client.host
+        )
+    except NotFoundError:
+        logger.error("change_my_password_user_not_found", user_id=user_id)
+        raise HTTPException(status_code=404, detail="User not found")
+    except InvalidPasswordError:
+        logger.error("change_my_password_user_invalid_password", user_id=user_id)
+        raise HTTPException(status_code=404, detail="Invalid password")
+    except Exception:
+        logger.error(
+            "change_my_password_failed", 
+            user_id=user_id, 
+            exc_info=True
+        )
+        raise HTTPException(status_code=422, detail="Failed to change user password")
 
 @router.get(
     "/options", 
@@ -188,7 +262,7 @@ async def update_user(
 ):
     try:
         tenant_id = request.state.tenant_id
-        return await user_service.update_user(tenant_id, user_id, data)
+        return await user_service.update_user(user_id, data, tenant_id)
     except NotFoundError:
         logger.error("update_user_not_found", user_id=user_id)
         raise HTTPException(status_code=404, detail="User not found")
@@ -378,57 +452,4 @@ async def reset_user_password(
             exc_info=True
         )
         raise HTTPException(status_code=422, detail="Failed to reset user password")
-
-@router.put(
-    "/{user_id}/change-password", 
-    response_model=UserResponse, 
-    dependencies=[Depends(check_permission(
-        PermissionResource.USERS, PermissionAction.UPDATE
-    ))]
-)
-@log_activity(
-    action="user.change_password",
-    resource="user",
-    meta_extractor=lambda res, *args, **kwargs: {
-        "target_user_id": kwargs.get("user_id")
-    }
-)
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
-async def change_user_password(
-    request: Request,
-    user_id: str, 
-    data: UserUpdatePassword,
-    background_tasks: BackgroundTasks,
-    user_service: UserService = Depends(get_user_service),
-):
-    """Change user password.
-
-    Args:
-        request: The FastAPI request object for rate limiting.
-        new_password: User's new password
-        old_password: User's old password
-
-    Returns:
-        UserResponse: User information
-    """
-    try:
-        tenant_id = request.state.tenant_id
-        return await user_service.change_user_password(
-            tenant_id, user_id,
-            old_password=data.old_password, 
-            new_password=data.new_password, 
-        )
-    except NotFoundError:
-        logger.error("change_password_user_not_found", user_id=user_id)
-        raise HTTPException(status_code=404, detail="User not found")
-    except InvalidPasswordError:
-        logger.error("change_password_user_invalid_password", user_id=user_id)
-        raise HTTPException(status_code=404, detail="Invalid password")
-    except Exception:
-        logger.error(
-            "change_password_user_failed", 
-            user_id=user_id, 
-            exc_info=True
-        )
-        raise HTTPException(status_code=422, detail="Failed to change user password")
 

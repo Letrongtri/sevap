@@ -184,7 +184,7 @@ async def test_change_user_password_success(async_client: AsyncClient, db_sessio
         "new_password": "NewSecurePassword@999"
     }
     
-    response = await async_client.put(f"/api/v1/users/{admin_user.id}/change-password", json=change_data, headers=headers)
+    response = await async_client.patch("/api/v1/users/change-password", json=change_data, headers=headers)
     assert response.status_code == 200
     
     # Verify new password is correct
@@ -204,9 +204,60 @@ async def test_change_user_password_invalid_old(async_client: AsyncClient, db_se
         "new_password": "NewSecurePassword@999"
     }
     
-    response = await async_client.put(f"/api/v1/users/{admin_user.id}/change-password", json=change_data, headers=headers)
+    response = await async_client.patch("/api/v1/users/change-password", json=change_data, headers=headers)
     assert response.status_code == 404
     assert "invalid password" in response.json()["detail"].lower()
+
+@pytest.mark.asyncio
+async def test_update_my_profile_success(async_client: AsyncClient, db_session: AsyncSession, admin_headers):
+    # Fetch seeded admin user
+    res_db = await db_session.execute(select(User).where(User.employee_code == "admin", User.tenant_id.isnot(None)))
+    admin_user = res_db.scalar_one()
+    
+    headers = await admin_headers()
+    update_data = {
+        "full_name": "My New Profile Name",
+        "email": "my_new_email@system.local"
+    }
+    
+    response = await async_client.patch("/api/v1/users", json=update_data, headers=headers)
+    assert response.status_code == 200
+    
+    data = response.json()
+    assert data["full_name"] == "My New Profile Name"
+    assert data["email"] == "my_new_email@system.local"
+    
+    # Verify in DB
+    await db_session.refresh(admin_user)
+    assert admin_user.full_name == "My New Profile Name"
+    assert admin_user.email == "my_new_email@system.local"
+
+@pytest.mark.asyncio
+async def test_update_my_profile_email_already_exists(async_client: AsyncClient, db_session: AsyncSession, admin_headers):
+    # Create another user in the same tenant to conflict email with
+    from app.models import Tenants
+    res_tenant = await db_session.execute(select(Tenants).limit(1))
+    tenant = res_tenant.scalar_one()
+    
+    conflict_user = User(
+        employee_code="conflict_user_emp",
+        full_name="Conflict User",
+        email="conflict_email@system.local",
+        password=hash_password("SecurePassword@123"),
+        tenant_id=tenant.id,
+    )
+    db_session.add(conflict_user)
+    await db_session.commit()
+    
+    headers = await admin_headers()
+    update_data = {
+        "full_name": "Should Fail",
+        "email": "conflict_email@system.local"
+    }
+    
+    response = await async_client.patch("/api/v1/users", json=update_data, headers=headers)
+    assert response.status_code == 409
+    assert "user already exists" in response.json()["detail"].lower()
 
 @pytest.mark.asyncio
 async def test_delete_user_success(async_client: AsyncClient, db_session: AsyncSession, admin_headers):

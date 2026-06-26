@@ -36,6 +36,10 @@ class UserUpdate(BaseModel):
     department_id: str | None = None
     role_ids: list[str] | None = None
 
+class MyProfileUpdate(BaseModel):
+    full_name: str | None = None
+    email: str | None = None
+
 class UserUpdatePassword(BaseModel):
     new_password: str
     old_password: str
