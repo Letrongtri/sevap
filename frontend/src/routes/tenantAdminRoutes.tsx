@@ -16,7 +16,7 @@ import { AdminSidebar } from '../components/sidebar/AdminSidebar'
 const AccountsPage = lazyPage(() => import('../pages/AccountsPage'))
 const RolesPage = lazyPage(() => import('../pages/RolesPage'))
 const DepartmentsPage = lazyPage(() => import('../pages/DepartmentsPage'))
-// const JobTitlesPage = lazyPage(() => import('../pages/JobTitlesPage'))
+const JobTitlesPage = lazyPage(() => import('../pages/JobTitlesPage'))
 // const ActivityLogsPage = lazyPage(() => import('../pages/ActivityLogsPage'))
 
 /** Zone 3 layout route — admin-only permission guard + admin shell */
@@ -45,11 +45,11 @@ export const adminDepartmentsRoute = createRoute({
     component: DepartmentsPage,
 })
 
-// export const adminJobTitlesRoute = createRoute({
-//     getParentRoute: () => tenantAdminLayoutRoute,
-//     path: PRIVATE_ROUTES.ADMIN_JOB_TITLES,
-//     component: JobTitlesPage,
-// })
+export const adminJobTitlesRoute = createRoute({
+    getParentRoute: () => tenantAdminLayoutRoute,
+    path: PRIVATE_ROUTES.ADMIN_JOB_TITLES,
+    component: JobTitlesPage,
+})
 
 // export const adminLogsRoute = createRoute({
 //     getParentRoute: () => tenantAdminLayoutRoute,
@@ -62,6 +62,6 @@ export const tenantAdminRoutes = [
     adminAccountsRoute,
     adminRolesRoute,
     adminDepartmentsRoute,
-    // adminJobTitlesRoute,
+    adminJobTitlesRoute,
     // adminLogsRoute,
 ] as const

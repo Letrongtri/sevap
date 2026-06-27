@@ -22,7 +22,7 @@ import {
     adminAccountsRoute,
     adminRolesRoute,
     adminDepartmentsRoute,
-    // adminJobTitlesRoute,
+    adminJobTitlesRoute,
     // adminLogsRoute,
 } from './tenantAdminRoutes'
 import { globalAdminLayoutRoute, globalAdminRoutes } from './globalAdminRoutes'
@@ -61,7 +61,7 @@ const routeTree = rootRoute.addChildren([
             adminAccountsRoute,
             adminRolesRoute,
             adminDepartmentsRoute,
-            // adminJobTitlesRoute,
+            adminJobTitlesRoute,
             // adminLogsRoute,
         ]),
 
