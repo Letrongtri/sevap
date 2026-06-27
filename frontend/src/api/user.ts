@@ -4,7 +4,12 @@ import type {
     UserPaginatedResponse,
     UserSimplePaginatedResponse,
 } from '../types/user'
+import type {
+    ChangeMyPasswordPayload,
+    UpdateMyProfilePayload,
+} from '../types/myProfile'
 import type { ID } from '../types/common'
+import type { UserSessionPaginatedResponse } from '../types/myProfile'
 
 /** Lấy danh sách tất cả người dùng */
 export const fetchUsers = async (
@@ -112,3 +117,31 @@ export const fetchUserOptions = async (
     })
     return res.data
 }
+
+/** Lấy thông tin cá nhân */
+export const fetchMyProfile = async (): Promise<User> => {
+    const res = await axiosClient.get(`/auth/me`)
+    return res.data
+}
+
+/** Cập nhật thông tin cá nhân */
+export const updateMyProfile = async (
+    payload: UpdateMyProfilePayload
+): Promise<User> => {
+    const res = await axiosClient.patch(`/users`, payload)
+    return res.data
+}
+
+/** Đổi mật khẩu cá nhân */
+export const changeMyPassword = async (
+    payload: ChangeMyPasswordPayload
+): Promise<User> => {
+    const res = await axiosClient.patch(`/users/change-password`, payload)
+    return res.data
+}
+
+export const fetchMyUserSessions =
+    async (): Promise<UserSessionPaginatedResponse> => {
+        const res = await axiosClient.get(`/users/sessions`)
+        return res.data
+    }

@@ -13,6 +13,12 @@ export interface Tenant {
     updated_at: Timestamp
 }
 
+export interface TenantSimple {
+    id: ID
+    tenant_domain: string
+    company_name: string
+}
+
 export interface AddTenantPayload {
     // Tenant details
     tenant_domain: string

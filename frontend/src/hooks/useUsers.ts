@@ -7,12 +7,29 @@ import {
     activateUser,
     deactivateUser,
     resetUserPassword,
+    updateMyProfile,
+    changeMyPassword,
+    fetchMyProfile,
+    fetchMyUserSessions,
 } from '../api/user'
 import { useUserStore } from '../store/usersStore'
 import type { User, UserPaginatedResponse } from '../types/user'
+import type {
+    ChangeMyPasswordPayload,
+    UpdateMyProfilePayload,
+} from '../types/myProfile'
 import type { ID } from '../types/common'
+import type { UserSessionPaginatedResponse } from '../types/myProfile'
 
-export const USERS_QUERY_KEY = ['users'] as const
+export const userKeys = {
+    all: ['users'] as const,
+    lists: () => [...userKeys.all, 'list'] as const,
+    list: (filters: object) => [...userKeys.lists(), filters] as const,
+
+    me: ['user-me'] as const,
+    myProfile: () => [...userKeys.me, 'profile'] as const,
+    mySessions: () => [...userKeys.me, 'sessions'] as const,
+}
 
 /**
  * useUsers — Fetch và cache danh sách users từ server.
@@ -32,21 +49,18 @@ export function useUsers() {
     // Chuẩn hoá status: 'all' hoặc rỗng thì truyền null cho API
     const statusParam = status === 'all' || !status ? null : status
 
-    const queryKey = [
-        ...USERS_QUERY_KEY,
-        {
-            querySearch,
-            departmentId,
-            jobTitleId,
-            roleId,
-            status: statusParam,
-            page,
-            limit,
-        },
-    ] as const
+    const filters = {
+        querySearch,
+        departmentId,
+        jobTitleId,
+        roleId,
+        status: statusParam,
+        page,
+        limit,
+    }
 
     const query = useQuery<UserPaginatedResponse>({
-        queryKey,
+        queryKey: userKeys.list(filters),
         queryFn: () =>
             fetchUsers(
                 querySearch,
@@ -72,7 +86,7 @@ export function useCreateUser() {
     return useMutation<User, Error, Parameters<typeof createUser>[0]>({
         mutationFn: createUser,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEY })
+            queryClient.invalidateQueries({ queryKey: userKeys.lists() })
         },
     })
 }
@@ -87,7 +101,7 @@ export function useUpdateUser() {
     >({
         mutationFn: ({ id, payload }) => updateUser(id, payload),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEY })
+            queryClient.invalidateQueries({ queryKey: userKeys.lists() })
         },
     })
 }
@@ -99,7 +113,7 @@ export function useToggleUserStatus() {
         mutationFn: ({ id, active }) =>
             active ? activateUser(id) : deactivateUser(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEY })
+            queryClient.invalidateQueries({ queryKey: userKeys.lists() })
         },
     })
 }
@@ -110,7 +124,7 @@ export function useDeleteUser() {
     return useMutation<User, Error, ID>({
         mutationFn: deleteUser,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEY })
+            queryClient.invalidateQueries({ queryKey: userKeys.lists() })
         },
     })
 }
@@ -121,7 +135,43 @@ export function useResetUserPassword() {
     return useMutation<User, Error, ID>({
         mutationFn: resetUserPassword,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEY })
+            queryClient.invalidateQueries({ queryKey: userKeys.lists() })
         },
+    })
+}
+
+export function useMyProfile() {
+    return useQuery<User>({
+        queryKey: userKeys.myProfile(),
+        queryFn: () => fetchMyProfile(),
+    })
+}
+
+/** Hook cập nhật thông tin cá nhân */
+export function useUpdateMyProfile() {
+    const queryClient = useQueryClient()
+    return useMutation<User, Error, { payload: UpdateMyProfilePayload }>({
+        mutationFn: ({ payload }) => updateMyProfile(payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: userKeys.myProfile() })
+        },
+    })
+}
+
+/** Hook cập nhật mật khẩu cá nhân */
+export function useChangeMyPassword() {
+    const queryClient = useQueryClient()
+    return useMutation<User, Error, { payload: ChangeMyPasswordPayload }>({
+        mutationFn: ({ payload }) => changeMyPassword(payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: userKeys.me })
+        },
+    })
+}
+
+export function useMyUserSessions() {
+    return useQuery<UserSessionPaginatedResponse>({
+        queryKey: userKeys.mySessions(),
+        queryFn: () => fetchMyUserSessions(),
     })
 }

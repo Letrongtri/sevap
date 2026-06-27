@@ -2,6 +2,7 @@ import type { ID, PaginatedResponse, Timestamp } from './common'
 import type { DepartmentSimple } from './department'
 import type { JobTitleSimple } from './jobTitle'
 import type { RoleSimple } from './role'
+import type { TenantSimple } from './tenant'
 
 export interface UserSimple {
     id: ID
@@ -28,6 +29,7 @@ export interface User {
     department?: DepartmentSimple
     job_title?: JobTitleSimple
     roles?: RoleSimple[]
+    tenant?: TenantSimple
 }
 
 export interface AddUserPayload {
