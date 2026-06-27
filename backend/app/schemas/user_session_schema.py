@@ -11,6 +11,7 @@ class UserSessionResponse(BaseModel):
     location: str
     status: str
     is_current: bool
+    is_revoked: bool
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -7,7 +7,7 @@ from app.core.logging import logger
 
 router = APIRouter()
 
-@router.post("/{session_id}/revoke")
+@router.delete("/{session_id}/revoke")
 async def revoke_session(
     request: Request,
     session_id: str,
@@ -17,7 +17,7 @@ async def revoke_session(
     )
 ):
     try:
-        user_id = request.state.user["user_id"]
+        user_id = request.state.user["id"]
         tenant_id = request.state.user.get("tenant_id")
         jti = request.state.jti
         client_ip = request.client.host if request.client else None

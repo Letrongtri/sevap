@@ -41,6 +41,10 @@ class UserSessionService:
             location = geoip_service.get_location(session.ip_address)
             device = parse_device_info(session.user_agent)
             status = calculate_status(session.created_at, is_current)
+            is_revoked = (
+                session.revoked_at is not None 
+                or session.expires_at < datetime.now(timezone.utc)
+            )
             session_resp = UserSessionResponse(
                 id=session.id,
                 user_id=session.user_id,
@@ -51,6 +55,7 @@ class UserSessionService:
                 location=location,
                 status=status,
                 is_current=is_current,
+                is_revoked=is_revoked
             )
             session_responses.append(session_resp)
         

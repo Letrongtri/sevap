@@ -1,7 +1,7 @@
 """This file contains the authentication utilities for the application."""
 
 import re
-import uuid
+import uuid_utils
 from datetime import UTC, datetime, timedelta
 from typing import List, Optional
 from jose import JWTError, jwt
@@ -22,7 +22,7 @@ def hash_password(password: str) -> str:
     return password_hash.hash(password)
 
 def generate_jti() -> str:
-    return str(uuid.uuid7())
+    return str(uuid_utils.uuid7())
 
 def create_access_token(
     user_id: str, jti: str, user_roles: List[str],
