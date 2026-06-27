@@ -12,26 +12,19 @@ import { useSimpleDepartments } from '../../hooks/useSimpleDepartments'
 import { useSimpleJobTitles } from '../../hooks/useSimpleJobTitles'
 import { useSimpleRoles } from '../../hooks/useSimpleRoles'
 import { formatDateTimeToDDMMYYYY } from '../../../utils/formater'
+import {
+    useDeleteUser,
+    useResetUserPassword,
+    useToggleUserStatus,
+    useUpdateUser,
+} from '../../hooks/useUsers'
+import { toast } from 'sonner'
+import { useUserStore } from '../../store/usersStore'
+import ConfirmDialog from '../ui/ConfirmDialog'
 
-const DetailAccountForm = ({
-    selectedUser,
-    onUpdateUser,
-    onResetPassword,
-    onDeleteUser,
-    onToggleUserStatus,
-    isSubmitting,
-    setFormError,
-    setFormSuccess,
-}: {
-    selectedUser: User
-    onUpdateUser: (payload: UpdateUserPayload) => void
-    onResetPassword: (id: ID) => void
-    onDeleteUser: (id: ID) => void
-    onToggleUserStatus: (id: ID, status: boolean) => void
-    isSubmitting: boolean
-    setFormError: (error: string | null) => void
-    setFormSuccess: (success: string | null) => void
-}) => {
+const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
+    const setActiveUserId = useUserStore((s) => s.setActiveUserId)
+
     const [editFullName, setEditFullName] = useState(
         selectedUser?.full_name || ''
     )
@@ -55,6 +48,12 @@ const DetailAccountForm = ({
     const { data: jobTitlesData } = useSimpleJobTitles()
     const { data: rolesData } = useSimpleRoles()
 
+    // Mutation hooks
+    const updateUserMutation = useUpdateUser()
+    const toggleStatusMutation = useToggleUserStatus()
+    const deleteUserMutation = useDeleteUser()
+    const resetPasswordMutation = useResetUserPassword()
+
     // Map metadata to select options
     const departmentOptions =
         departmentsData?.map((d) => ({
@@ -76,13 +75,14 @@ const DetailAccountForm = ({
 
     // Delete confirmation state
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+    const [showResetPasswordConfirm, setShowResetPasswordConfirm] =
+        useState(false)
+    const [showActiveToggleConfirm, setShowActiveToggleConfirm] =
+        useState(false)
 
     const handleUpdateUser = (e: React.SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault()
         if (!selectedUser) return
-
-        setFormError(null)
-        setFormSuccess(null)
 
         const payload: UpdateUserPayload = {
             id: selectedUser.id,
@@ -92,7 +92,29 @@ const DetailAccountForm = ({
             job_title_id: jobTitleId,
             role_ids: roleIds,
         }
-        onUpdateUser(payload)
+        updateUserMutation.mutate(
+            {
+                id: payload.id,
+                payload: {
+                    full_name: payload.full_name,
+                    email: payload.email,
+                    department_id: payload.department_id ?? undefined,
+                    job_title_id: payload.job_title_id ?? undefined,
+                    role_ids: payload.role_ids,
+                },
+            },
+            {
+                onSuccess: async () => {
+                    toast.success('Account updated successfully!')
+                },
+                onError: (err: any) => {
+                    toast.error(
+                        err.response?.data?.detail ??
+                            'Failed to update user account.'
+                    )
+                },
+            }
+        )
     }
 
     const handleResetPassword = () => {
@@ -105,31 +127,64 @@ const DetailAccountForm = ({
             return
         }
 
-        setFormError(null)
-        setFormSuccess(null)
-
-        onResetPassword(selectedUser.id)
+        resetPasswordMutation.mutate(selectedUser.id, {
+            onSuccess: () => {
+                toast.success(
+                    "Password reset successfully to default ('password')."
+                )
+            },
+            onError: (err: any) => {
+                toast.error(
+                    err.response?.data?.detail ?? 'Failed to reset password.'
+                )
+            },
+        })
     }
 
     const handleDeleteUser = () => {
         if (!selectedUser) return
 
-        setFormError(null)
-        setFormSuccess(null)
-
-        onDeleteUser(selectedUser.id)
+        deleteUserMutation.mutate(selectedUser.id, {
+            onSuccess: () => {
+                toast.success('Account deleted successfully.')
+                setActiveUserId(null)
+            },
+            onError: (err: any) => {
+                toast.error(
+                    err.response?.data?.detail ?? 'Failed to delete account.'
+                )
+            },
+        })
     }
 
     const handleToggleUserStatus = () => {
         if (!selectedUser) return
 
-        setFormError(null)
-        setFormSuccess(null)
-
-        onToggleUserStatus(selectedUser.id, !editIsActive)
+        toggleStatusMutation.mutate(
+            { id: selectedUser.id, active: !editIsActive },
+            {
+                onSuccess: () => {
+                    toast.success(
+                        `Account ${!editIsActive ? 'activated' : 'deactivated'} successfully.`
+                    )
+                },
+                onError: (err: any) => {
+                    toast.error(
+                        err.response?.data?.detail ??
+                            'Failed to activate account.'
+                    )
+                },
+            }
+        )
 
         setEditIsActive(!editIsActive)
     }
+
+    const isSubmitting =
+        updateUserMutation.isPending ||
+        toggleStatusMutation.isPending ||
+        deleteUserMutation.isPending ||
+        resetPasswordMutation.isPending
 
     return (
         <div className="space-y-6">
@@ -234,7 +289,7 @@ const DetailAccountForm = ({
                     </div>
                     <button
                         type="button"
-                        onClick={handleToggleUserStatus}
+                        onClick={() => setShowActiveToggleConfirm(true)}
                         className={[
                             'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none',
                             editIsActive ? 'bg-success' : 'bg-[#D4D7DE]',
@@ -265,7 +320,7 @@ const DetailAccountForm = ({
                         variant="secondary"
                         size="sm"
                         leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
-                        onClick={handleResetPassword}
+                        onClick={() => setShowResetPasswordConfirm(true)}
                         disabled={isSubmitting}
                     >
                         Reset
@@ -273,58 +328,58 @@ const DetailAccountForm = ({
                 </div>
 
                 {/* Delete Account button */}
-                {!showDeleteConfirm ? (
-                    <div className="flex items-center justify-between gap-4 p-3 hover:bg-error-bg/10 rounded-xl transition-all">
-                        <div>
-                            <p className="text-sm font-semibold text-error-text">
-                                Delete Account
-                            </p>
-                            <p className="text-[10px] text-text-placeholder leading-normal mt-0.5">
-                                Permanently delete user profile and logs
-                            </p>
-                        </div>
-                        <Button
-                            variant="danger"
-                            size="sm"
-                            leftIcon={<Trash2 className="w-3.5 h-3.5" />}
-                            onClick={() => setShowDeleteConfirm(true)}
-                            disabled={isSubmitting}
-                        >
-                            Delete
-                        </Button>
-                    </div>
-                ) : (
-                    <div className="p-3.5 bg-error-bg/30 border border-error-border/60 rounded-xl space-y-2.5 animate-fade-in">
+                <div className="flex items-center justify-between gap-4 p-3 bg-error-bg/30 border border-error-border/60 rounded-xl">
+                    <div>
                         <p className="text-sm font-semibold text-error-text">
-                            Confirm Deletion?
+                            Delete Account
                         </p>
-                        <p className="text-xs text-text-secondary leading-normal">
-                            This action is irreversible and will delete all
-                            session logs for this user.
+                        <p className="text-[10px] text-text-placeholder leading-normal mt-0.5">
+                            Permanently delete user profile and logs
                         </p>
-                        <div className="flex gap-2">
-                            <Button
-                                variant="danger"
-                                size="sm"
-                                onClick={handleDeleteUser}
-                                isLoading={isSubmitting}
-                                loadingText="Deleting..."
-                                fullWidth
-                            >
-                                Yes, Delete
-                            </Button>
-                            <Button
-                                variant="secondary"
-                                size="sm"
-                                onClick={() => setShowDeleteConfirm(false)}
-                                disabled={isSubmitting}
-                                fullWidth
-                            >
-                                Cancel
-                            </Button>
-                        </div>
                     </div>
-                )}
+                    <Button
+                        variant="danger"
+                        size="sm"
+                        leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+                        onClick={() => setShowDeleteConfirm(true)}
+                        disabled={isSubmitting}
+                    >
+                        Delete
+                    </Button>
+                </div>
+
+                <ConfirmDialog
+                    isOpen={showDeleteConfirm}
+                    onClose={() => setShowDeleteConfirm(false)}
+                    onConfirm={handleDeleteUser}
+                    title="Delete account?"
+                    description="This will delete the account immediately. This action is irreversible."
+                    confirmLabel="Yes, delete"
+                    variant="danger"
+                    isLoading={isSubmitting}
+                />
+
+                <ConfirmDialog
+                    isOpen={showResetPasswordConfirm}
+                    onClose={() => setShowResetPasswordConfirm(false)}
+                    onConfirm={handleResetPassword}
+                    title="Reset password?"
+                    description="This will reset the account password to default (password). This action is irreversible."
+                    confirmLabel="Yes, reset"
+                    variant="danger"
+                    isLoading={isSubmitting}
+                />
+
+                <ConfirmDialog
+                    isOpen={showActiveToggleConfirm}
+                    onClose={() => setShowActiveToggleConfirm(false)}
+                    onConfirm={handleToggleUserStatus}
+                    title="Change account status?"
+                    description="This will deactivate the account. This action is irreversible."
+                    confirmLabel="Yes, change"
+                    variant="danger"
+                    isLoading={isSubmitting}
+                />
             </div>
         </div>
     )
