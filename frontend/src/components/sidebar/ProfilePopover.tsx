@@ -79,7 +79,11 @@ export const ProfilePopover = ({
             {/* User info header */}
             <div className="px-4 pt-4 pb-3 border-b border-border/60">
                 <div className="flex items-center gap-3">
-                    <Avatar fullName={user?.fullName ?? 'User'} size={44} />
+                    <Avatar
+                        id={user?.id ?? 'User'}
+                        fullName={user?.fullName ?? 'User'}
+                        size={44}
+                    />
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-text-primary truncate">
                             {user?.fullName ?? 'User'}

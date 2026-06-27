@@ -1,6 +1,5 @@
 import { FileText } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
-import { useAuth } from '../../hooks/useAuth'
 import { PRIVATE_ROUTES } from '../../routes/paths'
 import { SidebarShell } from './SidebarShell'
 import { SidebarFooter } from './SidebarFooter'
@@ -21,10 +20,6 @@ interface DocumentSidebarProps {
 
 export function DocumentSidebar({ collapsed, onToggle }: DocumentSidebarProps) {
     const user = useAuthStore((s) => s.user)
-    const { logout } = useAuth()
-
-    const roleLabel = user?.roles?.[0] ?? ''
-    const userInitial = user?.fullName?.charAt(0)?.toUpperCase() ?? 'U'
 
     return (
         <SidebarShell
@@ -34,10 +29,7 @@ export function DocumentSidebar({ collapsed, onToggle }: DocumentSidebarProps) {
             footerSlot={
                 <SidebarFooter
                     collapsed={collapsed}
-                    userInitial={userInitial}
-                    fullName={user?.fullName}
-                    roleLabel={roleLabel}
-                    onLogout={logout}
+                    user={user}
                     backTo={PRIVATE_ROUTES.HOME}
                 />
             }

@@ -1,11 +1,12 @@
 import { stringToColor } from '../../../utils/utils'
 
 type AvatarProps = {
+    id: string
     fullName: string
     size?: number
 }
 
-export const Avatar = ({ fullName, size = 28 }: AvatarProps) => {
+export const Avatar = ({ id, fullName, size = 28 }: AvatarProps) => {
     const nameSplit = fullName.split(' ')
     const userInitial =
         nameSplit.length > 1
@@ -13,7 +14,7 @@ export const Avatar = ({ fullName, size = 28 }: AvatarProps) => {
               nameSplit[nameSplit.length - 1].charAt(0).toUpperCase()
             : fullName.charAt(0).toUpperCase()
 
-    const color = stringToColor(fullName)
+    const color = stringToColor(id)
     return (
         <div
             style={{

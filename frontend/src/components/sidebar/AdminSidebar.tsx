@@ -1,6 +1,5 @@
 import { UserCog, ShieldCheck, Building2, Briefcase, History } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
-import { useAuth } from '../../hooks/useAuth'
 import { PRIVATE_ROUTES } from '../../routes/paths'
 import { SidebarShell } from './SidebarShell'
 import { SidebarFooter } from './SidebarFooter'
@@ -25,9 +24,6 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
     const user = useAuthStore((s) => s.user)
-    const { logout } = useAuth()
-
-    const userInitial = user?.fullName?.charAt(0)?.toUpperCase() ?? 'U'
 
     return (
         <SidebarShell
@@ -37,10 +33,7 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
             footerSlot={
                 <SidebarFooter
                     collapsed={collapsed}
-                    userInitial={userInitial}
-                    fullName={user?.fullName}
-                    roleLabel="Tenant Admin"
-                    onLogout={logout}
+                    user={user}
                     backTo={PRIVATE_ROUTES.HOME}
                 />
             }

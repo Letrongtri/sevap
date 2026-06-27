@@ -69,6 +69,7 @@ const BottomNavigation = ({
                             className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                         >
                             <Avatar
+                                id={user?.id ?? 'User'}
                                 fullName={user?.fullName ?? 'User'}
                                 size={32}
                             />
@@ -83,7 +84,11 @@ const BottomNavigation = ({
                         className="w-full flex items-center gap-2 px-3 py-2 mt-1 rounded-xl hover:bg-bg transition-all duration-150 group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                     >
                         {/* Avatar */}
-                        <Avatar fullName={user?.fullName ?? 'User'} size={32} />
+                        <Avatar
+                            id={user?.id ?? 'User'}
+                            fullName={user?.fullName ?? 'User'}
+                            size={32}
+                        />
                         {/* Name + role */}
                         <div className="flex-1 min-w-0 text-left">
                             <p className="text-xs font-semibold text-text-primary leading-none truncate">
