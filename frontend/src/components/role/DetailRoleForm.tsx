@@ -181,7 +181,6 @@ const DetailRoleForm = ({
             >
                 {/* Role Information Fields */}
                 <RoleInfoFields
-                    selectedRoleId={selectedRole?.id}
                     editRoleName={editRoleName}
                     setEditRoleName={setEditRoleName}
                     editDescription={editDescription}

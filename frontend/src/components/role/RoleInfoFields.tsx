@@ -1,10 +1,8 @@
 import Input from '../ui/Input'
-import { Hash, Shield } from 'lucide-react'
+import { Shield } from 'lucide-react'
 import SearchableSelect from '../ui/SearchableSelect'
-import type { ID } from '../../types/common'
 
 interface RoleInfoFieldsProps {
-    selectedRoleId?: ID | null
     editRoleName: string
     setEditRoleName: (val: string) => void
     editDescription: string
@@ -15,7 +13,6 @@ interface RoleInfoFieldsProps {
 }
 
 const RoleInfoFields = ({
-    selectedRoleId,
     editRoleName,
     setEditRoleName,
     editDescription,
@@ -26,16 +23,7 @@ const RoleInfoFields = ({
 }: RoleInfoFieldsProps) => {
     return (
         <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <Input
-                    label="ID"
-                    placeholder="Role ID"
-                    value={selectedRoleId ?? ''}
-                    readOnly
-                    leftIcon={<Hash className="w-4 h-4" />}
-                    disabled
-                />
-
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input
                     label="Role Name"
                     placeholder="Role name"

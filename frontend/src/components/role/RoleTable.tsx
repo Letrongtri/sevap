@@ -133,7 +133,7 @@ const RoleTable = () => {
                             <tr className="text-text-secondary text-xs uppercase font-bold tracking-wider">
                                 {/* Đưa sticky và bg-white vào từng thẻ th để làm nền cứng chặn text cuộn phía dưới */}
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                    ID
+                                    No.
                                 </th>
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
                                     Name
@@ -156,7 +156,7 @@ const RoleTable = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[#D4D7DE]/40">
-                            {roles.map((role) => {
+                            {roles.map((role, index) => {
                                 const isSelected = activeRoleId === role.id
 
                                 return (
@@ -171,11 +171,11 @@ const RoleTable = () => {
                                         ].join(' ')}
                                     >
                                         {/* ID */}
-                                        <td className="px-5 py-3.5 text-sm text-text-secondary font-mono">
-                                            {role.id}
+                                        <td className="px-5 py-3.5 text-sm text-text-secondary">
+                                            {(page - 1) * limit + index + 1}
                                         </td>
                                         {/* Name */}
-                                        <td className="px-5 py-3.5 text-sm text-text-secondary font-mono">
+                                        <td className="px-5 py-3.5 text-sm text-text-secondary">
                                             {role.name}
                                         </td>
                                         {/* Description */}

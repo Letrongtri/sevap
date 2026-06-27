@@ -1,3 +1,4 @@
+import { stringToLabel } from '../../../utils/utils'
 import type { Permission } from '../../types/permission'
 
 interface PermissionsMatrixProps {
@@ -6,23 +7,22 @@ interface PermissionsMatrixProps {
     onTogglePermission: (permissionId: number) => void
 }
 
-const ACTIONS = [
-    { key: 'read', label: 'READ' },
-    { key: 'write', label: 'WRITE' },
-    { key: 'delete', label: 'DELETE' },
-    { key: 'manage', label: 'MANAGE' },
-    { key: 'execute', label: 'EXECUTE' },
-]
-
 const PermissionsMatrix = ({
     permissionsData,
     editPermissionIds,
     onTogglePermission,
 }: PermissionsMatrixProps) => {
     // Dynamic list of unique resources, sorted alphabetically
-    const resources = Array.from(
-        new Set(permissionsData?.map((p) => p.resource) ?? [])
-    ).sort()
+    const resources = [
+        ...new Set(permissionsData?.map((p) => p.resource)),
+    ].sort()
+
+    const actions = [...new Set(permissionsData?.map((p) => p.action))]
+        .sort()
+        .map((action) => ({
+            key: action,
+            label: action.toUpperCase(),
+        }))
 
     return (
         <div className="space-y-2">
@@ -38,7 +38,7 @@ const PermissionsMatrix = ({
                                 Resource
                             </th>
                             {/* Action Columns: Each 15% width, total 75%, headings centered */}
-                            {ACTIONS.map((act) => (
+                            {actions.map((act) => (
                                 <th
                                     key={act.key}
                                     className="border-r last:border-r-0 border-border p-3 font-bold text-text-primary text-center tracking-wider w-[15%]"
@@ -55,9 +55,9 @@ const PermissionsMatrix = ({
                                 className="border-b last:border-b-0 border-border hover:bg-surface-raised/40 transition-colors"
                             >
                                 <td className="border-r border-border p-3 font-medium text-text-secondary text-left capitalize">
-                                    {res}
+                                    {stringToLabel(res)}
                                 </td>
-                                {ACTIONS.map((act) => {
+                                {actions.map((act) => {
                                     const perm = permissionsData?.find(
                                         (p) =>
                                             p.resource === res &&

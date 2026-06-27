@@ -2,6 +2,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { ChevronDown, Search, X, Check } from 'lucide-react'
 
+type SelectSize = 'sm' | 'md' | 'lg'
+
 export interface SelectOption {
     value: string | number | null
     label: string
@@ -15,6 +17,19 @@ interface SearchableSelectProps {
     label?: string
     disabled?: boolean
     className?: string
+    size?: SelectSize
+}
+
+const paddingMap: Record<SelectSize, string> = {
+    sm: 'py-2',
+    md: 'py-2.5',
+    lg: 'py-3.5',
+}
+
+const fontSizeMap: Record<SelectSize, string> = {
+    sm: 'text-xs',
+    md: 'text-sm',
+    lg: 'text-base',
 }
 
 export default function SearchableSelect({
@@ -25,10 +40,13 @@ export default function SearchableSelect({
     label,
     disabled = false,
     className = '',
+    size = 'md',
 }: SearchableSelectProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const containerRef = useRef<HTMLDivElement>(null)
+    const paddingSelect = paddingMap[size]
+    const fontSizeSelect = fontSizeMap[size]
 
     // Close on click outside
     useEffect(() => {
@@ -84,6 +102,7 @@ export default function SearchableSelect({
                 onClick={handleToggleOpen}
                 className={[
                     'w-full flex items-center justify-between gap-2 bg-surface-raised border border-border px-3 py-1.5 rounded-xl text-xs font-semibold text-text-primary text-left transition-all outline-none',
+                    paddingSelect,
                     isOpen
                         ? 'border-primary ring-2 ring-primary/20'
                         : 'hover:border-text-placeholder',
@@ -93,11 +112,12 @@ export default function SearchableSelect({
                 ].join(' ')}
             >
                 <span
-                    className={
+                    className={[
+                        fontSizeSelect,
                         selectedOption
                             ? 'text-text-primary'
-                            : 'text-text-placeholder font-medium'
-                    }
+                            : 'text-text-placeholder font-normal',
+                    ].join(' ')}
                 >
                     {selectedOption ? selectedOption.label : placeholder}
                 </span>

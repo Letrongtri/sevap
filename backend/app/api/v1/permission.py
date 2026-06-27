@@ -21,7 +21,9 @@ async def get_all_permissions(
     permission_service: PermissionService = Depends(get_permission_service),
 ):
     try:
-        return await permission_service.get_all_permissions()
+        is_global_admin = request.state.user['is_global_admin']
+        
+        return await permission_service.get_all_permissions(is_global_admin)
     except Exception:
         logger.error(
             "get_all_permissions_failed",

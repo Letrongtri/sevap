@@ -28,7 +28,7 @@ export default function RolesPage() {
             </div>
 
             {/* Filter and Content layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch flex-1 overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch flex-1 overflow-hidden">
                 {/* Left side: roles table list */}
                 <div
                     className={[
