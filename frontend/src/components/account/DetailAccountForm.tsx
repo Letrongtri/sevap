@@ -11,6 +11,7 @@ import SearchableSelect from '../ui/SearchableSelect'
 import { useSimpleDepartments } from '../../hooks/useSimpleDepartments'
 import { useSimpleJobTitles } from '../../hooks/useSimpleJobTitles'
 import { useSimpleRoles } from '../../hooks/useSimpleRoles'
+import { formatDateTimeToDDMMYYYY } from '../../../utils/formater'
 
 const DetailAccountForm = ({
     selectedUser,
@@ -209,6 +210,18 @@ const DetailAccountForm = ({
                     Security & Management
                 </h4>
 
+                {/* Created at */}
+                <div className="flex items-center justify-between p-3">
+                    <p className="text-sm font-medium text-text-secondary">
+                        Account Created Date
+                    </p>
+                    <p className="text-sm font-medium text-text-secondary">
+                        {formatDateTimeToDDMMYYYY(
+                            selectedUser.created_at.toString()
+                        )}
+                    </p>
+                </div>
+
                 {/* Status toggle slider */}
                 <div className="flex items-center justify-between p-3 bg-surface-raised border border-border rounded-xl">
                     <div>
@@ -241,7 +254,7 @@ const DetailAccountForm = ({
                 {/* Password Reset button */}
                 <div className="flex items-center justify-between gap-4 p-3 hover:bg-bg/20 rounded-xl transition-all">
                     <div>
-                        <p className="text-xs font-semibold text-text-secondary">
+                        <p className="text-sm font-semibold text-text-secondary">
                             Reset Password
                         </p>
                         <p className="text-[10px] text-text-placeholder leading-normal mt-0.5">
@@ -263,7 +276,7 @@ const DetailAccountForm = ({
                 {!showDeleteConfirm ? (
                     <div className="flex items-center justify-between gap-4 p-3 hover:bg-error-bg/10 rounded-xl transition-all">
                         <div>
-                            <p className="text-xs font-semibold text-error-text">
+                            <p className="text-sm font-semibold text-error-text">
                                 Delete Account
                             </p>
                             <p className="text-[10px] text-text-placeholder leading-normal mt-0.5">
@@ -282,10 +295,10 @@ const DetailAccountForm = ({
                     </div>
                 ) : (
                     <div className="p-3.5 bg-error-bg/30 border border-error-border/60 rounded-xl space-y-2.5 animate-fade-in">
-                        <p className="text-xs font-semibold text-error-text">
+                        <p className="text-sm font-semibold text-error-text">
                             Confirm Deletion?
                         </p>
-                        <p className="text-[10px] text-text-secondary leading-normal">
+                        <p className="text-xs text-text-secondary leading-normal">
                             This action is irreversible and will delete all
                             session logs for this user.
                         </p>

@@ -11,6 +11,7 @@ import LoadingSpinner from '../ui/LoadingSpinner'
 import SearchableSelect from '../ui/SearchableSelect'
 import Pagination from '../ui/Pagination'
 import type { User } from '../../types/user'
+import { stringToLabel } from '../../../utils/utils'
 
 const UserTable = () => {
     // Search and status state
@@ -202,7 +203,10 @@ const UserTable = () => {
                             <tr className="text-text-secondary text-xs uppercase font-bold tracking-wider">
                                 {/* Đưa sticky và bg-white vào từng thẻ th để làm nền cứng chặn text cuộn phía dưới */}
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                    User
+                                    No.
+                                </th>
+                                <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
+                                    Full Name
                                 </th>
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
                                     Employee Code
@@ -211,19 +215,16 @@ const UserTable = () => {
                                     Email
                                 </th>
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
+                                    Roles
+                                </th>
+                                <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
                                     Status
                                 </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[#D4D7DE]/40">
-                            {users.map((user) => {
+                            {users.map((user, index) => {
                                 const isSelected = activeUserId === user.id
-                                const initials = user.full_name
-                                    .split(' ')
-                                    .map((n) => n[0])
-                                    .slice(-2)
-                                    .join('')
-                                    .toUpperCase()
 
                                 return (
                                     <tr
@@ -236,27 +237,25 @@ const UserTable = () => {
                                                 : 'hover:bg-bg/20',
                                         ].join(' ')}
                                     >
+                                        <td className="px-5 py-3.5 text-sm text-text-secondary">
+                                            {(page - 1) * limit + index + 1}
+                                        </td>
                                         {/* User Identity cell */}
-                                        <td className="px-5 py-3.5 flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs group-hover:scale-105 transition-transform">
-                                                {initials}
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-semibold text-text-primary group-hover:text-primary transition-colors">
-                                                    {user.full_name}
+                                        <td className="px-5 py-3.5">
+                                            <p className="text-sm font-semibold text-text-primary group-hover:text-primary transition-colors">
+                                                {user.full_name}
+                                            </p>
+                                            {user.last_login && (
+                                                <p className="text-[10px] text-text-placeholder mt-0.5">
+                                                    Last login:{' '}
+                                                    {new Date(
+                                                        user.last_login
+                                                    ).toLocaleDateString()}
                                                 </p>
-                                                {user.last_login && (
-                                                    <p className="text-[10px] text-text-placeholder mt-0.5">
-                                                        Last login:{' '}
-                                                        {new Date(
-                                                            user.last_login
-                                                        ).toLocaleDateString()}
-                                                    </p>
-                                                )}
-                                            </div>
+                                            )}
                                         </td>
                                         {/* Code */}
-                                        <td className="px-5 py-3.5 text-sm text-text-secondary font-mono">
+                                        <td className="px-5 py-3.5 text-sm text-text-secondary">
                                             {user.employee_code}
                                         </td>
                                         {/* Email */}
@@ -266,6 +265,14 @@ const UserTable = () => {
                                                     No email
                                                 </span>
                                             )}
+                                        </td>
+                                        {/* Roles */}
+                                        <td className="px-5 py-3.5 text-sm text-text-secondary">
+                                            {user?.roles
+                                                ?.map((role) =>
+                                                    stringToLabel(role.name)
+                                                )
+                                                .join(', ') || 'Employee'}
                                         </td>
                                         {/* Status badge */}
                                         <td className="px-5 py-3.5">
@@ -299,6 +306,7 @@ const UserTable = () => {
                         limit={limit}
                         totalPages={pagination.total_pages}
                         totalItems={pagination.total}
+                        unit="accounts"
                         onPageChange={setPage}
                         onLimitChange={setLimit}
                     />
