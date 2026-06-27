@@ -5,6 +5,7 @@ interface PaginationProps {
     limit: number
     totalPages: number
     totalItems: number
+    unit?: string
     onPageChange: (page: number) => void
     onLimitChange: (limit: number) => void
 }
@@ -14,6 +15,7 @@ export default function Pagination({
     limit,
     totalPages,
     totalItems,
+    unit = 'items',
     onPageChange,
     onLimitChange,
 }: PaginationProps) {
@@ -60,7 +62,7 @@ export default function Pagination({
         <div className="flex flex-wrap items-center justify-end gap-3.5 px-6 py-4 border-t border-[#D4D7DE]/40 bg-bg/5 select-none font-medium text-xs text-text-secondary">
             {/* Total items count display */}
             <span className="mr-auto text-text-placeholder">
-                Total {totalItems} accounts
+                Total {totalItems} {unit}
             </span>
 
             {/* Pagination Controls Wrapper */}

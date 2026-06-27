@@ -93,6 +93,14 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
     setLoading: (status) => set({ isLoading: status }),
     setError: (msg) => set({ error: msg }),
+    updateUser: (patch) =>
+        set((state) => {
+            if (!state.user) return state
+            
+            const updated = { ...state.user, ...patch }
+            localStorage.setItem('auth_user', JSON.stringify(updated))
+            return { user: updated }
+        }),
 }))
 
 export const checkAuthOrRefresh = async (): Promise<boolean> => {

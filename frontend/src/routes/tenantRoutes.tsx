@@ -23,6 +23,7 @@ const HomePage = lazyPage(() => import('../pages/HomePage'))
 const ChatPage = lazyPage(() => import('../pages/ChatPage'))
 const DirectoryPage = lazyPage(() => import('../pages/DirectoryPage'))
 const ForbiddenPage = lazyPage(() => import('../pages/ForbiddenPage'))
+const MyProfilePage = lazyPage(() => import('../pages/MyProfilePage'))
 
 // ── Zone 1 leaf routes ────────────────────────────────────────
 
@@ -59,4 +60,12 @@ export const forbiddenRoute = createRoute({
     getParentRoute: () => tenantLayoutRoute,
     path: PRIVATE_ROUTES.FORBIDDEN,
     component: ForbiddenPage,
+})
+
+/** My Profile — available to all authenticated tenant users */
+export const profileRoute = createRoute({
+    getParentRoute: () => tenantLayoutRoute,
+    path: PRIVATE_ROUTES.PROFILE,
+    beforeLoad: requireTenantUserGuard,
+    component: MyProfilePage,
 })

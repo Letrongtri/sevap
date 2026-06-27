@@ -13,6 +13,7 @@ export const PRIVATE_ROUTES = {
     CHAT: '/chat',
     CHAT_DETAIL: '/chat/$conversationId',
     DIRECTORY: '/directory',
+    PROFILE: '/profile',
 
     // ── Zone 2: Document Management (hr_manager + admin) ─────
     DOCUMENTS: '/documents',

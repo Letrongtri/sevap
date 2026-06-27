@@ -15,9 +15,9 @@ import { AdminSidebar } from '../components/sidebar/AdminSidebar'
 // Lazy-loaded admin pages
 const AccountsPage = lazyPage(() => import('../pages/AccountsPage'))
 const RolesPage = lazyPage(() => import('../pages/RolesPage'))
-const DepartmentsPage = lazyPage(() => import('../pages/DepartmentsPage'))
-const JobTitlesPage = lazyPage(() => import('../pages/JobTitlesPage'))
-const ActivityLogsPage = lazyPage(() => import('../pages/ActivityLogsPage'))
+// const DepartmentsPage = lazyPage(() => import('../pages/DepartmentsPage'))
+// const JobTitlesPage = lazyPage(() => import('../pages/JobTitlesPage'))
+// const ActivityLogsPage = lazyPage(() => import('../pages/ActivityLogsPage'))
 
 /** Zone 3 layout route — admin-only permission guard + admin shell */
 export const tenantAdminLayoutRoute = createRoute({
@@ -39,29 +39,29 @@ export const adminRolesRoute = createRoute({
     component: RolesPage,
 })
 
-export const adminDepartmentsRoute = createRoute({
-    getParentRoute: () => tenantAdminLayoutRoute,
-    path: PRIVATE_ROUTES.ADMIN_DEPARTMENTS,
-    component: DepartmentsPage,
-})
+// export const adminDepartmentsRoute = createRoute({
+//     getParentRoute: () => tenantAdminLayoutRoute,
+//     path: PRIVATE_ROUTES.ADMIN_DEPARTMENTS,
+//     component: DepartmentsPage,
+// })
 
-export const adminJobTitlesRoute = createRoute({
-    getParentRoute: () => tenantAdminLayoutRoute,
-    path: PRIVATE_ROUTES.ADMIN_JOB_TITLES,
-    component: JobTitlesPage,
-})
+// export const adminJobTitlesRoute = createRoute({
+//     getParentRoute: () => tenantAdminLayoutRoute,
+//     path: PRIVATE_ROUTES.ADMIN_JOB_TITLES,
+//     component: JobTitlesPage,
+// })
 
-export const adminLogsRoute = createRoute({
-    getParentRoute: () => tenantAdminLayoutRoute,
-    path: PRIVATE_ROUTES.ADMIN_LOGS,
-    component: ActivityLogsPage,
-})
+// export const adminLogsRoute = createRoute({
+//     getParentRoute: () => tenantAdminLayoutRoute,
+//     path: PRIVATE_ROUTES.ADMIN_LOGS,
+//     component: ActivityLogsPage,
+// })
 
 export const tenantAdminRoutes = [
     tenantAdminLayoutRoute,
     adminAccountsRoute,
     adminRolesRoute,
-    adminDepartmentsRoute,
-    adminJobTitlesRoute,
-    adminLogsRoute,
+    // adminDepartmentsRoute,
+    // adminJobTitlesRoute,
+    // adminLogsRoute,
 ] as const

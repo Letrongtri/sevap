@@ -14,6 +14,7 @@ export interface AuthUser {
     id: ID
     fullName: string
     employeeCode: string
+    email?: string
     roles: string[]
     permissions: string[]
     isGlobalAdmin: boolean
@@ -47,4 +48,6 @@ export interface AuthActions {
     clearAuth: () => void
     setLoading: (status: boolean) => void
     setError: (msg: string | null) => void
+    /** Partially update the cached AuthUser (e.g. after a profile save). */
+    updateUser: (patch: Partial<AuthUser>) => void
 }

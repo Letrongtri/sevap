@@ -13,6 +13,7 @@ import {
     chatDetailRoute,
     directoryRoute,
     forbiddenRoute,
+    profileRoute,
 } from './tenantRoutes'
 import { privateLayoutRoute } from './privateLayoutRoute'
 import { documentLayoutRoute, documentsRoute } from './documentRoutes'
@@ -20,9 +21,9 @@ import {
     tenantAdminLayoutRoute,
     adminAccountsRoute,
     adminRolesRoute,
-    adminDepartmentsRoute,
-    adminJobTitlesRoute,
-    adminLogsRoute,
+    // adminDepartmentsRoute,
+    // adminJobTitlesRoute,
+    // adminLogsRoute,
 } from './tenantAdminRoutes'
 import { globalAdminLayoutRoute, globalAdminRoutes } from './globalAdminRoutes'
 
@@ -49,6 +50,7 @@ const routeTree = rootRoute.addChildren([
             chatDetailRoute,
             directoryRoute,
             forbiddenRoute,
+            profileRoute,
         ]),
 
         // Zone 2 — Document Management (hr_manager + admin) (renders DocumentShell directly)
@@ -58,9 +60,9 @@ const routeTree = rootRoute.addChildren([
         tenantAdminLayoutRoute.addChildren([
             adminAccountsRoute,
             adminRolesRoute,
-            adminDepartmentsRoute,
-            adminJobTitlesRoute,
-            adminLogsRoute,
+            // adminDepartmentsRoute,
+            // adminJobTitlesRoute,
+            // adminLogsRoute,
         ]),
 
         // Zone 4 — Global Admin (renders AdminShell directly)
