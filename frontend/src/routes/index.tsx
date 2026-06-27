@@ -21,7 +21,7 @@ import {
     tenantAdminLayoutRoute,
     adminAccountsRoute,
     adminRolesRoute,
-    // adminDepartmentsRoute,
+    adminDepartmentsRoute,
     // adminJobTitlesRoute,
     // adminLogsRoute,
 } from './tenantAdminRoutes'
@@ -60,7 +60,7 @@ const routeTree = rootRoute.addChildren([
         tenantAdminLayoutRoute.addChildren([
             adminAccountsRoute,
             adminRolesRoute,
-            // adminDepartmentsRoute,
+            adminDepartmentsRoute,
             // adminJobTitlesRoute,
             // adminLogsRoute,
         ]),

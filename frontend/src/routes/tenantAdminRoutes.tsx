@@ -15,7 +15,7 @@ import { AdminSidebar } from '../components/sidebar/AdminSidebar'
 // Lazy-loaded admin pages
 const AccountsPage = lazyPage(() => import('../pages/AccountsPage'))
 const RolesPage = lazyPage(() => import('../pages/RolesPage'))
-// const DepartmentsPage = lazyPage(() => import('../pages/DepartmentsPage'))
+const DepartmentsPage = lazyPage(() => import('../pages/DepartmentsPage'))
 // const JobTitlesPage = lazyPage(() => import('../pages/JobTitlesPage'))
 // const ActivityLogsPage = lazyPage(() => import('../pages/ActivityLogsPage'))
 
@@ -39,11 +39,11 @@ export const adminRolesRoute = createRoute({
     component: RolesPage,
 })
 
-// export const adminDepartmentsRoute = createRoute({
-//     getParentRoute: () => tenantAdminLayoutRoute,
-//     path: PRIVATE_ROUTES.ADMIN_DEPARTMENTS,
-//     component: DepartmentsPage,
-// })
+export const adminDepartmentsRoute = createRoute({
+    getParentRoute: () => tenantAdminLayoutRoute,
+    path: PRIVATE_ROUTES.ADMIN_DEPARTMENTS,
+    component: DepartmentsPage,
+})
 
 // export const adminJobTitlesRoute = createRoute({
 //     getParentRoute: () => tenantAdminLayoutRoute,
@@ -61,7 +61,7 @@ export const tenantAdminRoutes = [
     tenantAdminLayoutRoute,
     adminAccountsRoute,
     adminRolesRoute,
-    // adminDepartmentsRoute,
+    adminDepartmentsRoute,
     // adminJobTitlesRoute,
     // adminLogsRoute,
 ] as const
