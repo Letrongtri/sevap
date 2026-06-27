@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useRef } from 'react'
 import type { Role, UpdateRolePayload } from '../../types/role'
 import { useRoleStore } from '../../store/roleStore'
@@ -12,16 +11,14 @@ import {
 import { usePermissions } from '../../hooks/usePermissions'
 import RoleInfoFields from './RoleInfoFields'
 import PermissionsMatrix from './PermissionsMatrix'
+import { toast } from 'sonner'
+import ConfirmDialog from '../ui/ConfirmDialog'
 
 const DetailRoleForm = ({
     selectedRole,
-    setFormError,
-    setFormSuccess,
     onCloseCard,
 }: {
     selectedRole?: Role | null
-    setFormError: (error: string | null) => void
-    setFormSuccess: (success: string | null) => void
     onCloseCard: () => void
 }) => {
     // Form state initialized from selectedRole props.
@@ -87,8 +84,6 @@ const DetailRoleForm = ({
     ) => {
         e.preventDefault()
 
-        setFormError(null)
-        setFormSuccess(null)
         createRoleMutation.mutate(
             {
                 name: editRoleName.trim(),
@@ -100,12 +95,12 @@ const DetailRoleForm = ({
             },
             {
                 onSuccess: (created) => {
-                    setFormSuccess('Role created successfully!')
+                    toast.success('Role created successfully!')
                     setActiveRoleId(created.id)
                     setIsAddingRole(false)
                 },
                 onError: (err: any) => {
-                    setFormError(
+                    toast.error(
                         err.response?.data?.detail ?? 'Failed to create role.'
                     )
                 },
@@ -116,9 +111,6 @@ const DetailRoleForm = ({
     const handleUpdateRole = (e: React.SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault()
         if (!selectedRole) return
-
-        setFormError(null)
-        setFormSuccess(null)
 
         const payload: UpdateRolePayload = {
             id: selectedRole.id,
@@ -141,10 +133,10 @@ const DetailRoleForm = ({
             },
             {
                 onSuccess: async () => {
-                    setFormSuccess('Role updated successfully!')
+                    toast.success('Role updated successfully!')
                 },
                 onError: (err: any) => {
-                    setFormError(
+                    toast.error(
                         err.response?.data?.detail ?? 'Failed to update role.'
                     )
                 },
@@ -155,16 +147,13 @@ const DetailRoleForm = ({
     const handleDeleteRole = () => {
         if (!selectedRole) return
 
-        setFormError(null)
-        setFormSuccess(null)
-
         deleteRoleMutation.mutate(selectedRole.id, {
             onSuccess: () => {
-                setFormSuccess('Role deleted successfully.')
+                toast.success('Role deleted successfully.')
                 setActiveRoleId(null)
             },
             onError: (err: any) => {
-                setFormError(
+                toast.error(
                     err.response?.data?.detail ?? 'Failed to delete role.'
                 )
             },
@@ -242,38 +231,16 @@ const DetailRoleForm = ({
                 </div>
             )}
 
-            {showDeleteConfirm && (
-                <div className="p-3.5 bg-error-bg/30 border border-error-border/60 rounded-xl space-y-2.5 animate-fade-in">
-                    <p className="text-xs font-semibold text-error-text">
-                        Confirm Deletion?
-                    </p>
-                    <p className="text-[10px] text-text-secondary leading-normal">
-                        This action is irreversible and will delete all session
-                        logs for this user.
-                    </p>
-                    <div className="flex gap-2">
-                        <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={handleDeleteRole}
-                            isLoading={isSubmitting}
-                            loadingText="Deleting..."
-                            fullWidth
-                        >
-                            Yes, Delete
-                        </Button>
-                        <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => setShowDeleteConfirm(false)}
-                            disabled={isSubmitting}
-                            fullWidth
-                        >
-                            Cancel
-                        </Button>
-                    </div>
-                </div>
-            )}
+            <ConfirmDialog
+                isOpen={showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(false)}
+                onConfirm={handleDeleteRole}
+                title="Delete Role?"
+                description="This will delete the role immediately. This action is irreversible."
+                confirmLabel="Yes, delete"
+                variant="danger"
+                isLoading={isSubmitting}
+            />
         </div>
     )
 }

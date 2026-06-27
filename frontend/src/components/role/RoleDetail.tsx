@@ -1,6 +1,5 @@
-import { useState } from 'react'
 import { useRoleStore } from '../../store/roleStore'
-import { AlertCircle, CheckCircle, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { useRoles } from '../../hooks/useRoles'
 import DetailRoleForm from './DetailRoleForm'
 
@@ -12,10 +11,6 @@ const RoleDetail = () => {
 
     const { roles } = useRoles()
     const selectedRole = roles.find((r) => r.id === activeRoleId) || null
-
-    // Form feedback states
-    const [formError, setFormError] = useState<string | null>(null)
-    const [formSuccess, setFormSuccess] = useState<string | null>(null)
 
     const handleCloseCard = () => {
         setActiveRoleId(null)
@@ -43,20 +38,6 @@ const RoleDetail = () => {
                           ? 'Role Information'
                           : ''}
                 </h2>
-
-                {/* Khóa các Banner feedback cố định tại đây để không bị cuộn mất khi có lỗi/thành công */}
-                {formError && (
-                    <div className="mb-2 p-3 bg-error-bg border border-error-border text-error-text rounded-xl text-xs flex items-start gap-2 animate-fade-in-down">
-                        <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                        <span>{formError}</span>
-                    </div>
-                )}
-                {formSuccess && (
-                    <div className="mb-2 p-3 bg-success-bg border border-success-border text-success rounded-xl text-xs flex items-start gap-2 animate-fade-in-down">
-                        <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                        <span>{formSuccess}</span>
-                    </div>
-                )}
             </div>
 
             {/* ─── PHẦN 2: NỘI DUNG INPUTS ĐƯỢC PHÉP SCROLL (SCROLLABLE CONTENT) ─── */}
@@ -65,8 +46,6 @@ const RoleDetail = () => {
                     <DetailRoleForm
                         key={selectedRole?.id ?? 'new-role'}
                         selectedRole={selectedRole}
-                        setFormError={setFormError}
-                        setFormSuccess={setFormSuccess}
                         onCloseCard={handleCloseCard}
                     />
                 )}
