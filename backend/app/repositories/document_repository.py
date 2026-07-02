@@ -1,7 +1,7 @@
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import update, or_, func
+from sqlalchemy import update, or_, func, bindparam
 from sqlalchemy.orm import selectinload
 
 from app.models import (
@@ -89,11 +89,55 @@ class DocumentRepository:
     async def get_document_by_hash(self, tenant_id: str, file_hash: str):
         stmt = select(Document).where(
             Document.tenant_id == tenant_id,
-            Document.file_hash == file_hash
+            Document.file_hash == file_hash,
+            Document.is_deleted == False
         )
 
-        result = await self.db.execute(stmt)
+        options = [
+            selectinload(Document.role_accesses)
+            .selectinload(DocumentRoleAccess.role),
+            selectinload(Document.user_accesses)
+            .selectinload(DocumentUserAccess.user),
+            selectinload(Document.department_accesses)
+            .selectinload(DocumentDepartmentAccess.department)
+        ]
+
+        result = await self.db.execute(stmt.options(*options))
         return result.scalar_one_or_none()
+    
+    async def get_chunks_by_document_id(self, tenant_id: str, document_id: str):
+        stmt = select(DocumentChunk).where(
+            DocumentChunk.tenant_id == tenant_id,
+            DocumentChunk.document_id == document_id
+        )
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
+
+    async def bulk_update_chunks(self, chunks: list[DocumentChunk]) -> None:
+        if not chunks:
+            return
+
+        try:
+            update_data = [
+                {
+                    "b_id": chunk.id,
+                    "b_meta_data": chunk.meta_data
+                }
+                for chunk in chunks
+            ]
+            stmt = (
+                update(DocumentChunk)
+                .where(DocumentChunk.id == bindparam("b_id"))
+                .values(meta_data=bindparam("b_meta_data"))
+            )
+
+            await self.db.execute(stmt, update_data)
+            
+            await self.db.commit()
+
+        except Exception as e:
+            await self.db.rollback()
+            raise e
         
     async def restore_document(self, document_id: str):
         try:
@@ -187,12 +231,12 @@ class DocumentRepository:
 
         return list(documents), total_records
     
-    async def save_document(self, document: Document):
+    
+    async def save_document(self, document: Document) -> Document:
         try:
             await self.db.commit()
             await self.db.refresh(document)
+            return document
         except Exception as e:
             await self.db.rollback()
             raise e
-        
-   

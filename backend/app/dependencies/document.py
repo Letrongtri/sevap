@@ -5,7 +5,6 @@ from app.dependencies.db import get_db
 from app.repositories import DocumentRepository, RoleRepository, UserRepository
 from app.services import DocumentService
 
-
 def get_document_service(
         db: AsyncSession = Depends(get_db)
 ) -> DocumentService:

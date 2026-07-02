@@ -33,3 +33,6 @@ class TenantAlreadyExistsError(Exception):
 
 class InternalError(Exception):
     pass
+
+class OnProcessingError(Exception):
+    pass

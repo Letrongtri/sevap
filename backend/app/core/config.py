@@ -158,6 +158,11 @@ class Settings:
 
         self.EMBEDDING_MODEL_PATH = os.getenv("EMBEDDING_MODEL_PATH", self.BASE_DIR / "data" / "models" / "bge-m3")
 
+        self.ALLOWED_UPLOAD_EXTENSIONS = parse_list_from_env(
+            "ALLOWED_UPLOAD_EXTENSIONS",
+            [".pdf", ".docx", ".xlsx", ".pptx", ".html", ".md"]
+        )
+
         # OLLAMA Configuration
         self.OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")
         self.OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen3:8b")

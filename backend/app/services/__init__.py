@@ -4,7 +4,6 @@ from .role_service import RoleService
 from .exceptions import *
 from .document_service import DocumentService
 from .conversation_service import ConversationService
-from .chunking_service import ChunkService
 from .auth_service import AuthService
 from .message_service import MessageService
 from .department_service import DepartmentService

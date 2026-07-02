@@ -15,6 +15,7 @@ from typing import List
 from datetime import datetime
 
 from app.services import DocumentService, NotFoundError
+from app.services.exceptions import MissingRequiredFieldsError, OnProcessingError
 from app.schemas import (
     DocumentResponse, 
     DocumentUpdate,
@@ -25,6 +26,7 @@ from app.schemas import (
 from app.dependencies import get_document_service, check_permission
 from app.decorators import log_activity
 from app.core.logging import logger
+from app.core.config import settings
 from app.core.enum import AccessLevel, PermissionAction, PermissionResource
 
 router = APIRouter()
@@ -59,12 +61,17 @@ async def upload_document(
     role_access: List[str] | None = Form(None, description="User's role to access document"),
     document_service: DocumentService = Depends(get_document_service),
 ):
-    if not file.filename.endswith(".docx"):
-        raise HTTPException(status_code=400, detail="File must be a docx file")
+    file_ext = Path(file.filename).suffix.lower() if file.filename else ""
+    if file_ext not in settings.ALLOWED_UPLOAD_EXTENSIONS:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"File type '{file_ext}' is not allowed. Accepted: {', '.join(settings.ALLOWED_UPLOAD_EXTENSIONS)}"
+        )
     
+    user_id = request.state.user["id"]
+    tenant_id = request.state.tenant_id
+
     try:
-        user_id = request.state.user["id"]
-        tenant_id = request.state.tenant_id
         return await document_service.upload(
             file=file,
             tenant_id=tenant_id,
@@ -78,9 +85,19 @@ async def upload_document(
             role_access=role_access,
             background_tasks=background_tasks
         )
+    except MissingRequiredFieldsError:
+        raise HTTPException(
+            status_code=422,
+            detail="Private documents require at least one of: department_ids, role_access, or target_user_ids"
+        )
+    except OnProcessingError:
+        raise HTTPException(
+            status_code=409,
+            detail="This document is already being processed. Please wait before uploading again."
+        )
     except NotFoundError:
-        logger.error("document_role_access_not_found", role_access=role_access)
-        raise HTTPException(status_code=404, detail="Document role access not found")
+        logger.error("document_access_entity_not_found", role_access=role_access, department_ids=department_ids)
+        raise HTTPException(status_code=404, detail="Role, department, or user not found")
     except Exception:
         logger.error(
             "upload_document_failed", 
@@ -88,7 +105,7 @@ async def upload_document(
             tenant_id=tenant_id,
             exc_info=True
         )
-        raise HTTPException(status_code=422, detail="Failed to upload document")
+        raise HTTPException(status_code=500, detail="Failed to upload document")
 
 @router.get(
     "", 
