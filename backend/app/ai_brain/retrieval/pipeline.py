@@ -26,6 +26,10 @@ class RetrievalPipeline:
         )
         return embedding.tolist()
     
-    def rerank(self, query: str, results: list[dict]) -> list[dict]:
-        # TODO: Cài đặt Adaptive / Reranking 
+    def rerank(self, query: str, results: list) -> list:
+        """
+        Reranking placeholder — hiện tại trả về nguyên kết quả (pass-through).
+        Có thể implement CrossEncoder sau nếu cần độ chính xác cao hơn.
+        """
         return results
+

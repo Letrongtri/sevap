@@ -1,8 +1,8 @@
 import uuid_utils
-from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey, UniqueConstraint, Index
+from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey, UniqueConstraint, Index, Computed
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
 from app.db.base_class import Base
 
 class DocumentChunk(Base):
@@ -13,7 +13,11 @@ class DocumentChunk(Base):
     tenant_id = Column(String(36), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
     
     content = Column(Text, nullable=False)
-    context_content = Column(Text)
+    content_tsv = Column(
+        TSVECTOR,
+        Computed("to_tsvector('simple', immutable_unaccent(content))", persisted=True)
+    )
+
     meta_data = Column(JSONB)
     embedding_model = Column(String(128), index=True)
     embedding_status = Column(String(32), index=True)

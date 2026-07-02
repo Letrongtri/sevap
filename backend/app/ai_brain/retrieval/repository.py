@@ -245,6 +245,65 @@ class PARRepository:
             for row in result.mappings().fetchall()
         ]
 
+    async def keyword_search(
+        self,
+        query: str,
+        allowed_doc_ids: Set[str],
+        tenant_id: str,
+        top_k: int = 5,
+    ) -> List[RetrievalResult]:
+        """
+        Bước 2b — Full-Text Search (BM25-style).
+        Dùng PostgreSQL ts_rank_cd + unaccent cho tiếng Việt.
+        Chỉ tìm trong vùng allowed_doc_ids — tuân thủ PAR boundary.
+        """
+        if not allowed_doc_ids:
+            return []
+
+        sql = text("""
+            SELECT
+                dc.id               AS chunk_id,
+                dc.document_id,
+                dc.content,
+                dc.meta_data        AS metadata,
+                d.title             AS doc_title,
+                d.access_level,
+                ts_rank_cd(
+                    dc.content_tsv,
+                    plainto_tsquery('simple', immutable_unaccent(:query))
+                ) AS score
+            FROM  document_chunks  dc
+            JOIN  documents        d  ON d.id = dc.document_id
+            WHERE
+                d.tenant_id = :tenant_id
+                AND dc.document_id = ANY(:doc_ids)
+                AND dc.embedding_status = 'done'
+                AND d.is_deleted = FALSE
+                AND dc.content_tsv @@ plainto_tsquery('simple', immutable_unaccent(:query))
+            ORDER BY score DESC
+            LIMIT :top_k
+        """)
+
+        result = await self.db.execute(sql, {
+            "query":    query,
+            "doc_ids":  list(allowed_doc_ids),
+            "tenant_id": tenant_id,
+            "top_k":    top_k,
+        })
+
+        return [
+            RetrievalResult(
+                chunk_id=row.chunk_id,
+                document_id=row.document_id,
+                content=row.content,
+                score=float(row.score),
+                doc_title=row.doc_title,
+                metadata=row.metadata,
+            )
+            for row in result.mappings().fetchall()
+        ]
+
+
     async def check_par_gate_blocked(
         self,
         query_embedding: List[float],
