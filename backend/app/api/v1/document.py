@@ -15,7 +15,7 @@ from typing import List
 from datetime import datetime
 
 from app.services import DocumentService, NotFoundError
-from app.services.exceptions import MissingRequiredFieldsError, OnProcessingError
+from app.services.exceptions import MissingRequiredFieldsError, OnProcessingError, AccessDeniedError
 from app.schemas import (
     DocumentResponse, 
     DocumentUpdate,
@@ -123,10 +123,10 @@ async def get_all_documents(
 ):
     try:
         tenant_id = request.state.tenant_id
-        # TODO: Lấy những tài liệu mà user có quyền đọc
+        user_id = request.state.user["id"]
         
         return await document_service.get_all_documents(
-            tenant_id, query, pagination
+            tenant_id, user_id, query, pagination
         )
     except Exception:
         logger.error(
@@ -153,9 +153,13 @@ async def get_document(
 ):
     try:
         tenant_id = request.state.tenant_id
+        user_id = request.state.user["id"]
+        
         return await document_service.get_document_by_id(
-            tenant_id, document_id
+            tenant_id, user_id, document_id
         )
+    except AccessDeniedError:
+        raise HTTPException(status_code=403, detail="Bạn không có quyền truy cập tài liệu này")
     except NotFoundError:
         logger.error(
             "document_not_found",
@@ -185,8 +189,10 @@ async def get_document_file(
 ):
     try:
         tenant_id = request.state.tenant_id
+        user_id = request.state.user["id"]
+
         document = await document_service.get_document_by_id(
-            tenant_id, document_id
+            tenant_id, user_id, document_id
         )
         if not document.file_path or not Path(document.file_path).exists():
             logger.error(
@@ -210,6 +216,8 @@ async def get_document_file(
             document_id=document_id
         )
         raise HTTPException(status_code=404, detail="Document not found")
+    except AccessDeniedError:
+        raise HTTPException(status_code=403, detail="Bạn không có quyền truy cập tài liệu này")
     except Exception:
         logger.error(
             "get_document_file_failed",
@@ -244,8 +252,10 @@ async def update_document(
 ):
     try:
         tenant_id = request.state.tenant_id
+        user_id = request.state.user["id"]
         return await document_service.update_document(
             tenant_id=tenant_id,
+            user_id=user_id,
             document_id=document_id,
             access_level=data.access_level,
             department_ids=data.department_ids,
@@ -255,6 +265,10 @@ async def update_document(
             effective_date=data.effective_date,
             target_user_ids=data.target_user_ids
         )
+    except AccessDeniedError:
+        raise HTTPException(status_code=403, detail="Bạn không có quyền chỉnh sửa tài liệu này")
+    except NotFoundError:
+        raise HTTPException(status_code=404, detail="Document not found")
     except Exception:
         logger.error(
             "upload_document_failed",
@@ -288,10 +302,15 @@ async def delete_document(
 ):
     try:
         tenant_id = request.state.tenant_id
+        user_id = request.state.user["id"]
+        
         return await document_service.delete_document(
             tenant_id=tenant_id,
+            user_id=user_id,
             document_id=document_id
         )
+    except AccessDeniedError:
+        raise HTTPException(status_code=403, detail="Bạn không có quyền xóa tài liệu này")
     except NotFoundError:
         logger.error(
             "deleted_document_not_found",

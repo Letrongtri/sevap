@@ -11,9 +11,12 @@ from datetime import datetime
 
 from app.models import Document, Department
 from app.repositories import DocumentRepository, RoleRepository, UserRepository
-from app.services.exceptions import NotFoundError, MissingRequiredFieldsError, OnProcessingError
+from app.services.exceptions import (
+    NotFoundError, MissingRequiredFieldsError, OnProcessingError, AccessDeniedError
+)
 from app.core.enum import AccessLevel, DocumentStatus
 from app.core.config import settings
+from app.ai_brain.retrieval.repository import PARRepository
 from app.tasks import process_document_chunking_task, sync_chunk_metadata_task
 from app.schemas import (
     DocumentQuery, 
@@ -28,11 +31,22 @@ class DocumentService:
         self,
         repo: DocumentRepository,
         role_repo: RoleRepository,
-        user_repo: UserRepository
+        user_repo: UserRepository,
+        par_repo: PARRepository
     ):
         self.repo = repo
         self.role_repo = role_repo
         self.user_repo = user_repo
+        self.par_repo = par_repo
+
+    async def _check_document_access(self, tenant_id: str, user_id: str, document_id: str) -> None:
+        """Kiểm tra user có quyền truy cập document_id thông qua PAR gate.
+        Raise AccessDeniedError nếu document_id không nằm trong allowed set.
+        """
+        ctx = await self.par_repo.build_par_context(tenant_id, user_id)
+        allowed_ids = await self.par_repo.get_allowed_document_ids(ctx)
+        if document_id not in allowed_ids:
+            raise AccessDeniedError()
 
     async def upload(
         self, 
@@ -227,9 +241,13 @@ class DocumentService:
         return DocumentResponse.model_validate(saved_document)
 
     async def get_all_documents(
-        self, tenant_id: str, query: DocumentQuery, 
+        self, tenant_id: str, user_id: str, query: DocumentQuery, 
         pagination: PaginationQuery
     ) -> DocumentPaginatedResponse:
+        # Bước 1: Lấy danh sách document mà user được phép truy cập qua PAR gate
+        ctx = await self.par_repo.build_par_context(tenant_id, user_id)
+        allowed_ids = await self.par_repo.get_allowed_document_ids(ctx)
+
         skip = (pagination.page - 1) * pagination.limit
         documents, total_records = await self.repo.get_all_documents(
             tenant_id=tenant_id,
@@ -240,7 +258,8 @@ class DocumentService:
             access_level=query.access_level,
             effective_date=query.effective_date,
             skip=skip,
-            limit=pagination.limit
+            limit=pagination.limit,
+            allowed_ids=allowed_ids
         )
 
         total_pages = (
@@ -264,7 +283,7 @@ class DocumentService:
         )
     
     async def get_document_by_id(
-        self, tenant_id: str, document_id: str
+        self, tenant_id: str, user_id: str, document_id: str
     ) -> DocumentResponse:
         document = await self.repo.get_document_by_id(
             document_id,
@@ -276,11 +295,14 @@ class DocumentService:
 
         if document is None or document.tenant_id != tenant_id:
             raise NotFoundError()
+
+        # PAR gate: kiểm tra user có quyền truy cập document này không
+        await self._check_document_access(tenant_id, user_id, document_id)
         
         return DocumentResponse.model_validate(document)
 
     async def update_document(
-        self, tenant_id: str, document_id: str, 
+        self, tenant_id: str, user_id: str, document_id: str, 
         access_level: str = None, department_ids: List[str] = None, 
         title: str = None, category: str = None, 
         effective_date: datetime = None,
@@ -295,6 +317,9 @@ class DocumentService:
         
         if existing is None or existing.tenant_id != tenant_id:
             raise NotFoundError()
+
+        # PAR gate: kiểm tra user có quyền truy cập document này không
+        await self._check_document_access(tenant_id, user_id, document_id)
 
         if access_level is not None:
             existing.access_level = access_level
@@ -346,7 +371,7 @@ class DocumentService:
         return DocumentResponse.model_validate(updated)
 
     async def delete_document(
-        self, tenant_id: str, document_id: str
+        self, tenant_id: str, user_id: str, document_id: str
     ) -> DocumentResponse:
         existing = await self.repo.get_document_by_id(
             document_id, 
@@ -357,6 +382,9 @@ class DocumentService:
 
         if existing is None or existing.tenant_id != tenant_id:
             raise NotFoundError()
+
+        # PAR gate: kiểm tra user có quyền truy cập document này không
+        await self._check_document_access(tenant_id, user_id, document_id)
         
         existing.is_deleted = True
         

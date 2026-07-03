@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Set, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import update, or_, func, bindparam
@@ -157,12 +158,19 @@ class DocumentRepository:
         department_id: str = None, role_id: str = None,
         user_id: str = None, effective_date: datetime = None, 
         access_level: str = None, is_deleted: bool = False, 
-        limit: int = 10, skip: int = 0
+        limit: int = 10, skip: int = 0,
+        allowed_ids: Optional[Set[str]] = None
     ) -> tuple[list[Document], str]:
         stmt = select(Document).where(
             Document.tenant_id == tenant_id,
             Document.is_deleted == is_deleted
         )
+
+        # PAR gate: chỉ trả về document mà user được phép truy cập
+        if allowed_ids is not None:
+            if len(allowed_ids) == 0:
+                return [], 0
+            stmt = stmt.where(Document.id.in_(allowed_ids))
                 
         if query is not None and query != '':
             stmt = stmt.filter(
@@ -198,7 +206,7 @@ class DocumentRepository:
                 )
             )
         if effective_date is not None:
-            stmt = stmt.where(Document.effective_date >= effective_date)
+            stmt = stmt.where(Document.effective_date <= effective_date)
         if access_level is not None:
             stmt = stmt.where(Document.access_level == access_level)
 

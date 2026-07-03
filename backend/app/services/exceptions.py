@@ -36,3 +36,6 @@ class InternalError(Exception):
 
 class OnProcessingError(Exception):
     pass
+
+class AccessDeniedError(Exception):
+    pass

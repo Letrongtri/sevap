@@ -1,3 +1,4 @@
+import uuid_utils
 from typing import List, Set
 from sqlalchemy import and_, or_, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -5,10 +6,9 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
 from app.ai_brain.retrieval.schemas import ACCESS_LEVEL_HIERARCHY, PARContext, RetrievalResult
-from app.core.enum import AccessLevel, DocumentStatus
-from app.models import Document, DocumentRoleAccess, DocumentUserAccess, Department, User, UserRole, DocumentDepartmentAccess
+from app.core.enum import AccessLevel, DocumentStatus, LogLevel
+from app.models import Document, DocumentRoleAccess, DocumentUserAccess, User, UserRole, DocumentDepartmentAccess, ActivityLog
 from sqlalchemy import cast
-from sqlalchemy.dialects.postgresql import JSONB
 
 
 class PARRepository:
@@ -17,60 +17,72 @@ class PARRepository:
 
     async def build_par_context(self, tenant_id: str, user_id: str) -> PARContext:
         """Xây dựng PAR Context từ user_id, truy vấn DB một lần."""
-        
-        # Lấy thông tin user
-        stmt = (
-            select(User)
-            .options(selectinload(User.role_associations).selectinload(UserRole.role))
-            .where(User.id == user_id)
-        )
-        result = await self.db.execute(stmt)
-        user = result.scalar_one_or_none()
+        try:
+            # Lấy thông tin user
+            stmt = (
+                select(User)
+                .options(selectinload(User.role_associations).selectinload(UserRole.role))
+                .where(User.id == user_id)
+            )
+            result = await self.db.execute(stmt)
+            user = result.scalar_one_or_none()
 
-        highest_level = AccessLevel.PUBLIC
-        is_admin = False
-        role_ids = []
-        department_ids = []
-        managed_department_ids = []
-        
-        if not user:
-            # Fallback: chỉ đọc public
+            if not user or not user.tenant_id == tenant_id:
+                raise ValueError("User not found or user is not in the tenant")
+
+            highest_level = AccessLevel.PUBLIC
+            is_admin = False
+            role_ids = []
+            department_ids = []
+            
+            if not user:
+                # Fallback: chỉ đọc public
+                return PARContext(
+                    user_id=user_id, 
+                    tenant_id=tenant_id,
+                    role_ids=role_ids, 
+                    role_access_level=highest_level,
+                    department_ids=department_ids,
+                    is_admin=is_admin
+                )
+            
+            if user.role_associations:
+                # Lấy access level cao nhất trong các role
+                valid_roles = [r.role for r in user.role_associations if r.role]
+                if valid_roles:
+                    highest_level_role = max(
+                        valid_roles,
+                        key=lambda r: ACCESS_LEVEL_HIERARCHY.get(r.access_level, 0)
+                    )
+                    highest_level = highest_level_role.access_level
+                    is_admin = any(r.name == "admin" for r in valid_roles)
+                role_ids = [r.role_id for r in user.role_associations]
+            
+            department_ids = [user.department_id] if user.department_id else []
+
+            
             return PARContext(
-                user_id=user_id, 
+                user_id=user_id,
                 tenant_id=tenant_id,
-                role_ids=role_ids, 
+                role_ids=role_ids,
                 role_access_level=highest_level,
                 department_ids=department_ids,
                 is_admin=is_admin
             )
-        
-        if user.role_associations:
-            # Lấy access level cao nhất trong các role
-            valid_roles = [r.role for r in user.role_associations if r.role]
-            if valid_roles:
-                highest_level_role = max(
-                    valid_roles,
-                    key=lambda r: ACCESS_LEVEL_HIERARCHY.get(r.access_level, 0)
-                )
-                highest_level = highest_level_role.access_level
-                is_admin = any(r.name == "admin" for r in valid_roles)
-            role_ids = [r.role_id for r in user.role_associations]
-
-        stmt_managed = select(Department.id).where(Department.manager_id == user_id)
-        res_managed = await self.db.execute(stmt_managed)
-        managed_department_ids = [row[0] for row in res_managed.fetchall()]
-        
-        department_ids = [user.department_id] if user.department_id else []
-
-        
-        return PARContext(
-            user_id=user_id,
-            tenant_id=tenant_id,
-            role_ids=role_ids,
-            role_access_level=highest_level,
-            department_ids=department_ids,
-            is_admin=is_admin
-        )
+        except Exception as e:
+            log = ActivityLog(
+                id=str(uuid_utils.uuid7()),
+                user_id=user_id,
+                tenant_id=tenant_id,
+                action="rag.par_gate_blocked",
+                resource="document",
+                log_level=LogLevel.ERROR,
+                meta_data=str(e),
+                ip_address=None
+            )
+            self.db.add(log)
+            await self.db.commit()
+            raise e
 
     async def get_allowed_document_ids(
         self,
@@ -84,19 +96,6 @@ class PARRepository:
 
         allowed_levels = ctx.allowed_access_levels()
         allowed_ids = set()
-
-        # Admin có quyền cao nhất, đọc toàn bộ tài liệu của tenant
-        if ctx.is_admin:
-            stmt_private_admin = select(Document.id).where(
-                and_(
-                    Document.tenant_id == ctx.tenant_id,
-                    Document.is_deleted == False,
-                    Document.status == DocumentStatus.DONE
-                )
-            )
-            res_private_admin = await self.db.execute(stmt_private_admin)
-            allowed_ids.update({row[0] for row in res_private_admin.fetchall()})
-            return allowed_ids
 
         # NHÁNH 1: TÀI LIỆU PUBLIC (Ai hợp lệ cũng được đọc)
         stmt_public = select(Document.id).where(
