@@ -3,7 +3,7 @@ import { ChevronDown, X, User, Check } from 'lucide-react'
 import { useUserOptions } from '../../hooks/useUserOptions'
 import type { UserSimple } from '../../types/user'
 import LoadingSpinner from './LoadingSpinner'
-import type { ID } from '../../types/common'
+import type { ID, SelectSize } from '../../types/common'
 
 interface SearchableUserMultiSelectProps {
     value: ID[]
@@ -13,6 +13,13 @@ interface SearchableUserMultiSelectProps {
     label?: string
     disabled?: boolean
     className?: string
+    size?: SelectSize
+}
+
+const sizeMap: Record<SelectSize, string> = {
+    sm: 'py-2 text-xs',
+    md: 'py-2.5 text-sm',
+    lg: 'py-3.5 text-base',
 }
 
 export default function SearchableUserMultiSelect({
@@ -23,6 +30,7 @@ export default function SearchableUserMultiSelect({
     label,
     disabled = false,
     className = '',
+    size = 'md',
 }: SearchableUserMultiSelectProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [searchTerm, setSearchTerm] = useState('')
@@ -36,6 +44,8 @@ export default function SearchableUserMultiSelect({
 
     const containerRef = useRef<HTMLDivElement>(null)
     const listRef = useRef<HTMLDivElement>(null)
+
+    const sizeStyle = sizeMap[size]
 
     // Sync selectedUsers details when initialSelectedUsers changes during render
     const currentInitialIds = initialSelectedUsers.map((u) => u.id).join(',')
@@ -131,7 +141,8 @@ export default function SearchableUserMultiSelect({
             <div
                 onClick={() => !disabled && setIsOpen(true)}
                 className={[
-                    'w-full flex items-center justify-between gap-2 bg-surface-raised border border-border px-3 py-1.5 rounded-xl text-xs font-semibold text-text-primary text-left transition-all outline-none min-h-[34px]',
+                    'w-full flex items-center justify-between gap-2 bg-surface-raised border border-border px-3 rounded-xl text-text-primary text-left transition-all outline-none min-h-[34px]',
+                    sizeStyle,
                     isOpen
                         ? 'border-primary ring-2 ring-primary/20'
                         : 'hover:border-text-placeholder',

@@ -4,7 +4,7 @@ import { useUserOptions } from '../../hooks/useUserOptions'
 import { fetchUserById } from '../../api/user'
 import type { UserSimple } from '../../types/user'
 import LoadingSpinner from './LoadingSpinner'
-import type { ID } from '../../types/common'
+import type { ID, SelectSize } from '../../types/common'
 
 interface SearchableUserSelectProps {
     value: ID | null | undefined
@@ -13,6 +13,13 @@ interface SearchableUserSelectProps {
     label?: string
     disabled?: boolean
     className?: string
+    size?: SelectSize
+}
+
+const sizeMap: Record<SelectSize, string> = {
+    sm: 'py-2 text-xs',
+    md: 'py-2.5 text-sm',
+    lg: 'py-3.5 text-base',
 }
 
 export default function SearchableUserSelect({
@@ -22,12 +29,15 @@ export default function SearchableUserSelect({
     label,
     disabled = false,
     className = '',
+    size = 'md',
 }: SearchableUserSelectProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [searchTerm, setSearchTerm] = useState('')
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
     const [selectedUserName, setSelectedUserName] = useState('')
     const [prevValue, setPrevValue] = useState(value)
+
+    const sizeStyle = sizeMap[size]
 
     const containerRef = useRef<HTMLDivElement>(null)
     const listRef = useRef<HTMLDivElement>(null)
@@ -146,7 +156,8 @@ export default function SearchableUserSelect({
                     onFocus={() => setIsOpen(true)}
                     placeholder={placeholder}
                     className={[
-                        'w-full bg-surface-raised border border-border pl-3 pr-14 py-1.5 rounded-xl text-xs font-semibold text-text-primary outline-none transition-all placeholder:text-text-placeholder placeholder:font-medium',
+                        'w-full bg-surface-raised border border-border pl-3 pr-14 rounded-xl text-text-primary outline-none transition-all placeholder:text-text-placeholder placeholder:font-medium',
+                        sizeStyle,
                         isOpen
                             ? 'border-primary ring-2 ring-primary/20'
                             : 'hover:border-text-placeholder',

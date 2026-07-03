@@ -8,7 +8,11 @@ import LoadingSpinner from '../ui/LoadingSpinner'
 import Button from '../ui/Button'
 import Badge from '../ui/Badge'
 import Pagination from '../ui/Pagination'
-import { formatDateTimeToDDMMYYYY } from '../../../utils/formater'
+import {
+    formatBytes,
+    formatDateTimeToDDMMYYYY,
+    getShortFileType,
+} from '../../../utils/formater'
 
 const DocumentList = () => {
     const activeDocumentId = useDocumentStore((d) => d.activeDocumentId)
@@ -71,13 +75,19 @@ const DocumentList = () => {
                         <thead>
                             <tr className="text-text-secondary text-xs uppercase font-bold tracking-wider">
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                    ID
+                                    No.
                                 </th>
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
                                     Title
                                 </th>
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                    File name
+                                    File Type
+                                </th>
+                                <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
+                                    File Size
+                                </th>
+                                <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
+                                    Status
                                 </th>
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
                                     Access Level
@@ -94,7 +104,7 @@ const DocumentList = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[#D4D7DE]/40">
-                            {documents.map((document) => {
+                            {documents.map((document, index) => {
                                 const isSelected =
                                     activeDocumentId === document.id
 
@@ -113,14 +123,39 @@ const DocumentList = () => {
                                     >
                                         {/* Document Identity cell */}
                                         <td className="px-5 py-3.5 text-sm text-text-secondary">
-                                            {document.id}
+                                            {(page - 1) * limit + index + 1}
                                         </td>
                                         {/* giới hạn chiều rộng của title và file name thành ... nếu quá dài */}
                                         <td className="px-5 py-3.5 text-sm text-text-secondary max-w-[300px] truncate">
                                             {document.title}
                                         </td>
                                         <td className="px-5 py-3.5 text-sm text-text-secondary max-w-[200px] truncate">
-                                            {document.file_name}
+                                            {getShortFileType(
+                                                document.file_type
+                                            )}
+                                        </td>
+                                        <td className="px-5 py-3.5 text-sm text-text-secondary max-w-[200px] truncate">
+                                            {formatBytes(document.file_size)}
+                                        </td>
+                                        <td className="px-5 py-3.5">
+                                            <Badge
+                                                variant={
+                                                    document.status === 'done'
+                                                        ? 'success'
+                                                        : document.status ===
+                                                            'pending'
+                                                          ? 'default'
+                                                          : document.status ===
+                                                              'processing'
+                                                            ? 'warning'
+                                                            : 'error'
+                                                }
+                                                size="sm"
+                                                dot
+                                            >
+                                                {document?.status?.toUpperCase() ||
+                                                    '-'}
+                                            </Badge>
                                         </td>
                                         {/* Access level badge */}
                                         <td className="px-5 py-3.5">

@@ -1,5 +1,6 @@
 import React, { useRef } from 'react'
 import { Calendar, X } from 'lucide-react'
+import type { SelectSize } from '../../types/common'
 
 interface DatePickerProps {
     value: string | null | undefined
@@ -7,6 +8,13 @@ interface DatePickerProps {
     placeholder?: string
     disabled?: boolean
     className?: string
+    size?: SelectSize
+}
+
+const sizeMap: Record<SelectSize, string> = {
+    sm: 'py-2 text-xs',
+    md: 'py-2.5 text-sm',
+    lg: 'py-3.5 text-base',
 }
 
 export default function DatePicker({
@@ -15,8 +23,11 @@ export default function DatePicker({
     placeholder = 'Select date...',
     disabled = false,
     className = '',
+    size = 'md',
 }: DatePickerProps) {
     const inputRef = useRef<HTMLInputElement>(null)
+
+    const sizeStyle = sizeMap[size]
 
     const handleClear = (e: React.MouseEvent) => {
         e.stopPropagation()
@@ -49,7 +60,8 @@ export default function DatePicker({
                 disabled={disabled}
                 onClick={handleButtonClick}
                 className={[
-                    'w-full flex items-center justify-between gap-2 bg-surface-raised border border-border px-3 py-1.5 rounded-xl text-xs font-semibold text-text-primary text-left transition-all outline-none',
+                    'w-full flex items-center justify-between gap-2 bg-surface-raised border border-border px-3 rounded-xl text-text-primary text-left transition-all outline-none',
+                    sizeStyle,
                     'hover:border-text-placeholder focus:border-primary focus:ring-2 focus:ring-primary/20',
                     disabled
                         ? 'opacity-50 cursor-not-allowed'

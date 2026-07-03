@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useRef, useEffect } from 'react'
 import { ChevronDown, Search, X, Check } from 'lucide-react'
+import type { SelectSize } from '../../types/common'
 
 export interface SelectOption {
     value: string | number
@@ -15,6 +15,19 @@ interface SearchableMultiSelectProps {
     label?: string
     disabled?: boolean
     className?: string
+    size?: SelectSize
+}
+
+const paddingMap: Record<SelectSize, string> = {
+    sm: 'py-2',
+    md: 'py-2.5',
+    lg: 'py-3.5',
+}
+
+const fontSizeMap: Record<SelectSize, string> = {
+    sm: 'text-xs',
+    md: 'text-sm',
+    lg: 'text-base',
 }
 
 export default function SearchableMultiSelect({
@@ -25,10 +38,13 @@ export default function SearchableMultiSelect({
     label,
     disabled = false,
     className = '',
+    size = 'md',
 }: SearchableMultiSelectProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const containerRef = useRef<HTMLDivElement>(null)
+    const paddingSelect = paddingMap[size]
+    const fontSizeSelect = fontSizeMap[size]
 
     // Close on click outside
     useEffect(() => {
@@ -90,7 +106,8 @@ export default function SearchableMultiSelect({
             <div
                 onClick={handleToggleOpen}
                 className={[
-                    'w-full flex items-center justify-between gap-2 bg-surface-raised border border-border px-3 py-1.5 rounded-xl text-xs font-semibold text-text-primary text-left transition-all outline-none min-h-[34px]',
+                    'w-full flex items-center justify-between gap-2 bg-surface-raised border border-border px-3 rounded-xl text-xs font-semibold text-text-primary text-left transition-all outline-none min-h-[34px]',
+                    paddingSelect,
                     isOpen
                         ? 'border-primary ring-2 ring-primary/20'
                         : 'hover:border-text-placeholder',
@@ -101,7 +118,9 @@ export default function SearchableMultiSelect({
             >
                 <div className="flex flex-wrap gap-1 items-center flex-1 min-w-0">
                     {selectedOptions.length === 0 ? (
-                        <span className="text-text-placeholder font-medium select-none">
+                        <span
+                            className={`text-text-placeholder select-none ${fontSizeSelect}`}
+                        >
                             {placeholder}
                         </span>
                     ) : (

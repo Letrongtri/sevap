@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useRef, useEffect } from 'react'
 import { ChevronDown, Search, X, Check } from 'lucide-react'
-
-type SelectSize = 'sm' | 'md' | 'lg'
+import type { SelectSize } from '../../types/common'
 
 export interface SelectOption {
     value: string | number | null

@@ -37,3 +37,5 @@ export type UserRole = 'Admin' | 'HR Manager' | 'Employee'
 export const ACCESS_LEVELS = ['Public', 'Private', 'Managerial'] as const
 
 export type AccessLevel = (typeof ACCESS_LEVELS)[number]
+
+export type SelectSize = 'sm' | 'md' | 'lg'
