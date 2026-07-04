@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useRef } from 'react'
 import { Shield, Info, UploadCloud, FileUp } from 'lucide-react'
 import { useUploadDocument, useUpdateDocument } from '../../hooks/useDocuments'
@@ -14,7 +13,7 @@ import Input from '../ui/Input'
 import Button from '../ui/Button'
 import { formatBytes } from '../../../utils/formater'
 import type { Document } from '../../types/document'
-import type { ID } from '../../types/common'
+import { type ID, ALLOWED_DOCUMENT_FILE_TYPES } from '../../types/common'
 
 interface DocumentDetailFormProps {
     document?: Document
@@ -220,12 +219,18 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
             {isAddingDocument && (
                 <div className="space-y-1">
                     <label className="block text-sm font-semibold text-text-secondary">
-                        Document File (.docx) *
+                        Document File (
+                        {ALLOWED_DOCUMENT_FILE_TYPES.map((e) => `.${e}`).join(
+                            ', '
+                        )}
+                        ) *
                     </label>
                     <div className="border-2 border-dashed border-border hover:border-primary rounded-2xl p-6 transition-all bg-surface-raised cursor-pointer relative group flex flex-col items-center justify-center text-center">
                         <input
                             type="file"
-                            accept=".docx"
+                            accept={ALLOWED_DOCUMENT_FILE_TYPES.map(
+                                (e) => `.${e}`
+                            ).join(',')}
                             onChange={handleFileChange}
                             className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
                         />
@@ -246,7 +251,11 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
                                     Click or drag file to upload
                                 </p>
                                 <p className="text-[10px] text-text-placeholder mt-0.5">
-                                    Only MS Word (.docx) files supported
+                                    Only
+                                    {ALLOWED_DOCUMENT_FILE_TYPES.map(
+                                        (e) => `.${e}`
+                                    ).join(', ')}{' '}
+                                    files supported
                                 </p>
                             </>
                         )}

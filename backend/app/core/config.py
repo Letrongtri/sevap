@@ -160,7 +160,7 @@ class Settings:
 
         self.ALLOWED_UPLOAD_EXTENSIONS = parse_list_from_env(
             "ALLOWED_UPLOAD_EXTENSIONS",
-            [".pdf", ".docx", ".xlsx", ".pptx", ".html", ".md"]
+            [".pdf", ".docx", ".xlsx", ".pptx", ".html", ".md", ".txt"]
         )
 
         # OLLAMA Configuration

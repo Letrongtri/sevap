@@ -39,3 +39,16 @@ export const ACCESS_LEVELS = ['Public', 'Private', 'Managerial'] as const
 export type AccessLevel = (typeof ACCESS_LEVELS)[number]
 
 export type SelectSize = 'sm' | 'md' | 'lg'
+
+export const ALLOWED_DOCUMENT_FILE_TYPES = [
+    'pdf',
+    'docx',
+    'xlsx',
+    'html',
+    'md',
+    'pptx',
+    'txt',
+] as const
+
+export type AllowedDocumentFileType =
+    (typeof ALLOWED_DOCUMENT_FILE_TYPES)[number]
