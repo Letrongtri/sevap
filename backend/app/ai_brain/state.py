@@ -1,6 +1,6 @@
 from typing import Any, Dict, TypedDict
 
-from app.ai_brain.retrieval import PARContext
+from app.ai_brain.schemas import PARContext
 
 
 class AgentState(TypedDict):

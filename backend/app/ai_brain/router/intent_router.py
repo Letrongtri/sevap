@@ -10,7 +10,7 @@ from app.ai_brain.prompts.intent_router_prompt import (
     INTENT_ROUTER_USER_PROMPT, INTENT_ROUTER_SYSTEM_PROMPT
 )
 from app.ai_brain.llm.llm_provider import get_llm
-from app.ai_brain.router.state import RouterOutputSchema, SubQuery
+from app.ai_brain.schemas import RouterOutputSchema, SubQuery
 
 
 class IntentRouter:

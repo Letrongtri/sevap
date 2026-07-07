@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.ai_brain.retrieval import PARContext
+from app.ai_brain.schemas import PARContext
 
 class BaseAgent(ABC):
     def __init__(self, db: AsyncSession):

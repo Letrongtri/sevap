@@ -2,7 +2,7 @@ import asyncio
 import uuid_utils
 from app.ai_brain.retrieval.pipeline import RetrievalPipeline
 from app.ai_brain.retrieval.repository import PARRepository
-from app.ai_brain.retrieval.schemas import RetrievalResult, PARContext
+from app.ai_brain.schemas import RetrievalResult, PARContext
 from app.models import ActivityLog
 
 

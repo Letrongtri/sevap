@@ -3,7 +3,8 @@ from typing import AsyncGenerator
 from langchain_core.messages import SystemMessage, HumanMessage
 
 from app.ai_brain.agents.base_agent import BaseAgent
-from app.ai_brain.retrieval import RetrievalService, PARContext, PARRepository, RetrievalPipeline
+from app.ai_brain.schemas import PARContext
+from app.ai_brain.retrieval import RetrievalService, PARRepository, RetrievalPipeline
 from app.ai_brain.llm.llm_provider import get_llm
 from app.ai_brain.prompts.policy_prompt import POLICY_SYSTEM_PROMPT, POLICY_USER_PROMPT
 

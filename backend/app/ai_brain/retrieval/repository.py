@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
-from app.ai_brain.retrieval.schemas import ACCESS_LEVEL_HIERARCHY, PARContext, RetrievalResult
+from app.ai_brain.schemas import ACCESS_LEVEL_HIERARCHY, PARContext, RetrievalResult
 from app.core.enum import AccessLevel, DocumentStatus, LogLevel
 from app.models import Document, DocumentRoleAccess, DocumentUserAccess, User, UserRole, DocumentDepartmentAccess, ActivityLog
 from sqlalchemy import cast

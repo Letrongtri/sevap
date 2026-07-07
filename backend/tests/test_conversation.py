@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.models import Conversation, Message, Tenants, User
-from app.ai_brain.retrieval.schemas import PARContext
+from app.ai_brain.schemas import PARContext
 
 async def mock_route_stream(*args, **kwargs):
     yield {"type": "token", "data": "Hello"}
