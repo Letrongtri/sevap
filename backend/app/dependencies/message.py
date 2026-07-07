@@ -14,5 +14,5 @@ def get_message_service(
     msg_repo = MessageRepository(db)
     conv_repo = ConversationRepository(db)
     par_repo = PARRepository(db)
-    intent_router = IntentRouter(db)
+    intent_router = IntentRouter()
     return MessageService(msg_repo, conv_repo, par_repo, intent_router)

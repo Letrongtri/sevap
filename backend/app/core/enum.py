@@ -1,5 +1,18 @@
 from enum import Enum
 
+class IntentType(str, Enum):
+    DIRECT = "direct"       # Trả lời trực tiếp, không cần RAG
+    SINGLE_RAG = "single_rag"   # Cần RAG, 1 ý hỏi
+    MULTI_RAG = "multi_rag"    # Cần RAG, nhiều ý hỏi
+    UNKNOWN = "unknown"      # Không phân loại được
+    SECURITY_ANOMALY = "security_anomaly" # Hành vi tấn công, spam, prompt injection, v.v.
+
+class RetrievalExecutionPlan(str, Enum):
+    DIRECT = "direct"         # Cho trường hợp Single-rag
+    PARALLEL = "parallel"     # Các câu hỏi con có thể chạy song song (không phụ thuộc nhau)
+    SEQUENTIAL = "sequential" # Câu hỏi con sau cần kết quả câu hỏi trước
+    UNKNOWN = "unknown"      # Không phân loại được
+
 class AccessLevel(str, Enum):
     PUBLIC = "public"
     PRIVATE = "private"
