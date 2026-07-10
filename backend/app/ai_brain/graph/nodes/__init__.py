@@ -6,6 +6,7 @@ from .threshold_check_node import threshold_check_node
 from .rewrite_node import rewrite_node
 from .generate_node import generate_final_response_node
 from .fallback_node import fallback_node
+from .security_kill_switch_node import security_kill_switch_node
 
 __all__ = [
     "intent_node",
@@ -16,4 +17,5 @@ __all__ = [
     "rewrite_node",
     "generate_final_response_node",
     "fallback_node",
+    "security_kill_switch_node",
 ]
