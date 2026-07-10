@@ -10,6 +10,10 @@ from app.ai_brain.prompts.direct_response_generator_prompt import (
     DIRECT_RESPONSE_GENERATOR_SYSTEM_PROMPT,
     DIRECT_RESPONSE_GENERATOR_USER_PROMPT,
 )
+from app.ai_brain.prompts.rewrite_query_prompt import (
+    REWRITE_QUERY_SYSTEM_PROMPT,
+    REWRITE_QUERY_USER_PROMPT,
+)
 
 __all__ = [
     "INTENT_ROUTER_SYSTEM_PROMPT",
@@ -18,4 +22,6 @@ __all__ = [
     "POLICY_USER_PROMPT",
     "DIRECT_RESPONSE_GENERATOR_SYSTEM_PROMPT",
     "DIRECT_RESPONSE_GENERATOR_USER_PROMPT",
+    "REWRITE_QUERY_SYSTEM_PROMPT",
+    "REWRITE_QUERY_USER_PROMPT",
 ]
