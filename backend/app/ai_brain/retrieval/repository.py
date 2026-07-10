@@ -5,20 +5,29 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
-from app.ai_brain.schemas import ACCESS_LEVEL_HIERARCHY, PARContext, RetrievalResult
+from app.ai_brain.schemas import ACCESS_LEVEL_HIERARCHY, PARContext, RetrievalResult, UserSecurityContext
 from app.core.enum import AccessLevel, DocumentStatus, LogLevel
 from app.models import Document, DocumentRoleAccess, DocumentUserAccess, User, UserRole, DocumentDepartmentAccess, ActivityLog
-from sqlalchemy import cast
 
 
 class PARRepository:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
 
-    async def build_par_context(self, tenant_id: str, user_id: str) -> PARContext:
-        """Xây dựng PAR Context từ user_id, truy vấn DB một lần."""
+    async def build_par_context(self, security_ctx: UserSecurityContext) -> PARContext:
+        """
+        PAR Filter — bước 0 của RAG pipeline.
+
+        Nhận UserSecurityContext (identity) từ HTTP layer,
+        truy vấn DB một lần duy nhất để giải quyết RBAC,
+        trả về PARContext (authorization) cho retrieval engine.
+
+        Raises:
+            ValueError: Nếu user không tồn tại hoặc không thuộc tenant.
+        """
+        user_id = security_ctx.user_id
+        tenant_id = security_ctx.tenant_id
         try:
-            # Lấy thông tin user
             stmt = (
                 select(User)
                 .options(selectinload(User.role_associations).selectinload(UserRole.role))
@@ -27,27 +36,14 @@ class PARRepository:
             result = await self.db.execute(stmt)
             user = result.scalar_one_or_none()
 
-            if not user or not user.tenant_id == tenant_id:
-                raise ValueError("User not found or user is not in the tenant")
+            if not user or user.tenant_id != tenant_id:
+                raise ValueError(f"User '{user_id}' not found or does not belong to tenant '{tenant_id}'")
 
             highest_level = AccessLevel.PUBLIC
-            is_admin = False
-            role_ids = []
-            department_ids = []
-            
-            if not user:
-                # Fallback: chỉ đọc public
-                return PARContext(
-                    user_id=user_id, 
-                    tenant_id=tenant_id,
-                    role_ids=role_ids, 
-                    role_access_level=highest_level,
-                    department_ids=department_ids,
-                    is_admin=is_admin
-                )
-            
+            role_ids: list[str] = []
+            department_ids: list[str] = []
+
             if user.role_associations:
-                # Lấy access level cao nhất trong các role
                 valid_roles = [r.role for r in user.role_associations if r.role]
                 if valid_roles:
                     highest_level_role = max(
@@ -55,30 +51,27 @@ class PARRepository:
                         key=lambda r: ACCESS_LEVEL_HIERARCHY.get(r.access_level, 0)
                     )
                     highest_level = highest_level_role.access_level
-                    is_admin = any(r.name == "admin" for r in valid_roles)
                 role_ids = [r.role_id for r in user.role_associations]
-            
+
             department_ids = [user.department_id] if user.department_id else []
 
-            
             return PARContext(
                 user_id=user_id,
                 tenant_id=tenant_id,
                 role_ids=role_ids,
                 role_access_level=highest_level,
                 department_ids=department_ids,
-                is_admin=is_admin
             )
         except Exception as e:
             log = ActivityLog(
                 id=str(uuid_utils.uuid7()),
                 user_id=user_id,
                 tenant_id=tenant_id,
-                action="rag.par_gate_blocked",
-                resource="document",
+                action="rag.par_build_failed",
+                resource="user",
                 log_level=LogLevel.ERROR,
                 meta_data=str(e),
-                ip_address=None
+                ip_address=security_ctx.ip_address,
             )
             self.db.add(log)
             await self.db.commit()

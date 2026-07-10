@@ -1,6 +1,6 @@
 import asyncio
 import uuid_utils
-from app.ai_brain.retrieval.pipeline import RetrievalPipeline
+from app.ai_brain.embeddings.embedder import document_embedder
 from app.ai_brain.retrieval.repository import PARRepository
 from app.ai_brain.schemas import RetrievalResult, PARContext
 from app.models import ActivityLog
@@ -8,15 +8,14 @@ from app.models import ActivityLog
 
 class RetrievalService:
 
-    def __init__(self, repo: PARRepository, pipeline: RetrievalPipeline):
+    def __init__(self, repo: PARRepository):
         self.repo = repo
-        self.pipeline = pipeline
 
     async def retrieve(
         self,
         query: str,
         par_context: PARContext,
-        top_k: int = 5,
+        top_k: int = 30,
         rrf_k: int = 60,
     ) -> list[RetrievalResult]:
         """
@@ -30,8 +29,8 @@ class RetrievalService:
         # ── Bước 1: Relational Filter ─────────────────────────────
         allowed_ids = await self.repo.get_allowed_document_ids(par_context)
 
-        # Generate query embedding
-        query_embedding = self.pipeline.encode_query(query)
+        # Generate query embedding từ shared singleton
+        query_embedding = document_embedder.encode_query(query)
 
         # Check if any documents matched but were blocked by PAR
         blocked_docs = await self.repo.check_par_gate_blocked(
