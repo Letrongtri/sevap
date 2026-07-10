@@ -172,6 +172,10 @@ class Settings:
         self.RETRIEVAL_RELEVANCE_THRESHOLD = float(os.getenv("RETRIEVAL_RELEVANCE_THRESHOLD", "0.45"))
         self.MAX_RETRY = int(os.getenv("MAX_RETRY", "2"))
 
+        # Reranker Configuration
+        self.RERANKER_MODEL_PATH = os.getenv("RERANKER_MODEL_PATH", self.BASE_DIR / "data" / "models" / "bge-reranker-v2-m3")
+        self.RERANKER_TOP_K = int(os.getenv("RERANKER_TOP_K", "5"))
+
         # Langfuse Configuration
         # self.LANGFUSE_PUBLIC_KEY = os.getenv("LANGFUSE_PUBLIC_KEY", "")
         # self.LANGFUSE_SECRET_KEY = os.getenv("LANGFUSE_SECRET_KEY", "")
