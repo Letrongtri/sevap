@@ -1,7 +1,6 @@
 from typing import List
 
-from sentence_transformers import SentenceTransformer
-
+from app.ai_brain.models import get_embedding_model
 from app.core.config import settings
 from app.core.logging import logger
 
@@ -10,17 +9,26 @@ class DocumentEmbedder:
         self.embedding_model_name = settings.EMBEDDING_MODEL
         self.embedding_model_dimension = settings.EMBEDDING_MODEL_DIMENSION
         self.batch_size = settings.EMBEDDING_BATCH_SIZE
+        self.embedding_model = get_embedding_model()
 
-        local_model_path = settings.EMBEDDING_MODEL_PATH
+    def encode_query(self, query: str) -> List[float]:
+        """
+        Chuyển query text thành vector embedding chuẩn hóa (synchronous).
 
-        self.embedding_model = SentenceTransformer(
-            str(local_model_path),
-            local_files_only=True
+        Dùng cho retrieval path — gọi trực tiếp trong async context vì
+        SentenceTransformer inference là CPU-bound và không block event loop
+        đủ lâu để cần asyncio.to_thread().
+        """
+        embedding = self.embedding_model.encode(
+            query,
+            normalize_embeddings=True,
         )
-    
+        return embedding.tolist()
+
     async def embed(self, contextual_text: str) -> List[float]:
         """
         Chuyển đổi văn bản được làm giàu ngữ cảnh sang vector embedding để tìm kiếm ngữ nghĩa.
+        Dùng cho document ingestion pipeline (async context).
         """
         try:
             embeddings = self.embedding_model.encode(
@@ -28,7 +36,7 @@ class DocumentEmbedder:
                 batch_size=self.batch_size,
                 convert_to_numpy=True,
                 normalize_embeddings=True,
-                show_progress_bar=False
+                show_progress_bar=False,
             )
 
             return embeddings.tolist()
