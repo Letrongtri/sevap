@@ -75,10 +75,10 @@ class IntentRouter:
 
             # 2. Xử lý logic Heuristic xác định Strategy & Cấu trúc Kế hoạch thực thi bằng Python Code
             if not sub_queries_objs or len(sub_queries_objs) == 1:
-                # Trường hợp Single RAG
+                query_text = sub_queries_objs[0].query if sub_queries_objs else response_dict.get("rewritten_query", current_query)
                 sub_query = SubQuery(
                     id=1, 
-                    query=sub_queries_objs[0].query, 
+                    query=query_text, 
                     depends_on=[]
                 )
                 return RouterOutputSchema(
