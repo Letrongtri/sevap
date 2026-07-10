@@ -167,6 +167,10 @@ class Settings:
         self.OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")
         self.OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen3:8b")
         self.OLLAMA_ROUTER_MODEL = os.getenv("OLLAMA_ROUTER_MODEL", "qwen2.5:3b")
+        self.OLLAMA_SLM_MODEL = os.getenv("OLLAMA_SLM_MODEL", "qwen2.5:3b")
+
+        self.RETRIEVAL_RELEVANCE_THRESHOLD = float(os.getenv("RETRIEVAL_RELEVANCE_THRESHOLD", "0.45"))
+        self.MAX_RETRY = int(os.getenv("MAX_RETRY", "2"))
 
         # Langfuse Configuration
         # self.LANGFUSE_PUBLIC_KEY = os.getenv("LANGFUSE_PUBLIC_KEY", "")

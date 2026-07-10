@@ -13,6 +13,19 @@ class RetrievalExecutionPlan(str, Enum):
     SEQUENTIAL = "sequential" # Câu hỏi con sau cần kết quả câu hỏi trước
     UNKNOWN = "unknown"      # Không phân loại được
 
+class GraphNodeID(str, Enum):
+    INTENT_ROUTER = "intent_router"
+    SEMANTIC_CACHE = "semantic_cache"
+    RETRIEVAL = "retrieval"
+    RERANK = "rerank"
+    THRESHOLD_CHECK = "threshold_check"
+    REWRITE = "rewrite"
+    DIRECT_RESPONSE_GENERATOR = "direct_response_generator"
+    FINAL_RESPONSE_GENERATOR = "final_response_generator"
+    SECURITY_KILL_SWITCH = "security_kill_switch"
+    FALLBACK_NODE = "fallback_node"
+    END = "end"
+
 class AccessLevel(str, Enum):
     PUBLIC = "public"
     PRIVATE = "private"
