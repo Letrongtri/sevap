@@ -102,8 +102,6 @@ export const downloadDocumentFile = async (
     link.href = url
     link.download = fileName
 
-    console.log(fileName)
-
     document.body.appendChild(link)
     link.click()
 

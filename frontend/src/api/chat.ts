@@ -7,6 +7,8 @@ import type {
     SendMessagePayload,
     CreateConversationPayload,
     StreamEvent,
+    ConversationPaginatedResponse,
+    ConversationQuery,
 } from '../types/chat'
 import type { ID } from '../types/common'
 
@@ -17,15 +19,27 @@ const API_BASE = 'http://localhost:8000/api/v1'
    ============================================================ */
 
 /** Lấy danh sách tất cả conversations của user hiện tại */
-export const fetchConversations = async (): Promise<Conversation[]> => {
-    const res = await axiosClient.get('/conversations')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (res.data ?? []).map((d: any) => ({
-        id: d.id,
-        title: d.title,
-        createdAt: d.created_at,
-        updatedAt: d.updated_at,
-    }))
+export const fetchConversations = async (
+    query: ConversationQuery
+): Promise<ConversationPaginatedResponse> => {
+    const res = await axiosClient.get('/conversations', {
+        params: {
+            query: query.query,
+            page: query.page,
+            limit: query.limit,
+        },
+    })
+    const d = res.data
+    return {
+        conversations:
+            d?.conversations?.map((conv) => ({
+                id: conv.id,
+                title: conv.title,
+                createdAt: conv.created_at,
+                updatedAt: conv.updated_at,
+            })) ?? [],
+        pagination: d.pagination,
+    }
 }
 
 /** Tạo conversation mới */
@@ -94,9 +108,7 @@ function mapMessage(m: Record<string, unknown>): Message {
 }
 
 /** Lấy danh sách messages của một conversation (legacy) */
-export const fetchMessages = async (
-    conversationId: ID
-): Promise<Message[]> => {
+export const fetchMessages = async (conversationId: ID): Promise<Message[]> => {
     const res = await axiosClient.get(
         `/conversations/${conversationId}/messages`
     )

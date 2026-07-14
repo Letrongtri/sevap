@@ -13,6 +13,8 @@ export const useChatStore = create<ChatStore>((set) => ({
     activeChatId: null,
     searchKeyword: '',
     initialMessage: null,
+    page: 1,
+    limit: 10,
 
     // ── Actions ────────────────────────────────────────────────────────
 
@@ -27,4 +29,7 @@ export const useChatStore = create<ChatStore>((set) => ({
 
     /** Lưu tin nhắn đầu tiên khi chuyển từ Home sang Chat */
     setInitialMessage: (message) => set({ initialMessage: message }),
+
+    setPage: (page) => set({ page }),
+    setLimit: (limit) => set({ limit }),
 }))

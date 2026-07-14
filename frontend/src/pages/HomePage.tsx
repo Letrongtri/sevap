@@ -11,8 +11,6 @@ export default function HomePage() {
         return 'Chào buổi tối'
     }
 
-    console.log(user)
-
     return (
         <div className="flex flex-col h-full items-center justify-center px-6">
             {/* ── Greeting ─────────────────────────────────────────── */}

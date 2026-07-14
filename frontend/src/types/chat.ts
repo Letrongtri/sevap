@@ -1,4 +1,4 @@
-import type { ID, Timestamp } from './common'
+import type { ID, PaginatedResponse, Timestamp } from './common'
 
 /* ============================================================
    Chat — Type definitions
@@ -9,7 +9,6 @@ export interface Conversation {
     title: string
     updatedAt: Timestamp
     createdAt: Timestamp
-    lastMessage?: string
 }
 
 /** actor: 'user' | 'assistant' | agent names — mirrors backend MessageResponse.actor */
@@ -27,9 +26,12 @@ export interface Message {
 
 /** Response từ GET /conversations/{id} — bao gồm messages (10 cuối) */
 export interface ConversationDetail extends Conversation {
+    id: ID
     userId: ID
     isDeleted: boolean
     messages: Message[]
+    createdAt: Timestamp
+    updatedAt: Timestamp
 }
 
 export interface SendMessagePayload {
@@ -41,6 +43,17 @@ export interface CreateConversationPayload {
     title?: string
 }
 
+export interface ConversationQuery {
+    query?: string | null
+    page?: number | null
+    limit?: number
+}
+
+export interface ConversationPaginatedResponse {
+    conversations: Conversation[]
+    pagination: PaginatedResponse
+}
+
 export interface ChatClientState {
     /** ID của conversation đang được xem, null nếu chưa chọn */
     activeChatId: ID | null
@@ -48,6 +61,10 @@ export interface ChatClientState {
     searchKeyword: string
     /** Tin nhắn ban đầu truyền từ Home page sang Chat page */
     initialMessage: string | null
+    /** Phân trang */
+    page: number
+    /** Số lượng bản ghi trên mỗi trang */
+    limit: number
 }
 
 export interface ChatClientActions {
@@ -55,6 +72,8 @@ export interface ChatClientActions {
     setSearchKeyword: (keyword: string) => void
     clearActiveChat: () => void
     setInitialMessage: (message: string | null) => void
+    setPage: (page: number) => void
+    setLimit: (limit: number) => void
 }
 
 export type ChatStore = ChatClientState & ChatClientActions
