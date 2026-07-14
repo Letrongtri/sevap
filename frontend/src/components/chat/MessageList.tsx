@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Bot, User, Loader2, MessageSquare } from 'lucide-react'
 import type { Message } from '../../types/chat'
+import ReactMarkdown from 'react-markdown'
 
 /* ============================================================
    Props
@@ -68,7 +69,9 @@ function MessageBubble({ msg }: BubbleProps) {
             <div
                 className={`msg-bubble ${isUser ? 'msg-bubble--user' : 'msg-bubble--bot'}`}
             >
-                <p className="msg-bubble__content">{msg.content}</p>
+                <div className="msg-bubble__content">
+                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                </div>
                 <p
                     className={`msg-bubble__time ${isUser ? 'msg-bubble__time--user' : ''}`}
                 >
@@ -98,7 +101,9 @@ function StreamBubble({ content }: StreamBubbleProps) {
             </div>
             <div className="msg-bubble msg-bubble--bot">
                 {content ? (
-                    <p className="msg-bubble__content">{content}</p>
+                    <div className="msg-bubble__content">
+                        <ReactMarkdown>{content}</ReactMarkdown>
+                    </div>
                 ) : (
                     /* Typing indicator khi chưa có token nào */
                     <div className="typing-indicator">
