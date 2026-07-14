@@ -183,3 +183,4 @@ cython_debug/
 logs/
 /backend/data
 /notes
+/backend/.langgraph_api

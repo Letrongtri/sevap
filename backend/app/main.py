@@ -8,6 +8,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+
 from app.db.session import AsyncSessionLocal
 from app.db.init_db import add_system_default_data
 
@@ -15,9 +17,22 @@ from app.core.logging import logger
 from app.core.config import settings
 from app.api.v1.api import api_router
 from app.services import geoip_service
+from app.ai_brain.graph.hr_graph import build_hr_graph
 
 # Load environment variables from .env file
 load_dotenv()
+
+
+def _build_postgres_dsn() -> str:
+    """
+    Chuyển đổi DATABASE_URL (SQLAlchemy format) sang DSN psycopg3.
+
+    SQLAlchemy:  postgresql+asyncpg://user:pass@host:port/db
+    psycopg3:    postgresql://user:pass@host:port/db
+    """
+    url = settings.DATABASE_URL
+    return url.replace("postgresql+asyncpg://", "postgresql://")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -28,13 +43,31 @@ async def lifespan(app: FastAPI):
         version=settings.VERSION,
         api_prefix=settings.API_V1_STR,
     )
+
+    # ── Khởi tạo dữ liệu mặc định ────────────────────────────────────────────
     async with AsyncSessionLocal() as db:
         await add_system_default_data(db)
 
+    # ── GeoIP ─────────────────────────────────────────────────────────────────
     GEOIP_DB_PATH = settings.GEOIP_DB_PATH
     geoip_service.initialize(db_path=GEOIP_DB_PATH)
-    
-    yield
+
+    # ── LangGraph Checkpointer (AsyncPostgresSaver) ───────────────────────────
+    # Mở connection pool tới Postgres dùng psycopg3.
+    # setup() chạy idempotent: tạo bảng nếu chưa có, skip nếu đã tồn tại.
+    postgres_dsn = _build_postgres_dsn()
+    async with AsyncPostgresSaver.from_conn_string(postgres_dsn) as checkpointer:
+        await checkpointer.setup()
+        logger.info("langgraph_checkpointer_ready", type="AsyncPostgresSaver")
+
+        # Compile graph 1 lần duy nhất → lưu vào app.state
+        app.state.checkpointer = checkpointer
+        app.state.compiled_graph = build_hr_graph(checkpointer=checkpointer)
+        logger.info("langgraph_graph_compiled")
+
+        yield
+
+    # ── Shutdown ──────────────────────────────────────────────────────────────
     logger.info("application_shutdown")
     geoip_service.close()
 

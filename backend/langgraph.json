@@ -1,0 +1,7 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "hr_graph": "./studio/entrypoint.py:hr_graph"
+  },
+  "env": ".env"
+}

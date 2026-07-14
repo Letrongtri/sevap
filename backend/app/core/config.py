@@ -141,6 +141,7 @@ class Settings:
         # CORS Settings
         # self.ALLOWED_ORIGINS = parse_list_from_env("ALLOWED_ORIGINS", ["*"])
         self.ALLOWED_ORIGINS = [
+            "https://smith.langchain.com",
             "http://localhost:5173",
             "http://localhost:3000",
         ]
