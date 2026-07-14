@@ -1,10 +1,7 @@
-from functools import partial
 from langgraph.graph import StateGraph, END
 from langgraph.graph.state import CompiledStateGraph
-from langgraph.checkpoint.memory import MemorySaver
 from app.ai_brain.graph.nodes import *
 from app.ai_brain.state import AgentState
-from app.ai_brain.retrieval import RetrievalService
 from app.core.enum import IntentType, GraphNodeID
 
 
@@ -37,10 +34,13 @@ def route_after_threshold(state: AgentState) -> str:
     return state.get("_next", GraphNodeID.FALLBACK_NODE.value)
 
 
-def build_hr_graph(retrieval_service: RetrievalService, checkpointer=None) -> CompiledStateGraph:
+def build_hr_graph(checkpointer=None) -> CompiledStateGraph:
     """
     Factory function: tạo và compile graph.
-    Nhận RetrievalService qua DI thay vì import trực tiếp — dễ test, dễ mock.
+
+    RetrievalService được inject per-request vào AgentState khi invoke —
+    không cần bind lúc compile. Điều này cho phép mỗi request dùng
+    AsyncSession riêng biệt, tránh race condition.
 
     Pipeline retrieval:
         retrieval_node → rerank_node → threshold_check_node
@@ -51,8 +51,8 @@ def build_hr_graph(retrieval_service: RetrievalService, checkpointer=None) -> Co
     graph.add_node(GraphNodeID.INTENT_ROUTER.value, intent_node)
     graph.add_node(GraphNodeID.DIRECT_RESPONSE_GENERATOR.value, direct_node)
 
-    # partial() inject retrieval_service vào node mà không thay đổi signature
-    graph.add_node(GraphNodeID.RETRIEVAL.value, partial(retrieval_node, retrieval_service=retrieval_service))
+    # retrieval_node lấy retrieval_service từ AgentState (injected per-request)
+    graph.add_node(GraphNodeID.RETRIEVAL.value, retrieval_node)
     graph.add_node(GraphNodeID.RERANK.value, rerank_node)
     graph.add_node(GraphNodeID.THRESHOLD_CHECK.value, threshold_check_node)
     graph.add_node(GraphNodeID.REWRITE.value, rewrite_node)
@@ -102,9 +102,5 @@ def build_hr_graph(retrieval_service: RetrievalService, checkpointer=None) -> Co
             GraphNodeID.SECURITY_KILL_SWITCH.value: GraphNodeID.SECURITY_KILL_SWITCH.value,
         },
     )
-
-    # TODO: sử dụng PostgresSaver
-    if checkpointer is None:
-        checkpointer = MemorySaver()
 
     return graph.compile(checkpointer=checkpointer)

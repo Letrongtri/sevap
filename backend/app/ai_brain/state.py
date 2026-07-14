@@ -2,39 +2,26 @@ from langgraph.graph.message import add_messages
 from langchain_core.messages import BaseMessage
 from typing import Any, Annotated, TypedDict
 
-from app.ai_brain.schemas import PARContext, RetrievalResult, SubQuery, UserSecurityContext
+from app.ai_brain.schemas import RetrievalResult, SubQuery
 from app.core.enum import GraphNodeID
-from app.models import Message
 
 
 class AgentState(TypedDict):
     """
-    Shared state across the entire graph.
-    Each node only reads/writes the fields it is responsible for.
+    Shared state across the entire graph — chỉ chứa dữ liệu có thể serialize (JSON-safe).
 
-    ── Security Boundary ────────────────────────────────────────────────────
-    Hai field dưới đây được inject tại điểm vào của graph (trước node đầu tiên)
-    và TUYỆT ĐỐI không được thay đổi bởi bất kỳ node nào downstream.
-    Đây là cơ chế đảm bảo Tenant Isolation và Security Boundary trong toàn graph.
+    Per-request context không có thể serialize (dataclasses, SQLAlchemy models)
+    được truyền qua RunnableConfig["configurable"] để tránh Postgres checkpointer lỗi.
 
-    user_security_ctx : UserSecurityContext
-        Identity của người dùng — được build từ JWT token tại HTTP layer.
-        Dùng cho: audit log, logging, hiển thị thông tin user.
-
-    par_ctx : PARContext
-        Authorization context — được build từ DB lookup tại entry point.
-        Dùng cho: PAR filter, SQL boundary inject trong retrieval pipeline.
-        Không được dùng ngoài ai_brain/retrieval.
-    ─────────────────────────────────────────────────────────────────────────
+    config["configurable"] chứa:
+        user_security_ctx : UserSecurityContext  — identity (frozen dataclass)
+        par_ctx           : PARContext            — authorization (frozen dataclass)
+        retrieval_service : RetrievalService      — per-request service
+        chat_history      : list[Message]         — SQLAlchemy models
     """
-
-    # ── Security (injected once, never mutated) ───────────────────────────
-    user_security_ctx: UserSecurityContext      # Identity layer
-    par_ctx: PARContext                         # Authorization / PAR layer
 
     # ── Conversation ──────────────────────────────────────────────────────
     conversation_id: str
-    chat_history: list[Message]
 
     # ── Query processing ──────────────────────────────────────────────────
     original_question: str

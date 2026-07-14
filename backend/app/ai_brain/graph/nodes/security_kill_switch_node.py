@@ -1,9 +1,10 @@
 from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.runnables import RunnableConfig
 from app.ai_brain.state import AgentState
 from app.core.logging import logger
 
 
-async def security_kill_switch_node(state: AgentState) -> dict:
+async def security_kill_switch_node(state: AgentState, config: RunnableConfig) -> dict:
     """
     Terminal node xử lý các trường hợp Security Anomaly.
 
@@ -14,13 +15,15 @@ async def security_kill_switch_node(state: AgentState) -> dict:
     original_question = state.get("original_question", "")
     reasoning = state.get("router_reasoning", "Malicious input detected.")
 
+    # user_security_ctx lấy từ configurable (không persist trong state)
+    security_ctx = config["configurable"].get("user_security_ctx")
+    tenant_id = getattr(security_ctx, "tenant_id", None) if security_ctx else None
+
     logger.warning(
         "[SecurityKillSwitch] TERMINATED | query=%r | reason=%r | tenant=%r",
         original_question,
         reasoning,
-        state.get("user_security_ctx", {}).get("tenant_id", "unknown")
-        if isinstance(state.get("user_security_ctx"), dict)
-        else getattr(state.get("user_security_ctx"), "tenant_id", "unknown"),
+        tenant_id,
     )
 
     answer = (

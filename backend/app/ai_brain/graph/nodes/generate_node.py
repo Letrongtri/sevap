@@ -1,4 +1,5 @@
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.runnables import RunnableConfig
 from app.ai_brain.llm import get_llm
 from app.ai_brain.prompts import (
     GENERATE_RESPONSE_SYSTEM_PROMPT,
@@ -7,10 +8,10 @@ from app.ai_brain.prompts import (
 from app.ai_brain.state import AgentState
 from app.core.enum import GraphNodeID
 
-async def generate_final_response_node(state: AgentState) -> dict:
+async def generate_final_response_node(state: AgentState, config: RunnableConfig) -> dict:
     question = state["rewritten_question"]
     chunks = state.get("reranked_chunks") or state.get("retrieved_chunks", [])
-    chat_history = state["chat_history"]
+    chat_history = config["configurable"].get("chat_history", [])
     
     llm = get_llm(temperature=0.6)
 

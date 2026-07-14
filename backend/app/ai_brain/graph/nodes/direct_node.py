@@ -1,4 +1,5 @@
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.runnables import RunnableConfig
 from app.ai_brain.llm import get_llm
 from app.ai_brain.prompts import (
     DIRECT_RESPONSE_GENERATOR_SYSTEM_PROMPT,
@@ -8,9 +9,9 @@ from app.ai_brain.state import AgentState
 from app.core.config import settings
 from app.core.enum import GraphNodeID
 
-async def direct_node(state: AgentState) -> dict:
+async def direct_node(state: AgentState, config: RunnableConfig) -> dict:
     question = state["original_question"]
-    chat_history = state["chat_history"]
+    chat_history = config["configurable"].get("chat_history", [])
     
     model_name = settings.OLLAMA_SLM_MODEL
     llm = get_llm(model_name=model_name, temperature=0.6)

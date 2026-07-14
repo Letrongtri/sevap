@@ -3,6 +3,7 @@ from app.core.enum import RetrievalExecutionPlan
 from app.core.enum import IntentType
 import json
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.runnables import RunnableConfig
 from app.ai_brain.llm import get_llm
 from app.ai_brain.prompts import (
     REWRITE_QUERY_SYSTEM_PROMPT,
@@ -13,9 +14,9 @@ from app.core.config import settings
 from app.core.enum import GraphNodeID
 from app.utils.json_utils import clean_and_extract_json
 
-async def rewrite_node(state: AgentState) -> dict:
+async def rewrite_node(state: AgentState, config: RunnableConfig) -> dict:
     question = state["original_question"]
-    chat_history = state["chat_history"]
+    chat_history = config["configurable"].get("chat_history", [])
     failed_rewritten_question = state.get("rewritten_question", "")
     failed_subqueries = state.get("sub_queries", [])
     

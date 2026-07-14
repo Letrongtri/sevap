@@ -1,4 +1,6 @@
 import time
+from langchain_core.runnables import RunnableConfig
+
 from app.ai_brain.schemas import UserSecurityContext
 from app.ai_brain.state import AgentState
 from app.ai_brain.router import check_heuristic_intent, IntentRouter
@@ -6,13 +8,14 @@ from app.core.enum import IntentType, GraphNodeID, RetrievalExecutionPlan
 from app.core.logging import logger
 
 
-async def intent_node(state: AgentState) -> dict:
+async def intent_node(state: AgentState, config: RunnableConfig) -> dict:
     """Phân loại ý định người dùng từ câu hỏi và lịch sử hội thoại.
     Returns:
         dict with intent, sub_queries, next_node, messages
     """
     t_start = time.perf_counter()
-    security_ctx: UserSecurityContext = state["user_security_ctx"]
+    security_ctx: UserSecurityContext = config["configurable"]["user_security_ctx"]
+    chat_history = config["configurable"].get("chat_history", [])
     tenant_id = security_ctx.tenant_id
     original_question = state["original_question"]
 
@@ -37,7 +40,7 @@ async def intent_node(state: AgentState) -> dict:
     # TIER-1: LLM Intent Router
     router = IntentRouter()
     router_output = await router.route_intent(
-        history_messages=state["chat_history"],
+        history_messages=chat_history,
         current_query=original_question,
         tenant_id=tenant_id
     )

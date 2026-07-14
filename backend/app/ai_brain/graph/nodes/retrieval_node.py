@@ -13,6 +13,8 @@ import asyncio
 import time
 from typing import Dict, List, Set
 
+from langchain_core.runnables import RunnableConfig
+
 from app.ai_brain.schemas import PARContext, RetrievalResult, SubQuery
 from app.ai_brain.state import AgentState
 from app.ai_brain.retrieval import RetrievalService
@@ -105,19 +107,20 @@ async def _retrieve_single(
 # Main node
 # ─────────────────────────────────────────────────────────────────────────────
 
-async def retrieval_node(
-    state: AgentState,
-    retrieval_service: RetrievalService,
-) -> dict:
+async def retrieval_node(state: AgentState, config: RunnableConfig) -> dict:
     """
     LangGraph node — thực thi retrieval theo DAG (song song + tuần tự).
+
+    RetrievalService được lấy từ config["configurable"]["retrieval_service"].
+    Không lưu vào AgentState — tránh serialize issue với Postgres checkpointer.
 
     Writes:
         retrieved_chunks  : list[RetrievalResult]  — tất cả chunk đã thu thập
         confidence_score  : float                  — điểm cao nhất trong batch
     """
     t_start = time.perf_counter()
-    par_ctx: PARContext = state["par_ctx"]
+    par_ctx: PARContext = config["configurable"]["par_ctx"]
+    retrieval_service: RetrievalService = config["configurable"]["retrieval_service"]
 
     logger.info(
         "[RetrievalNode] Start | intent=%s | tenant=%s",

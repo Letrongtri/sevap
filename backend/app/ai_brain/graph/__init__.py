@@ -1,2 +1,3 @@
-# LangGraph orchestration module
-# Graph builder sẽ được implement tại đây khi pipeline hoàn chỉnh.
+from app.ai_brain.graph.hr_graph import build_hr_graph
+
+__all__ = ["build_hr_graph"]
