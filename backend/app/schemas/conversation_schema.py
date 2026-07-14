@@ -21,6 +21,8 @@ class ConversationResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class ConversationQuery(BaseModel):
+    query: str | None = None
 
 # Schema cho detail endpoint — bao gồm messages đã được eager-load
 class ConversationDetailResponse(ConversationResponse):

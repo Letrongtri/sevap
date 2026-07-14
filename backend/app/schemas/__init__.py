@@ -14,7 +14,8 @@ from .document_schema import (
 )
 from .conversation_schema import (
     ConversationUpdate, ConversationResponse, 
-    ConversationDetailResponse, ConversationPaginatedResponse
+    ConversationDetailResponse, ConversationPaginatedResponse,
+    ConversationQuery
 )
 from .auth_schema import (
     Token, LoginResponse, LoginForm, RefreshTokenRequest, 

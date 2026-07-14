@@ -219,7 +219,7 @@ class UserService:
                     if query.get_department and user.department 
                     else None,
                 job_title=
-                    user.job_title.name 
+                    user.job_title.title_name 
                     if query.get_job_title and user.job_title 
                     else None,
                 roles=roles

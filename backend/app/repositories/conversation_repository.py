@@ -30,12 +30,18 @@ class ConversationRepository:
             raise e
     
     async def get_all_conversations_by_user_id(
-        self, user_id: str, skip: int, limit: int
+        self, tenant_id: str, user_id: str, query: str | None, skip: int, limit: int
     ):
         stmt = select(Conversation).where(
+            Conversation.tenant_id == tenant_id,
             Conversation.user_id == user_id, 
             Conversation.is_deleted == False
         )
+
+        if query:
+            stmt = stmt.where(
+                Conversation.title.ilike(f"%{query}%")
+            )
 
         count_stmt = select(func.count()).select_from(stmt.subquery())
         total_records = await self.db.scalar(count_stmt)

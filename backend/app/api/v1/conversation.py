@@ -11,7 +11,7 @@ from app.dependencies import (
     get_message_service
 )
 from app.schemas import (
-    ConversationPaginatedResponse, PaginationQuery,
+    ConversationPaginatedResponse, PaginationQuery, ConversationQuery,
     ConversationResponse, ConversationDetailResponse, 
     ConversationUpdate, MessageSend, MessageResponse
 )
@@ -35,14 +35,16 @@ router = APIRouter()
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_personal_conversations(
     request: Request,
+    query: Annotated[ConversationQuery, Depends()],
     pagination: Annotated[PaginationQuery, Depends()],
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     try:
         user_id = request.state.user["id"]
+        tenant_id = request.state.tenant_id
         return await (
             conversation_service.get_all_conversations_by_user_id(
-                user_id, pagination
+                tenant_id, user_id, query, pagination
             )
         )
     except Exception:

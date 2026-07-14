@@ -5,7 +5,7 @@ from app.services.exceptions import NotFoundError
 from app.schemas import (
     ConversationResponse, ConversationPaginatedResponse,
     ConversationDetailResponse, MessageResponse,
-    PaginationQuery, PaginationResponse
+    PaginationQuery, PaginationResponse, ConversationQuery
 )
 
 
@@ -18,13 +18,13 @@ class ConversationService:
         self.message_repo = message_repo
     
     async def get_all_conversations_by_user_id(
-        self, user_id: str,
+        self, tenant_id: str, user_id: str, query: ConversationQuery,
         pagination: PaginationQuery
     ) -> ConversationPaginatedResponse:
         skip = (pagination.page - 1) * pagination.limit
 
         conversations, total = await self.repo.get_all_conversations_by_user_id(
-            user_id, skip, limit=pagination.limit
+            tenant_id, user_id, query.query, skip, limit=pagination.limit
         )
         
         total_pages = math.ceil(total / pagination.limit) if total > 0 else 0

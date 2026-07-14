@@ -17,6 +17,7 @@ from app.services.exceptions import (
 from app.core.enum import AccessLevel, DocumentStatus
 from app.core.config import settings
 from app.ai_brain.retrieval.repository import PARRepository
+from app.ai_brain.schemas import UserSecurityContext
 from app.tasks import process_document_chunking_task, sync_chunk_metadata_task
 from app.schemas import (
     DocumentQuery, 
@@ -39,11 +40,18 @@ class DocumentService:
         self.user_repo = user_repo
         self.par_repo = par_repo
 
-    async def _check_document_access(self, tenant_id: str, user_id: str, document_id: str) -> None:
+    async def _check_document_access(
+        self, tenant_id: str, user_id: str, document_id: str, 
+        is_admin: bool = False, session_id: str = None, ip_address: str = None
+
+    ) -> None:
         """Kiểm tra user có quyền truy cập document_id thông qua PAR gate.
         Raise AccessDeniedError nếu document_id không nằm trong allowed set.
         """
-        ctx = await self.par_repo.build_par_context(tenant_id, user_id)
+        security_ctx = UserSecurityContext(
+            user_id, tenant_id, is_admin, session_id, ip_address
+        )
+        ctx = await self.par_repo.build_par_context(security_ctx)
         allowed_ids = await self.par_repo.get_allowed_document_ids(ctx)
         if document_id not in allowed_ids:
             raise AccessDeniedError()
@@ -245,7 +253,8 @@ class DocumentService:
         pagination: PaginationQuery
     ) -> DocumentPaginatedResponse:
         # Bước 1: Lấy danh sách document mà user được phép truy cập qua PAR gate
-        ctx = await self.par_repo.build_par_context(tenant_id, user_id)
+        security_ctx = UserSecurityContext(user_id=user_id, tenant_id=tenant_id)
+        ctx = await self.par_repo.build_par_context(security_ctx)
         allowed_ids = await self.par_repo.get_allowed_document_ids(ctx)
 
         skip = (pagination.page - 1) * pagination.limit
