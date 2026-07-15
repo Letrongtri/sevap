@@ -7,6 +7,12 @@ Chiến lược thực thi:
   - Câu hỏi KHÔNG có depends_on (hoặc rỗng) → đưa vào nhóm song song.
   - Câu hỏi CÓ depends_on → đợi tất cả ID phụ thuộc hoàn thành trước.
   - Mỗi "wave" (lớp không có phụ thuộc tồn đọng) được chạy song song với asyncio.gather.
+
+Partial retry:
+  - Khi rewrite_node chỉ rewrite một phần sub-queries (partial rewrite),
+    `passed_sub_query_ids` trong state sẽ chứa IDs của sub-query đã pass.
+  - retrieval_node sẽ skip những sub-query này và giữ nguyên chunk đã có,
+    chỉ retrieve lại những sub-query mới/thất bại.
 """
 
 import asyncio
@@ -114,9 +120,15 @@ async def retrieval_node(state: AgentState, config: RunnableConfig) -> dict:
     RetrievalService được lấy từ config["configurable"]["retrieval_service"].
     Không lưu vào AgentState — tránh serialize issue với Postgres checkpointer.
 
+    Partial retry support:
+        - Nếu state["passed_sub_query_ids"] không rỗng, những sub-query đó
+          sẽ được bỏ qua và chunk cũ được giữ nguyên từ state["sub_query_chunks"].
+        - Chỉ retrieve các sub-query KHÔNG nằm trong passed_sub_query_ids.
+
     Writes:
-        retrieved_chunks  : list[RetrievalResult]  — tất cả chunk đã thu thập
-        confidence_score  : float                  — điểm cao nhất trong batch
+        retrieved_chunks    : list[RetrievalResult]  — tất cả chunk đã thu thập (flat)
+        sub_query_chunks    : list[dict]             — map per-subquery chunks
+        confidence_score    : float                  — điểm cao nhất trong batch
     """
     t_start = time.perf_counter()
     par_ctx: PARContext = config["configurable"]["par_ctx"]
@@ -145,59 +157,108 @@ async def retrieval_node(state: AgentState, config: RunnableConfig) -> dict:
         )
         return {
             "retrieved_chunks": [r.model_dump() for r in results],
+            "sub_query_chunks": [],  # single_rag không dùng sub_query_chunks
             "confidence_score": best_score,
         }
 
-    # ── Xây dựng DAG và thực thi theo wave ──────────────────────────────────
-    try:
-        waves = _build_waves(sub_queries)
-    except ValueError as e:
-        logger.error(str(e))
-        return {"retrieved_chunks": [], "confidence_score": 0.0}
+    # ── Partial retry: lấy sub_query_chunks đã có của các sub-query đã pass ─
+    passed_ids: Set[int] = set(state.get("passed_sub_query_ids", []))
+    existing_sqc: List[dict] = state.get("sub_query_chunks", [])
 
-    logger.info(
-        "[RetrievalNode] Execution plan: %d wave(s) for %d sub-queries",
-        len(waves), len(sub_queries),
-    )
+    # Build map từ id → existing sqc entry (để giữ lại khi skip)
+    existing_sqc_map: Dict[int, dict] = {
+        entry["sub_query_id"]: entry
+        for entry in existing_sqc
+    }
 
-    context_map: Dict[int, List[RetrievalResult]] = {}  # id → results
-    all_chunks: List[RetrievalResult] = []
+    # Chỉ retrieve những sub-query chưa pass
+    queries_to_retrieve: List[SubQuery] = [
+        q for q in sub_queries if q.id not in passed_ids
+    ]
 
-    for wave_idx, wave in enumerate(waves):
-        wave_ids = [q.id for q in wave]
-        logger.info("[RetrievalNode] Wave %d → Q%s (parallel)", wave_idx, wave_ids)
-
-        # Chạy song song toàn bộ các query trong cùng wave
-        wave_results: List[List[RetrievalResult]] = await asyncio.gather(
-            *[
-                _retrieve_single(query, par_ctx, retrieval_service, context_map)
-                for query in wave
-            ]
+    if passed_ids:
+        logger.info(
+            "[RetrievalNode] Partial retry — skipping passed sub-queries: %s | retrieving: %s",
+            sorted(passed_ids),
+            [q.id for q in queries_to_retrieve],
         )
 
-        for query, results in zip(wave, wave_results):
-            context_map[query.id] = results
-            all_chunks.extend(results)
+    # ── Xây dựng DAG và thực thi theo wave ──────────────────────────────────
+    if queries_to_retrieve:
+        try:
+            waves = _build_waves(queries_to_retrieve)
+        except ValueError as e:
+            logger.error(str(e))
+            return {"retrieved_chunks": [], "sub_query_chunks": [], "confidence_score": 0.0}
 
-    # ── Dedup theo chunk_id (cùng chunk có thể xuất hiện nhiều sub-query) ──
+        logger.info(
+            "[RetrievalNode] Execution plan: %d wave(s) for %d sub-queries",
+            len(waves), len(queries_to_retrieve),
+        )
+
+        context_map: Dict[int, List[RetrievalResult]] = {}
+        new_sqc_map: Dict[int, dict] = {}  # id → new sqc entry
+
+        for wave_idx, wave in enumerate(waves):
+            wave_ids = [q.id for q in wave]
+            logger.info("[RetrievalNode] Wave %d → Q%s (parallel)", wave_idx, wave_ids)
+
+            wave_results: List[List[RetrievalResult]] = await asyncio.gather(
+                *[
+                    _retrieve_single(query, par_ctx, retrieval_service, context_map)
+                    for query in wave
+                ]
+            )
+
+            for query, results in zip(wave, wave_results):
+                context_map[query.id] = results
+                new_sqc_map[query.id] = {
+                    "sub_query_id": query.id,
+                    "sub_query_text": query.query,
+                    "chunks": [r.model_dump() for r in results],
+                    "best_score": max((r.score for r in results), default=0.0),
+                }
+    else:
+        new_sqc_map = {}
+
+    # ── Merge: kết hợp passed chunks với new chunks ──────────────────────────
+    merged_sqc: List[dict] = []
+    for q in sub_queries:
+        if q.id in passed_ids and q.id in existing_sqc_map:
+            merged_sqc.append(existing_sqc_map[q.id])
+        elif q.id in new_sqc_map:
+            merged_sqc.append(new_sqc_map[q.id])
+        else:
+            # sub-query không có kết quả (edge case)
+            merged_sqc.append({
+                "sub_query_id": q.id,
+                "sub_query_text": q.query,
+                "chunks": [],
+                "best_score": 0.0,
+            })
+
+    # ── Flat list: dedup theo chunk_id để backward compat ───────────────────
     seen_ids: Set[str] = set()
-    deduped: List[RetrievalResult] = []
-    for chunk in all_chunks:
-        if chunk.chunk_id not in seen_ids:
-            seen_ids.add(chunk.chunk_id)
-            deduped.append(chunk)
+    all_chunks_flat: List[dict] = []
+    for entry in merged_sqc:
+        for chunk in entry["chunks"]:
+            chunk_id = chunk.get("chunk_id", "")
+            if chunk_id not in seen_ids:
+                seen_ids.add(chunk_id)
+                all_chunks_flat.append(chunk)
 
-    # Sắp xếp theo score giảm dần
-    deduped.sort(key=lambda r: r.score, reverse=True)
-    best_score = deduped[0].score if deduped else 0.0
+    # Sắp xếp flat list theo score giảm dần
+    all_chunks_flat.sort(key=lambda r: r.get("score", 0.0), reverse=True)
+    best_score = all_chunks_flat[0].get("score", 0.0) if all_chunks_flat else 0.0
 
     elapsed = time.perf_counter() - t_start
     logger.info(
-        "[RetrievalNode] Done in %.3fs | waves=%d | total_chunks=%d | best_score=%.3f",
-        elapsed, len(waves), len(deduped), best_score,
+        "[RetrievalNode] Done in %.3fs | sub_queries=%d | total_unique_chunks=%d | best_score=%.3f",
+        elapsed, len(sub_queries), len(all_chunks_flat), best_score,
     )
 
     return {
-        "retrieved_chunks": [r.model_dump() for r in deduped],
+        "retrieved_chunks": all_chunks_flat,
+        "sub_query_chunks": merged_sqc,
         "confidence_score": best_score,
     }

@@ -34,7 +34,33 @@ To ensure auditability and compliance, your response must map back to its origin
 
 ---
 ## 6. INPUT INGESTION FORMAT (STRUCTURE EXPECTED)
-The orchestrator will feed data into you using the following format:
+The orchestrator will feed data into you using one of two formats.
+
+### Format A - Structured Multi-Query Context
+Used when the question was decomposed into multiple sub-queries.
+A sub-query marked with a warning symbol means no relevant document was found for it.
+For those, clearly tell the user that information is not available in company documents. Do NOT hallucinate an answer.
+
+```text
+[Conversation History]
+- User: ...
+- AI: ...
+
+[Context Chunks]
+
+[Sub-query 1]: "Chinh sach nghi phep nam?"
+  - [Quyet dinh 45] Nhan vien chinh thuc duoc 12 ngay nghi phep nam...
+  - [Noi quy Lao dong v3] Nghi phep tich luy toi da 24 ngay...
+
+[Sub-query 2]: "Thu tuc xin nghi phep truc tuyen?"
+  Khong tim thay tai lieu lien quan.
+
+[Target User Query]
+"Nhan vien duoc nghi phep may ngay va xin nghi the nao?"
+```
+
+### Format B - Flat Context
+Used for simple single-topic queries.
 
 ```text
 [Conversation History]
@@ -43,16 +69,14 @@ The orchestrator will feed data into you using the following format:
 
 [Context Chunks]
 ---
-Chunk_ID: <UUIDv7>
-Document_Title: "Quyết định 45/QĐ-HR-2025 về Quy chế Phúc lợi"
-Content: "Nhân viên chính thức được hỗ trợ 500,000 VND/tháng tiền ăn trưa."
+Chunk_ID: UUIDv7-example
+Document_Title: "Quyet dinh 45 ve Quy che Phuc loi"
+Content: "Nhan vien chinh thuc duoc ho tro 500,000 VND/thang tien an trua."
 ---
-Chunk_ID: <UUIDv7>
-Document_Title: "Chính sách thử việc và Học việc v2"
-Content: "Nhân viên thử việc không được hưởng phụ cấp ăn trưa."
 
 [Target User Query]
-"Mình là nhân viên mới đang thử việc thì có được tiền ăn trưa không?"
+"Minh dang thu viec thi co duoc tien an trua khong?"
+```
 """
 
 GENERATE_RESPONSE_USER_PROMPT = """

@@ -15,8 +15,12 @@ from app.ai_brain.prompts.generate_response_prompt import (
     GENERATE_RESPONSE_USER_PROMPT,
 )
 from app.ai_brain.prompts.rewrite_query_prompt import (
-    REWRITE_QUERY_SYSTEM_PROMPT,
-    REWRITE_QUERY_USER_PROMPT,
+    # Full rewrite (toàn bộ câu hỏi gốc + sub-queries)
+    REWRITE_QUERY_FULL_SYSTEM_PROMPT,
+    REWRITE_QUERY_FULL_USER_PROMPT,
+    # Partial rewrite (chỉ reformulate các sub-query thất bại)
+    REWRITE_QUERY_PARTIAL_SYSTEM_PROMPT,
+    REWRITE_QUERY_PARTIAL_USER_PROMPT,
 )
 
 __all__ = [
@@ -28,6 +32,8 @@ __all__ = [
     "DIRECT_RESPONSE_GENERATOR_USER_PROMPT",
     "GENERATE_RESPONSE_SYSTEM_PROMPT",
     "GENERATE_RESPONSE_USER_PROMPT",
-    "REWRITE_QUERY_SYSTEM_PROMPT",
-    "REWRITE_QUERY_USER_PROMPT",
+    "REWRITE_QUERY_FULL_SYSTEM_PROMPT",
+    "REWRITE_QUERY_FULL_USER_PROMPT",
+    "REWRITE_QUERY_PARTIAL_SYSTEM_PROMPT",
+    "REWRITE_QUERY_PARTIAL_USER_PROMPT",
 ]

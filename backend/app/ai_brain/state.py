@@ -35,9 +35,20 @@ class AgentState(TypedDict):
 
     # ── Retrieval ─────────────────────────────────────────────────────────
     retrieved_chunks: list[RetrievalResult]   # Raw output từ hybrid search
-    reranked_chunks: list[RetrievalResult]    # Sau khi qua CrossEncoder reranker
+    reranked_chunks: list[RetrievalResult]    # Sau khi qua CrossEncoder reranker (flat, compat)
     confidence_score: float
     retry_count: int
+
+    # ── Per-subquery structured retrieval ─────────────────────────────────
+    # Mỗi entry: {"sub_query_id": int, "sub_query_text": str,
+    #             "chunks": list[dict], "best_score": float}
+    sub_query_chunks: list[dict]
+
+    # IDs của sub-query có best_score < threshold sau rerank
+    failed_sub_query_ids: list[int]
+
+    # IDs của sub-query đã pass threshold (dùng để skip retrieval khi partial retry)
+    passed_sub_query_ids: list[int]
 
     # ── Cache ─────────────────────────────────────────────────────────────
     cache_hit: bool
