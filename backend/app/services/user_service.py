@@ -237,8 +237,9 @@ class UserService:
         )
 
     async def update_user(
-        self, user_id: str, data: UserUpdate | MyProfileUpdate, tenant_id: str | None = None,
-        update_my_profile: bool = False, client_ip: str | None = None
+        self, user_id: str, data: UserUpdate | MyProfileUpdate,
+        tenant_id: str | None = None, update_my_profile: bool = False,
+        client_ip: str | None = None, user_agent: str | None = None
     ) -> UserResponse:
         existing = await self.repo.get_user_by_id(user_id)
         if existing is None or existing.tenant_id != tenant_id:
@@ -254,6 +255,7 @@ class UserService:
                         "tenant_id": tenant_id
                     },
                     ip_address=client_ip,
+                    user_agent=user_agent,
                     log_level=LogLevel.WARNING
                 )
             raise NotFoundError()
@@ -279,6 +281,7 @@ class UserService:
                                 "tenant_id": tenant_id
                             },
                             ip_address=client_ip,
+                            user_agent=user_agent,
                             log_level=LogLevel.WARNING
                         )
                     raise UserAlreadyExistsError()
@@ -443,7 +446,8 @@ class UserService:
     
     async def change_my_password(
         self, user_id: str, old_password: str, new_password: str,
-        tenant_id: str | None = None, client_ip: str | None = None
+        tenant_id: str | None = None, client_ip: str | None = None,
+        user_agent: str | None = None
     ) -> UserResponse:
         existing = await self.repo.get_user_by_id(user_id)
         if existing is None or existing.tenant_id != tenant_id:
@@ -458,6 +462,7 @@ class UserService:
                     "tenant_id": tenant_id
                 },
                 ip_address=client_ip,
+                user_agent=user_agent,
                 log_level=LogLevel.WARNING
             )
             raise NotFoundError()
@@ -474,6 +479,7 @@ class UserService:
                     "tenant_id": tenant_id
                 },
                 ip_address=client_ip,
+                user_agent=user_agent,
                 log_level=LogLevel.WARNING
             )
             raise InvalidPasswordError()

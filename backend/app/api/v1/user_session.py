@@ -4,6 +4,7 @@ from fastapi import (
 from app.services import UserSessionService, NotFoundError
 from app.dependencies import get_user_session_service
 from app.core.logging import logger
+from app.utils.request import get_client_ip, get_user_agent
 
 router = APIRouter()
 
@@ -20,7 +21,8 @@ async def revoke_session(
         user_id = request.state.user["id"]
         tenant_id = request.state.user.get("tenant_id")
         jti = request.state.jti
-        client_ip = request.client.host if request.client else None
+        client_ip = get_client_ip(request)
+        user_agent = get_user_agent(request)
         
         return await user_session_service.revoke_session(
             session_id=session_id,
@@ -28,6 +30,7 @@ async def revoke_session(
             tenant_id=tenant_id,
             jti=jti,
             client_ip=client_ip,
+            user_agent=user_agent,
             background_tasks=background_tasks
         )
     except NotFoundError:

@@ -76,6 +76,7 @@ class AuthService:
                     "tenant_domain": tenant_domain if tenant_domain else "Global Admin"
                 },
                 ip_address=client_ip,
+                user_agent=raw_user_agent,
                 log_level=LogLevel.WARNING
             )
             raise InvalidCredentialsError()
@@ -135,6 +136,7 @@ class AuthService:
                 "tenant_domain": tenant_domain if tenant_domain else "Global Admin"
             },
             ip_address=client_ip,
+            user_agent=raw_user_agent,
             log_level=LogLevel.INFO
         )
 
@@ -240,6 +242,7 @@ class AuthService:
         self, refresh_token: str, 
         user_id: str, tenant_id: str, 
         client_ip: str | None = None, 
+        user_agent: str | None = None,
         background_tasks: BackgroundTasks = None
     ):
         token_payload = verify_token(refresh_token)
@@ -258,7 +261,9 @@ class AuthService:
             tenant_id=tenant_id,
             action="user.logout",
             resource="auth",
-            ip_address=client_ip
+            ip_address=client_ip,
+            user_agent=user_agent,
+            log_level=LogLevel.INFO
         )
         
         return {"message": "Logout successful"}

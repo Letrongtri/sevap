@@ -18,6 +18,7 @@ from app.core.config import settings
 from app.api.v1.api import api_router
 from app.services import geoip_service
 from app.ai_brain.graph.hr_graph import build_hr_graph
+from app.utils.request import get_client_ip, get_user_agent
 
 # Load environment variables from .env file
 load_dotenv()
@@ -94,9 +95,12 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         JSONResponse: A formatted error response
     """
     # Log the validation error
+    client_ip = get_client_ip(request)
+    user_agent = get_user_agent(request)
     logger.error(
         "validation_error",
-        client_host=request.client.host if request.client else "unknown",
+        client_host=client_ip,
+        user_agent=user_agent,
         path=request.url.path,
         errors=str(exc.errors()),
     )

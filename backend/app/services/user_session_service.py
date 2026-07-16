@@ -9,7 +9,8 @@ from app.schemas import (
 from app.services.activity_log_service import ActivityLogService
 from app.services.exceptions import NotFoundError
 from app.services.geoip_service import geoip_service
-from app.utils.session import parse_device_info, calculate_status
+from app.utils.session import calculate_status
+from app.utils.device import parse_device_info
 
 class UserSessionService:
     def __init__(self, session_repo: UserSessionRepository):
@@ -76,6 +77,7 @@ class UserSessionService:
         tenant_id: str | None,
         jti: str,
         client_ip: str | None,
+        user_agent: str | None,
         background_tasks: BackgroundTasks
     ):
         # Check if session belongs to user
@@ -94,7 +96,8 @@ class UserSessionService:
                 action="session.revoke.fail",
                 resource="session",
                 meta_data={"session_id": session_id},
-                ip_address=client_ip
+                ip_address=client_ip,
+                user_agent=user_agent
             )
             raise NotFoundError()
         
@@ -109,7 +112,8 @@ class UserSessionService:
             action="session.revoke.success",
             resource="session",
             meta_data={"session_id": session_id},
-            ip_address=client_ip
+            ip_address=client_ip,
+            user_agent=user_agent
         )
 
         return {

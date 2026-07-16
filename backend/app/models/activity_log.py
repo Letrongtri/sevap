@@ -16,6 +16,7 @@ class ActivityLog(Base):
     resource = Column(String(128))
     meta_data = Column(JSONB)
     ip_address = Column(String(64))
+    user_agent = Column(String(512), nullable=True)
     log_level = Column(String(32), default="INFO", nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

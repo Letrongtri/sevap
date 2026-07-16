@@ -5,6 +5,7 @@ from jose import JWTError
 from app.utils.auth import verify_token
 from app.core.enum import LogLevel, PermissionResource, PermissionAction
 from app.services.activity_log_service import ActivityLogService
+from app.utils.request import get_client_ip, get_user_agent
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -13,6 +14,8 @@ async def get_current_user(
     background_tasks: BackgroundTasks,
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
 ):
+    client_ip = get_client_ip(request)
+    user_agent = get_user_agent(request)
     try:
         token = None
         if credentials:
@@ -82,10 +85,10 @@ async def get_current_user(
             action="security.jwt_signature_error",
             resource="auth",
             meta_data={
-                "error": str(e),
-                "ip": request.client.host if request.client else None
+                "error": str(e)
             },
-            ip_address=request.client.host if request.client else None,
+            ip_address=client_ip,
+            user_agent=user_agent,
             log_level="ERROR"
         )
         raise HTTPException(
@@ -103,6 +106,9 @@ def check_permission(
         background_tasks: BackgroundTasks,
         current_user: dict = Depends(get_current_user)
     ):
+        client_ip = get_client_ip(request)
+        user_agent = get_user_agent(request)
+
         res_val = resource.value if hasattr(resource, 'value') else str(resource)
         act_val = action.value if hasattr(action, 'value') else str(action)
         required_perm = f"{res_val}:{act_val}"
@@ -119,10 +125,10 @@ def check_permission(
                 resource=res_val,
                 meta_data={
                     "action": act_val,
-                    "user_roles": current_user.get("roles"),
-                    "ip": request.client.host if request.client else None
+                    "user_roles": current_user.get("roles")
                 },
-                ip_address=request.client.host if request.client else None,
+                ip_address=client_ip,
+                user_agent=user_agent,
                 log_level=LogLevel.WARNING
             )
             raise HTTPException(
@@ -144,10 +150,10 @@ def check_permission(
             resource=res_val,
             meta_data={
                 "action": act_val,
-                "user_roles": current_user.get("roles"),
-                "ip": request.client.host if request.client else None
+                "user_roles": current_user.get("roles")
             },
-            ip_address=request.client.host if request.client else None,
+            ip_address=client_ip,
+            user_agent=user_agent,
             log_level=LogLevel.WARNING
         )
         raise HTTPException(

@@ -6,16 +6,16 @@ and token verification.
 
 from fastapi import APIRouter, HTTPException, Depends, Request, BackgroundTasks
 
-from app.models import User
 from app.services import (
     AuthService,
     InvalidCredentialsError,
     InvalidTokenError,
     NotFoundError
 )
-from app.schemas import LoginResponse, LoginForm, RefreshTokenRequest, UserResponse, UserInfoResponse, RefreshTokenResponse
+from app.schemas import LoginResponse, LoginForm, RefreshTokenRequest, UserResponse, RefreshTokenResponse
 from app.dependencies import get_auth_service, get_current_user
 from app.core.logging import logger
+from app.utils.request import get_client_ip, get_user_agent
 
 router = APIRouter()
 
@@ -41,13 +41,9 @@ async def login(
         HTTPException: If credentials are invalid
     """
     try:
-        forwarded_for = request.headers.get("x-forwarded-for")
-        if forwarded_for:
-            client_ip = forwarded_for.split(",")[0].strip()
-        else:
-            client_ip = request.client.host if request.client else None
+        client_ip = get_client_ip(request)
+        raw_user_agent = get_user_agent(request)
 
-        raw_user_agent = request.headers.get("user-agent", "Unknown Agent")
         return await auth_service.login(
             data.employee_code, 
             data.password,
@@ -95,13 +91,15 @@ async def logout(
     try:
         user_id = current_user.get("user_id")
         tenant_id = current_user.get("tenant_id")
-        client_ip = request.client.host if request.client else None
+        client_ip = get_client_ip(request)
+        user_agent = get_user_agent(request)
         
         return await auth_service.logout(
             refresh_token=data.refresh_token, 
             user_id=user_id, 
             tenant_id=tenant_id, 
             client_ip=client_ip, 
+            user_agent=user_agent,
             background_tasks=background_tasks
         )
     except NotFoundError:
