@@ -23,7 +23,7 @@ import {
     adminRolesRoute,
     adminDepartmentsRoute,
     adminJobTitlesRoute,
-    // adminLogsRoute,
+    tenantLogsRoute,
 } from './tenantAdminRoutes'
 import { globalAdminLayoutRoute, globalAdminRoutes } from './globalAdminRoutes'
 
@@ -62,7 +62,7 @@ const routeTree = rootRoute.addChildren([
             adminRolesRoute,
             adminDepartmentsRoute,
             adminJobTitlesRoute,
-            // adminLogsRoute,
+            tenantLogsRoute,
         ]),
 
         // Zone 4 — Global Admin (renders AdminShell directly)

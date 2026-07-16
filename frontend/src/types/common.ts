@@ -52,3 +52,9 @@ export const ALLOWED_DOCUMENT_FILE_TYPES = [
 
 export type AllowedDocumentFileType =
     (typeof ALLOWED_DOCUMENT_FILE_TYPES)[number]
+
+export const LOG_LEVELS = ['info', 'warning', 'error'] as const
+export type LogLevel = (typeof LOG_LEVELS)[number]
+
+export const SORT_ORDERS = ['asc', 'desc'] as const
+export type SortOrder = (typeof SORT_ORDERS)[number]

@@ -3,6 +3,18 @@ export const formatDateTimeToDDMMYYYY = (dateTime: string): string => {
     const date = new Date(dateTime)
     return date.toLocaleDateString('vi-VN')
 }
+
+export const formatDateTimeToDDMMYYYYHHMMSS = (dateTime: string): string => {
+    const date = new Date(dateTime)
+    const formattedDate = date.toLocaleDateString('vi-VN')
+    const formattedTime = date.toLocaleTimeString('vi-VN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+    })
+    return `${formattedDate} ${formattedTime}`
+}
+
 export function formatBytes(bytes: number | null | undefined, decimals = 2) {
     if (!bytes) return '0 Bytes'
     const k = 1024

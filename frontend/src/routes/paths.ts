@@ -23,7 +23,7 @@ export const PRIVATE_ROUTES = {
     ADMIN_ROLES: '/admin/roles',
     ADMIN_DEPARTMENTS: '/admin/departments',
     ADMIN_JOB_TITLES: '/admin/job-titles',
-    ADMIN_LOGS: '/admin/logs',
+    TENANT_LOGS: '/admin/logs',
 
     // ── Zone 4: Global Admin ──────────────────────────────────
     GLOBAL_DASHBOARD: '/global-admin/dashboard',

@@ -17,7 +17,7 @@ const AccountsPage = lazyPage(() => import('../pages/AccountsPage'))
 const RolesPage = lazyPage(() => import('../pages/RolesPage'))
 const DepartmentsPage = lazyPage(() => import('../pages/DepartmentsPage'))
 const JobTitlesPage = lazyPage(() => import('../pages/JobTitlesPage'))
-// const ActivityLogsPage = lazyPage(() => import('../pages/ActivityLogsPage'))
+const TenantLogsPage = lazyPage(() => import('../pages/TenantLogPage'))
 
 /** Zone 3 layout route — admin-only permission guard + admin shell */
 export const tenantAdminLayoutRoute = createRoute({
@@ -51,11 +51,11 @@ export const adminJobTitlesRoute = createRoute({
     component: JobTitlesPage,
 })
 
-// export const adminLogsRoute = createRoute({
-//     getParentRoute: () => tenantAdminLayoutRoute,
-//     path: PRIVATE_ROUTES.ADMIN_LOGS,
-//     component: ActivityLogsPage,
-// })
+export const tenantLogsRoute = createRoute({
+    getParentRoute: () => tenantAdminLayoutRoute,
+    path: PRIVATE_ROUTES.TENANT_LOGS,
+    component: TenantLogsPage,
+})
 
 export const tenantAdminRoutes = [
     tenantAdminLayoutRoute,
@@ -63,5 +63,5 @@ export const tenantAdminRoutes = [
     adminRolesRoute,
     adminDepartmentsRoute,
     adminJobTitlesRoute,
-    // adminLogsRoute,
+    tenantLogsRoute,
 ] as const
