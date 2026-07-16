@@ -42,7 +42,8 @@ from .global_admin_schema import (
 from .base_schema import PaginationQuery, PaginationResponse
 from .activity_log_schema import (
     ActivityLogCreate, ActivityLogResponse, 
-    ActivityLogQuery, ActivityLogPaginatedResponse
+    ActivityLogQuery, ActivityLogPaginatedResponse,
+    ActivityLogDetailResponse
 )
 from .directory_schema import DirectoryOverviewResponse
 from .user_session_schema import (

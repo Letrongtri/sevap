@@ -2,13 +2,16 @@ import math
 from fastapi import BackgroundTasks
 from app.schemas import (
     ActivityLogResponse, ActivityLogPaginatedResponse,
-    PaginationQuery, ActivityLogQuery, PaginationResponse
+    PaginationQuery, ActivityLogQuery, PaginationResponse,
+    ActivityLogDetailResponse
 )
 from app.services.exceptions import NotFoundError
 from app.repositories import ActivityLogRepository
 from app.db.session import AsyncSessionLocal
 from app.models import ActivityLog
 from app.core.logging import logger
+from app.services.geoip_service import geoip_service
+from app.utils.device import parse_device_info
 
 class ActivityLogService:
     def __init__(self, activity_log_repo: ActivityLogRepository):
@@ -22,6 +25,7 @@ class ActivityLogService:
         resource: str | None,
         meta_data: dict | None,
         ip_address: str | None,
+        user_agent: str | None,
         log_level: str
     ):
         try:
@@ -34,6 +38,7 @@ class ActivityLogService:
                     resource=resource,
                     meta_data=meta_data,
                     ip_address=ip_address,
+                    user_agent=user_agent,
                     log_level=log_level
                 )
                 await repo.create_activity_log(activity_log)
@@ -56,6 +61,7 @@ class ActivityLogService:
         resource: str | None = None,
         meta_data: dict | None = None,
         ip_address: str | None = None,
+        user_agent: str | None = None,
         log_level: str = "INFO"
     ):
         if background_tasks is not None:
@@ -67,6 +73,7 @@ class ActivityLogService:
                 resource=resource,
                 meta_data=meta_data,
                 ip_address=ip_address,
+                user_agent=user_agent,
                 log_level=log_level
             )
         else:
@@ -79,20 +86,26 @@ class ActivityLogService:
                     resource=resource,
                     meta_data=meta_data,
                     ip_address=ip_address,
+                    user_agent=user_agent,
                     log_level=log_level
                 )
             )
     
     async def get_activity_log_by_id(
-        self, tenant_id: str | None, activity_log_id: str
-    ):
-        log = await self.repo.get_activity_log_by_id(
-            activity_log_id
-        )
-        if not log or (tenant_id is not None and log.tenant_id != tenant_id):
+        self, activity_log_id: str, tenant_id: str | None,
+        is_global_only: bool = False
+    ) -> ActivityLogDetailResponse:
+        log = await self.repo.get_activity_log_by_id(activity_log_id, tenant_id)
+        if not log:
+            raise NotFoundError()
+
+        if is_global_only and log.tenant_id is not None:
             raise NotFoundError()
         
-        return ActivityLogResponse.model_validate(log)
+        log.location = geoip_service.get_location(log.ip_address) if log.ip_address else None
+        log.device = parse_device_info(log.user_agent) if log.user_agent else None
+
+        return ActivityLogDetailResponse.model_validate(log)
     
     async def get_all_activity_logs(
         self, tenant_id: str | None, query: ActivityLogQuery, 
@@ -111,6 +124,8 @@ class ActivityLogService:
             end_date=query.end_date,
             limit=pagination.limit,
             offset=skip,
+            sort_by=query.sort_by,
+            sort_order=query.sort_order,
             is_global_only=is_global_only
         )
  

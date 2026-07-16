@@ -78,6 +78,10 @@ class TenantStatus(str, Enum):
     DELETED = "deleted"
 
 class LogLevel(str, Enum):
-    INFO = "INFO"
-    WARNING = "WARNING"
-    ERROR = "ERROR"
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+
+class SortOrder(str, Enum):
+    ASC = "asc"
+    DESC = "desc"

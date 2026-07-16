@@ -1,12 +1,12 @@
 from typing import Annotated
 from fastapi import APIRouter, HTTPException, Depends, Request, status
 
-from app.services import ActivityLogService
+from app.services import ActivityLogService, NotFoundError
 from app.schemas import (
     ActivityLogQuery,
     ActivityLogPaginatedResponse,
-    ActivityLogResponse,
-    PaginationQuery
+    PaginationQuery,
+    ActivityLogDetailResponse
 )
 from app.dependencies import get_activity_log_service, check_permission
 from app.core.logging import logger
@@ -62,7 +62,7 @@ async def get_tenant_activity_logs(
 
 @router.get(
     "/{log_id}", 
-    response_model=ActivityLogResponse,
+    response_model=ActivityLogDetailResponse,
     dependencies=[Depends(check_permission(
         PermissionResource.ACTIVITY_LOGS, PermissionAction.READ
     ))]
@@ -73,24 +73,27 @@ async def get_activity_log(
     activity_log_service: ActivityLogService = Depends(get_activity_log_service)
 ):
     """Retrieve details of a specific activity log."""
+    tenant_id = request.state.tenant_id
+    current_user = request.state.user
     try:
-        tenant_id = request.state.tenant_id
-        current_user = request.state.user
-        if current_user.get("is_global_admin"):
-            log = await activity_log_service.repo.get_activity_log_by_id(log_id)
-            if not log:
-                raise HTTPException(status_code=404, detail="Activity log not found")
-            # Restrict access to conversation and document resource details for global admin
-            if log.tenant_id is not None and log.resource in ["conversation", "document"]:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Global Admins are restricted from viewing detailed tenant conversation or document logs."
-                )
-            return ActivityLogResponse.model_validate(log)
-            
-        return await activity_log_service.get_activity_log_by_id(tenant_id, log_id)
-    except HTTPException:
-        raise
+
+        return await activity_log_service.get_activity_log_by_id(
+            log_id,
+            tenant_id=tenant_id,
+            is_global_only=current_user.get("is_global_admin")
+        )
+        
+    except NotFoundError:
+        logger.warning(
+            "get_activity_log_by_id_not_found",
+            log_id=log_id,
+            user_id=current_user.get("user_id"),
+            tenant_id=tenant_id,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Activity log not found"
+        )
     except Exception as exc:
         logger.error(
             "get_activity_log_by_id_failed",
