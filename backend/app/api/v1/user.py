@@ -30,23 +30,28 @@ from app.dependencies import (
 from app.core.enum import PermissionResource, PermissionAction
 from app.decorators import log_activity
 from app.core.logging import logger
+from app.utils.request import get_client_ip, get_user_agent
 
 router = APIRouter()
 
 @router.patch("", response_model=UserResponse)
+@log_activity(action="user.update_my_profile", resource="user")
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def update_my_profile(
     request: Request,
     data: MyProfileUpdate,
+    background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_current_user),
     user_service: UserService = Depends(get_user_service),
 ):
     user_id = current_user["user_id"]
     tenant_id = current_user.get("tenant_id")
+    client_ip = get_client_ip(request)
+    user_agent = get_user_agent(request)
     try:
         return await user_service.update_user(
-            user_id, data, tenant_id, update_my_profile=True, 
-            client_ip=request.client.host
+            user_id, data, tenant_id, update_my_profile=True,
+            client_ip=client_ip, user_agent=user_agent
         )
     except NotFoundError:
         logger.error("update_my_profile_not_found", user_id=user_id)
@@ -55,19 +60,21 @@ async def update_my_profile(
         logger.error("update_my_profile_already_exists", user_id=user_id)
         raise HTTPException(status_code=409, detail="User already exists")
     except Exception:
-        logger.error(
-            "update_user_failed", 
-            user_id=user_id, 
-            exc_info=True
-        )
+        logger.error("update_user_failed", user_id=user_id, exc_info=True)
         raise HTTPException(status_code=422, detail="Failed to update user")
 
 
 @router.patch("/change-password", response_model=UserResponse)
+@log_activity(
+    action="user.change_my_password",
+    resource="user",
+    include_request_body=False,
+)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def change_my_password(
     request: Request,
     data: UserUpdatePassword,
+    background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_current_user),
     user_service: UserService = Depends(get_user_service),
 ):
@@ -83,23 +90,21 @@ async def change_my_password(
     """
     user_id = current_user["user_id"]
     tenant_id = current_user.get("tenant_id")
+    client_ip = get_client_ip(request)
+    user_agent = get_user_agent(request)
     try:
         return await user_service.change_my_password(
             user_id, data.old_password, data.new_password,
-            tenant_id, client_ip=request.client.host
+            tenant_id, client_ip=client_ip, user_agent=user_agent
         )
     except NotFoundError:
         logger.error("change_my_password_user_not_found", user_id=user_id)
         raise HTTPException(status_code=404, detail="User not found")
     except InvalidPasswordError:
         logger.error("change_my_password_user_invalid_password", user_id=user_id)
-        raise HTTPException(status_code=404, detail="Invalid password")
+        raise HTTPException(status_code=401, detail="Invalid password")
     except Exception:
-        logger.error(
-            "change_my_password_failed", 
-            user_id=user_id, 
-            exc_info=True
-        )
+        logger.error("change_my_password_failed", user_id=user_id, exc_info=True)
         raise HTTPException(status_code=422, detail="Failed to change user password")
 
 
@@ -199,11 +204,10 @@ async def get_all_users(
 @log_activity(
     action="user.create",
     resource="user",
-    meta_extractor=lambda res, *args, **kwargs: {
-        "created_user_id": res.id, 
-        "employee_code": res.employee_code, 
-        "full_name": res.full_name
-    }
+    # employee_code, full_name, email, department_id, job_title_id, role_ids
+    # sẽ tự động được lấy từ request body (UserCreate schema).
+    # meta_extractor bổ sung thêm id của user vừa tạo từ response.
+    meta_extractor=lambda res, *args, **kwargs: {"created_user_id": res.id},
 )
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def create_user(
@@ -274,9 +278,8 @@ async def get_user(
 @log_activity(
     action="user.update",
     resource="user",
-    meta_extractor=lambda res, *args, **kwargs: {
-        "updated_user_id": kwargs.get("user_id")
-    }
+    # UserUpdate fields tự động vào meta_data, meta_extractor bổ sung target user_id.
+    meta_extractor=lambda res, *args, **kwargs: {"updated_user_id": kwargs.get("user_id")},
 )
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def update_user(
@@ -288,7 +291,11 @@ async def update_user(
 ):
     try:
         tenant_id = request.state.tenant_id
-        return await user_service.update_user(user_id, data, tenant_id)
+        client_ip = get_client_ip(request)
+        user_agent = get_user_agent(request)
+        return await user_service.update_user(
+            user_id, data, tenant_id, client_ip=client_ip, user_agent=user_agent
+        )
     except NotFoundError:
         logger.error("update_user_not_found", user_id=user_id)
         raise HTTPException(status_code=404, detail="User not found")
