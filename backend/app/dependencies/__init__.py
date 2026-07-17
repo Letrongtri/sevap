@@ -1,7 +1,8 @@
 from .user import get_user_service
 from .security import (
     get_current_user,
-    check_permission
+    check_permission,
+    check_role
 )
 from .role import get_role_service
 from .document import get_document_service

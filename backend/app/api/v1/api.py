@@ -22,7 +22,8 @@ from app.api.v1.directory import router as directory_router
 from app.api.v1.user_session import router as user_session_router
 
 from app.core.logging import logger
-from app.dependencies import get_current_user
+from app.core.enum import DefaultRole
+from app.dependencies import get_current_user, check_role
 
 api_router = APIRouter()
 
@@ -36,8 +37,8 @@ api_router.include_router(conversation_router, prefix="/conversations", tags=["c
 api_router.include_router(department_router, prefix="/departments", tags=["departments"], dependencies=[Depends(get_current_user)])
 api_router.include_router(job_title_router, prefix="/job_titles", tags=["job_titles"], dependencies=[Depends(get_current_user)])
 api_router.include_router(permission_router, prefix="/permissions", tags=["permissions"], dependencies=[Depends(get_current_user)])
-api_router.include_router(global_admin_router, prefix="/global-admin", tags=["global-admin"], dependencies=[Depends(get_current_user)])
-api_router.include_router(global_log_router, prefix="/global-admin/logs", tags=["global-admin-logs"], dependencies=[Depends(get_current_user)])
+api_router.include_router(global_admin_router, prefix="/global-admin", tags=["global-admin"], dependencies=[Depends(get_current_user), Depends(check_role(DefaultRole.GLOBAL_ADMIN.value))])
+api_router.include_router(global_log_router, prefix="/global-admin/logs", tags=["global-admin-logs"], dependencies=[Depends(get_current_user), Depends(check_role(DefaultRole.GLOBAL_ADMIN.value))])
 api_router.include_router(tenant_log_router, prefix="/logs", tags=["tenant-logs"], dependencies=[Depends(get_current_user)])
 api_router.include_router(directory_router, prefix="/directory", tags=["directory"], dependencies=[Depends(get_current_user)])
 api_router.include_router(user_session_router, prefix="/sessions", tags=["sessions"], dependencies=[Depends(get_current_user)])

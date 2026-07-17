@@ -161,3 +161,40 @@ def check_permission(
             detail=f"Không có quyền thực hiện hành động này ({required_perm})"
         )
     return dependency
+
+def check_role(
+    role: str
+):
+    async def dependency(
+        request: Request,
+        background_tasks: BackgroundTasks,
+        current_user: dict = Depends(get_current_user)
+    ):
+        client_ip = get_client_ip(request)
+        user_agent = get_user_agent(request)
+
+        user_roles = current_user.get("roles", [])
+
+        if role in user_roles:
+            return current_user
+
+        ActivityLogService.log(
+            background_tasks=None,
+            user_id=current_user.get("user_id"),
+            tenant_id=current_user.get("tenant_id"),
+            action="security.unauthorized_access_attempt",
+            resource="auth",
+            meta_data={
+                "action": "check_role",
+                "user_roles": user_roles,
+                "required_role": role
+            },
+            ip_address=client_ip,
+            user_agent=user_agent,
+            log_level=LogLevel.WARNING
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Không có quyền thực hiện hành động này (vai trò: {role})"
+        )
+    return dependency
