@@ -4,7 +4,8 @@ from fastapi import BackgroundTasks
 from app.repositories import UserSessionRepository
 from app.schemas import (
     UserSessionResponse, UserSessionPaginatedResponse,
-    PaginationQuery, PaginationResponse
+    PaginationQuery, PaginationResponse, UserSessionAdminQuery,
+    UserSessionAdminResponse, UserSessionAdminPaginatedResponse
 )
 from app.services.activity_log_service import ActivityLogService
 from app.services.exceptions import NotFoundError
@@ -120,3 +121,55 @@ class UserSessionService:
             "is_current_session": session.jti == jti
         }
         
+    async def get_tenant_user_sessions(
+        self,
+        tenant_id: str,
+        query: UserSessionAdminQuery,
+        current_user_id: str,
+        pagination: PaginationQuery
+    ) -> UserSessionAdminPaginatedResponse:
+        skip = (pagination.page - 1) * pagination.limit
+        
+        raw_rows, total_records = await self.session_repo.get_tenant_user_sessions(
+            tenant_id=tenant_id,
+            current_user_id=current_user_id,
+            user_id=query.user_id,
+            status=query.status,
+            skip=skip,
+            limit=pagination.limit
+        )
+        
+        total_pages = (
+            math.ceil(total_records / pagination.limit) 
+            if total_records > 0 else 0
+        )
+        
+        formatted_sessions: list[UserSessionAdminResponse] = []
+        for row in raw_rows:
+            roles_array = row.roles_list.split(",") if row.roles_list else ["employee"]
+
+            session_resp = UserSessionAdminResponse(
+                id=row.id,
+                user_id=row.user_id,
+                full_name=row.full_name,
+                email=row.email,
+                roles=roles_array,
+                tenant_id=row.tenant_id,
+                ip_address=row.ip_address,
+                user_agent=row.user_agent,
+                device=parse_device_info(row.user_agent),
+                location=geoip_service.get_location(row.ip_address),
+                status=row.computed_status,
+                is_revoked=row.is_revoked
+            )
+            formatted_sessions.append(session_resp)
+        
+        return UserSessionAdminPaginatedResponse(
+            sessions=formatted_sessions,
+            pagination=PaginationResponse(
+                total=total_records,
+                page=pagination.page,
+                limit=pagination.limit,
+                total_pages=total_pages
+            )
+        )

@@ -1,8 +1,9 @@
+from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import func
+from sqlalchemy import func, and_, or_, case, literal
 
-from app.models import UserSession
+from app.models import UserSession, User, UserRole, Role
 
 class UserSessionRepository:
     def __init__(self, db: AsyncSession):
@@ -66,3 +67,98 @@ class UserSessionRepository:
 
         result = await self.db.execute(stmt)
         return result.scalars().all(), total_records
+
+    async def get_tenant_user_sessions(
+        self,
+        tenant_id: str,
+        current_user_id: str,
+        user_id: str | None,
+        status: str | None,
+        skip: int,
+        limit: int
+    ) -> tuple[list[tuple], int]:
+        """
+        Truy vấn toàn bộ siêu dữ liệu phiên làm việc, thông tin nhân viên và vai trò liên quan.
+        Áp dụng Aggregate function string_agg của Postgres để nén danh sách quyền hạn gọn vào 1 single query.
+        """
+        now_utc = datetime.now(timezone.utc)
+
+        # 1. Xây dựng mệnh đề lọc động (Dynamic Where Clauses)
+        where_conditions = [
+            UserSession.tenant_id == tenant_id,
+            UserSession.user_id != current_user_id
+        ]
+
+        if user_id is not None:
+            where_conditions.append(UserSession.user_id == user_id)
+
+        if status == "active":
+            where_conditions.append(
+                and_(
+                    UserSession.revoked_at.is_(None),
+                    UserSession.expires_at >= now_utc
+                )
+            )
+        elif status == "inactive":
+            where_conditions.append(
+                or_(
+                    UserSession.revoked_at.is_not(None),
+                    UserSession.expires_at < now_utc
+                )
+            )
+
+        # 2. Tạo Subquery để tính tổng số bản ghi (Phục vụ phân trang chính xác)
+        count_stmt = select(func.count(UserSession.id)).where(and_(*where_conditions))
+        total_records = await self.db.scalar(count_stmt) or 0
+
+        if total_records == 0:
+            return [], 0
+
+        # 3. Luồng SQL Core: Kết hợp JOIN 4 tầng phẳng và Gom nhóm chuỗi văn bản (Aggregation)
+        # string_agg biến danh sách Roles của User từ dạng nhiều dòng thành chuỗi "admin, hr_manager"
+        roles_agg = func.string_agg(Role.name, literal(", ")).label("roles_list")
+
+        # Xác định trạng thái logic của phiên (Computed Status)
+        status_case = case(
+            (UserSession.revoked_at.is_not(None), "revoked"),
+            (UserSession.expires_at < now_utc, "expired"),
+            else_="active"
+        ).label("computed_status")
+
+        is_revoked = (UserSession.revoked_at.is_not(None)).label("is_revoked")
+
+        stmt = (
+            select(
+                UserSession.id,
+                UserSession.user_id,
+                User.full_name,
+                User.email,
+                roles_agg,
+                UserSession.tenant_id,
+                UserSession.ip_address,
+                UserSession.user_agent,
+                status_case,
+                is_revoked
+            )
+            .join(User, UserSession.user_id == User.id)
+            .join(UserRole, User.id == UserRole.user_id, isouter=True)
+            .join(Role, UserRole.role_id == Role.id, isouter=True)
+            .where(and_(*where_conditions))
+            .group_by(
+                UserSession.id,
+                UserSession.user_id,
+                User.full_name,
+                User.email,
+                UserSession.tenant_id,
+                UserSession.ip_address,
+                UserSession.user_agent,
+                UserSession.expires_at,
+                UserSession.revoked_at
+            )
+            .order_by(UserSession.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+        )
+
+        result = await self.db.execute(stmt)
+        return result.all(), total_records

@@ -47,7 +47,9 @@ from .activity_log_schema import (
 )
 from .directory_schema import DirectoryOverviewResponse
 from .user_session_schema import (
-    UserSessionResponse, UserSessionPaginatedResponse
+    UserSessionResponse, UserSessionPaginatedResponse,
+    UserSessionAdminResponse, UserSessionAdminPaginatedResponse,
+    UserSessionAdminQuery
 )
 from .tenant_admin_schema import (
     AdminTenantOverviewResponse,

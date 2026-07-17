@@ -1,8 +1,15 @@
+from typing import Annotated
 from fastapi import (
-    APIRouter, Request, Depends, BackgroundTasks, HTTPException
+    APIRouter, Request, Depends, BackgroundTasks, HTTPException,
+    status
 )
+from app.core.enum import DefaultRole
 from app.services import UserSessionService, NotFoundError
-from app.dependencies import get_user_session_service
+from app.schemas import (
+    UserSessionResponse, PaginationQuery, UserSessionAdminQuery,
+    UserSessionAdminPaginatedResponse
+)
+from app.dependencies import get_user_session_service, check_role
 from app.core.logging import logger
 from app.utils.request import get_client_ip, get_user_agent
 
@@ -39,3 +46,35 @@ async def revoke_session(
     except Exception as e:
         logger.error("revoke_session_error", error=str(e), exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error")
+
+@router.get(
+    "/admin", 
+    response_model=UserSessionAdminPaginatedResponse,
+    dependencies=[Depends(check_role(DefaultRole.ADMIN))]
+)
+async def get_tenant_user_sessions(
+    request: Request,
+    query: Annotated[UserSessionAdminQuery, Depends()],
+    pagination: Annotated[PaginationQuery, Depends()],
+    user_session_service: UserSessionService = Depends(get_user_session_service)
+):
+    try:
+        tenant_id = request.state.tenant_id
+        current_user_id = request.state.user["id"]
+
+        return await user_session_service.get_tenant_user_sessions(
+            tenant_id=tenant_id,
+            current_user_id=current_user_id,
+            query=query,
+            pagination=pagination
+        )
+    except Exception as exc:
+        logger.error(
+            "get_tenant_user_sessions_failed",
+            tenant_id=request.state.tenant_id,
+            exc_info=True
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve user sessions"
+        )
