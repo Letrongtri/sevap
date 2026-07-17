@@ -19,6 +19,7 @@ import { privateLayoutRoute } from './privateLayoutRoute'
 import { documentLayoutRoute, documentsRoute } from './documentRoutes'
 import {
     tenantAdminLayoutRoute,
+    tenantAdminDashboardRoute,
     adminAccountsRoute,
     adminRolesRoute,
     adminDepartmentsRoute,
@@ -58,6 +59,7 @@ const routeTree = rootRoute.addChildren([
 
         // Zone 3 — Admin Panel (admin only) (renders AdminShell directly)
         tenantAdminLayoutRoute.addChildren([
+            tenantAdminDashboardRoute,
             adminAccountsRoute,
             adminRolesRoute,
             adminDepartmentsRoute,

@@ -19,6 +19,7 @@ export const PRIVATE_ROUTES = {
     DOCUMENTS: '/documents',
 
     // ── Zone 3: Admin Panel (admin only) ─────────────────────
+    TENANT_ADMIN_DASHBOARD: '/admin/dashboard',
     ADMIN_ACCOUNTS: '/admin/accounts',
     ADMIN_ROLES: '/admin/roles',
     ADMIN_DEPARTMENTS: '/admin/departments',

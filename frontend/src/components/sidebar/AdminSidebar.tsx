@@ -4,6 +4,7 @@ import {
     Building2,
     Briefcase,
     History,
+    LayoutDashboard,
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { PRIVATE_ROUTES } from '../../routes/paths'
@@ -16,6 +17,11 @@ import { SidebarFooter } from './SidebarFooter'
    ============================================================ */
 
 const adminNav = [
+    {
+        label: 'Dashboard',
+        icon: LayoutDashboard,
+        to: PRIVATE_ROUTES.TENANT_ADMIN_DASHBOARD,
+    },
     {
         label: 'User Accounts',
         icon: UserCog,

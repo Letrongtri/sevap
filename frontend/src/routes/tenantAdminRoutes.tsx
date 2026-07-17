@@ -13,6 +13,9 @@ import { AdminSidebar } from '../components/sidebar/AdminSidebar'
    ============================================================ */
 
 // Lazy-loaded admin pages
+const TenantAdminDashboardPage = lazyPage(
+    () => import('../pages/TenantAdminDashboard')
+)
 const AccountsPage = lazyPage(() => import('../pages/AccountsPage'))
 const RolesPage = lazyPage(() => import('../pages/RolesPage'))
 const DepartmentsPage = lazyPage(() => import('../pages/DepartmentsPage'))
@@ -25,6 +28,12 @@ export const tenantAdminLayoutRoute = createRoute({
     id: 'tenant-admin-layout',
     beforeLoad: requirePermissionGuard('users:create'),
     component: () => <ZoneShell SidebarComponent={AdminSidebar} />,
+})
+
+export const tenantAdminDashboardRoute = createRoute({
+    getParentRoute: () => tenantAdminLayoutRoute,
+    path: PRIVATE_ROUTES.TENANT_ADMIN_DASHBOARD,
+    component: TenantAdminDashboardPage,
 })
 
 export const adminAccountsRoute = createRoute({
@@ -59,6 +68,7 @@ export const tenantLogsRoute = createRoute({
 
 export const tenantAdminRoutes = [
     tenantAdminLayoutRoute,
+    tenantAdminDashboardRoute,
     adminAccountsRoute,
     adminRolesRoute,
     adminDepartmentsRoute,

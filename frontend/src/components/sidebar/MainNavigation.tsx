@@ -72,7 +72,7 @@ const MainNavigation = ({
                         <SwitchButton
                             label="Admin Panel"
                             icon={Settings2}
-                            to={PRIVATE_ROUTES.ADMIN_ACCOUNTS}
+                            to={PRIVATE_ROUTES.TENANT_ADMIN_DASHBOARD}
                             collapsed={collapsed}
                         />
                     )}
