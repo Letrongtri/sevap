@@ -14,4 +14,5 @@ from .global_admin_service import GlobalAdminService
 from .activity_log_service import ActivityLogService
 from .directory_service import DirectoryService
 from .user_session_service import UserSessionService
+from .tenant_admin_service import TenantAdminService
 

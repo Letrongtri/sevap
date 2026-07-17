@@ -283,3 +283,12 @@ class UserRepository:
         except Exception as e:
             await self.db.rollback()
             raise e
+
+    async def count_all_users(self, tenant_id: str) -> int:
+        result = await self.db.execute(
+            select(func.count(User.id)).where(
+                User.tenant_id == tenant_id, 
+                User.is_deleted == False
+            )
+        )
+        return result.scalar_one()

@@ -86,3 +86,12 @@ class JobTitleRepository:
         except Exception as e:
             await self.db.rollback()
             raise e
+
+    async def count_all_job_titles(self, tenant_id: str) -> int:
+        result = await self.db.execute(
+            select(func.count(JobTitle.id)).where(
+                JobTitle.tenant_id == tenant_id,
+                JobTitle.is_deleted == False
+            )
+        )
+        return result.scalar_one()

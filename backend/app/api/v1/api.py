@@ -20,6 +20,7 @@ from app.api.v1.global_log import router as global_log_router
 from app.api.v1.tenant_log import router as tenant_log_router
 from app.api.v1.directory import router as directory_router
 from app.api.v1.user_session import router as user_session_router
+from app.api.v1.tenant_admin import router as tenant_admin_router
 
 from app.core.logging import logger
 from app.core.enum import DefaultRole
@@ -42,6 +43,7 @@ api_router.include_router(global_log_router, prefix="/global-admin/logs", tags=[
 api_router.include_router(tenant_log_router, prefix="/logs", tags=["tenant-logs"], dependencies=[Depends(get_current_user)])
 api_router.include_router(directory_router, prefix="/directory", tags=["directory"], dependencies=[Depends(get_current_user)])
 api_router.include_router(user_session_router, prefix="/sessions", tags=["sessions"], dependencies=[Depends(get_current_user)])
+api_router.include_router(tenant_admin_router, prefix="/admin", tags=["tenant-admin"], dependencies=[Depends(get_current_user), Depends(check_role(DefaultRole.ADMIN.value))])
 
 @api_router.get("/health")
 async def health_check():

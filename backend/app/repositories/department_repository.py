@@ -83,3 +83,12 @@ class DepartmentRepository:
         except Exception as e:
             await self.db.rollback()
             raise e
+
+    async def count_all_departments(self, tenant_id: str) -> int:
+        result = await self.db.execute(
+            select(func.count(Department.id)).where(
+                Department.tenant_id == tenant_id,
+                Department.is_deleted == False
+            )
+        )
+        return result.scalar_one()

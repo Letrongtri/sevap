@@ -93,3 +93,14 @@ class RoleRepository:
         except Exception as e:
             await self.db.rollback()
             raise e
+
+    async def count_all_roles(self, tenant_id: str) -> int:
+        result = await self.db.execute(
+            select(func.count(Role.id))
+            .where(
+                Role.tenant_id == tenant_id,
+                Role.is_system == False,
+                Role.is_deleted == False
+            )
+        )
+        return result.scalar_one()

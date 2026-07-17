@@ -2,9 +2,10 @@ from datetime import datetime
 from typing import Set, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import update, or_, func, bindparam
+from sqlalchemy import update, or_, func, bindparam, text
 from sqlalchemy.orm import selectinload
 
+from app.core.enum import DocumentStatus
 from app.models import (
     Document, DocumentChunk, DocumentUserAccess, 
     DocumentRoleAccess, DocumentDepartmentAccess
@@ -248,3 +249,56 @@ class DocumentRepository:
         except Exception as e:
             await self.db.rollback()
             raise e
+
+    async def count_all_documents(self, tenant_id: str) -> int:
+        result = await self.db.execute(
+            select(func.count(Document.id)).where(
+                Document.tenant_id == tenant_id,
+                Document.is_deleted == False,
+                Document.status == DocumentStatus.DONE
+            )
+        )
+        return result.scalar_one()
+
+    async def count_all_embeddings(self, tenant_id: str) -> int:
+        result = await self.db.execute(
+            select(func.count(DocumentChunk.id)).where(
+                DocumentChunk.tenant_id == tenant_id,
+                DocumentChunk.document_id.in_(
+                    select(Document.id).where(
+                        Document.tenant_id == tenant_id,
+                        Document.status == DocumentStatus.DONE
+                    )
+                )
+            )
+        )
+        return result.scalar_one() or 0
+
+    
+    async def get_total_storage(self, tenant_id: str) -> int:
+        """
+        Tính toán tổng dung lượng tệp tin vật lý đã tải lên của một Tenant.
+        Đảm bảo cô lập tuyệt đối và loại bỏ các tài liệu đã bị xóa mềm
+        """
+        stmt = (
+            select(func.sum(Document.file_size).label("total_size"))
+            .where(
+                Document.tenant_id == tenant_id,
+                Document.is_deleted == False
+            )
+        )
+        
+        result = await self.db.execute(stmt)
+        return result.scalar() or 0
+        
+    async def count_documents_by_access_level(self, tenant_id: str) -> int:
+        stmt = (
+            select(Document.access_level, func.count(Document.id))
+            .where(
+                Document.tenant_id == tenant_id,
+                Document.is_deleted == False
+            )
+            .group_by(Document.access_level)
+        )
+        result = await self.db.execute(stmt)
+        return result.all()

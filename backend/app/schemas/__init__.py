@@ -49,6 +49,13 @@ from .directory_schema import DirectoryOverviewResponse
 from .user_session_schema import (
     UserSessionResponse, UserSessionPaginatedResponse
 )
+from .tenant_admin_schema import (
+    AdminTenantOverviewResponse,
+    AdminTenantChatStatisticsQuery,
+    AdminTenantChatStatisticsItem,
+    AdminTenantChatStatisticsResponse,
+    AdminTenantDocumentStatisticsResponse
+)
 
 UserResponse.model_rebuild()
 DepartmentResponse.model_rebuild()
