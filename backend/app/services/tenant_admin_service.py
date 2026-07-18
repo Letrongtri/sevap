@@ -1,8 +1,4 @@
 import asyncio
-import random
-import httpx
-import time
-from datetime import datetime, timedelta
 from app.repositories import (
     UserRepository, RoleRepository, DepartmentRepository,
     JobTitleRepository, DocumentRepository, ConversationRepository,
@@ -10,12 +6,10 @@ from app.repositories import (
 )
 from app.schemas import (
     AdminTenantOverviewResponse, AdminTenantChatStatisticsQuery,
-    AdminTenantChatStatisticsItem, AdminTenantChatStatisticsResponse,
-    AdminTenantDocumentStatisticsResponse
+    AdminTenantChatStatisticsItem, AdminTenantDocumentStatisticsResponse
 )
 from app.core.enum import AccessLevel
 from app.core.logging import logger
-from app.core.config import settings
 from app.utils.datetime import get_statistics_date_range
 
 class TenantAdminService:
@@ -61,7 +55,7 @@ class TenantAdminService:
         self, 
         tenant_id: str, 
         query: AdminTenantChatStatisticsQuery
-    ) -> AdminTenantChatStatisticsResponse:
+    ) -> list[AdminTenantChatStatisticsItem]:
         try:
             group_by = query.group_by
             from_date, to_date = get_statistics_date_range(
@@ -86,6 +80,7 @@ class TenantAdminService:
             for time_bucket, conv_count in conversations_res:
                 clean_key = time_bucket[:10] if time_bucket else "Unknown"
                 merged_data[clean_key] = AdminTenantChatStatisticsItem(
+                    label=clean_key,
                     total_conversations=conv_count,
                     total_messages=0
                 )
@@ -96,11 +91,12 @@ class TenantAdminService:
                     merged_data[clean_key].total_messages = msg_count
                 else:
                     merged_data[clean_key] = AdminTenantChatStatisticsItem(
+                        label=clean_key,
                         total_conversations=0,
                         total_messages=msg_count
                     )
             
-            return AdminTenantChatStatisticsResponse(data=merged_data)
+            return list(merged_data.values())
         except Exception as e:
             logger.error("get_tenant_chat_statistics_failed", error=str(e), exc_info=True)
             raise

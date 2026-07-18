@@ -55,7 +55,6 @@ from .tenant_admin_schema import (
     AdminTenantOverviewResponse,
     AdminTenantChatStatisticsQuery,
     AdminTenantChatStatisticsItem,
-    AdminTenantChatStatisticsResponse,
     AdminTenantDocumentStatisticsResponse
 )
 

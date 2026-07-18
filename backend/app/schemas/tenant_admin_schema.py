@@ -23,11 +23,9 @@ class AdminTenantChatStatisticsQuery(BaseModel):
         return v
 
 class AdminTenantChatStatisticsItem(BaseModel):
+    label: str
     total_conversations: int
     total_messages: int
-
-class AdminTenantChatStatisticsResponse(BaseModel):
-    data: dict[str, AdminTenantChatStatisticsItem]
 
 class AdminTenantDocumentStatisticsResponse(BaseModel):
     public_documents: int

@@ -5,7 +5,7 @@ from app.dependencies import (
 )
 from app.schemas import (
     AdminTenantOverviewResponse, AdminTenantChatStatisticsQuery,
-    AdminTenantChatStatisticsResponse,
+    AdminTenantChatStatisticsItem,
     AdminTenantDocumentStatisticsResponse
 )
 from app.services import (
@@ -46,7 +46,7 @@ async def get_admin_tenant_overview(
 
 @router.get(
     "/dashboard/chats/statistics", 
-    response_model=AdminTenantChatStatisticsResponse
+    response_model=list[AdminTenantChatStatisticsItem]
 )
 async def get_admin_tenant_chat_statistics(
     request: Request,
