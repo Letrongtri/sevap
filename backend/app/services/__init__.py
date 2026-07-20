@@ -15,4 +15,5 @@ from .activity_log_service import ActivityLogService
 from .directory_service import DirectoryService
 from .user_session_service import UserSessionService
 from .tenant_admin_service import TenantAdminService
+from .socket_manager import log_socket_manager
 

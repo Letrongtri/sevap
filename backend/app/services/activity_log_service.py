@@ -1,3 +1,4 @@
+import asyncio
 import math
 from fastapi import BackgroundTasks
 from app.schemas import (
@@ -6,11 +7,12 @@ from app.schemas import (
     ActivityLogDetailResponse
 )
 from app.services.exceptions import NotFoundError
+from app.services.geoip_service import geoip_service
+from app.services.socket_manager import log_socket_manager
 from app.repositories import ActivityLogRepository
 from app.db.session import AsyncSessionLocal
 from app.models import ActivityLog
 from app.core.logging import logger
-from app.services.geoip_service import geoip_service
 from app.utils.device import parse_device_info
 
 class ActivityLogService:
@@ -42,6 +44,15 @@ class ActivityLogService:
                     log_level=log_level
                 )
                 await repo.create_activity_log(activity_log)
+                new_log = await repo.get_activity_log_by_id(activity_log.id, tenant_id)
+                log_response = ActivityLogResponse.model_validate(new_log)
+
+            asyncio.create_task(
+                log_socket_manager.broadcast_new_log(
+                    tenant_id=tenant_id,
+                    new_log=log_response
+                )
+            )
         except Exception:
             logger.error(
                 "failed_to_write_activity_log_bg",
