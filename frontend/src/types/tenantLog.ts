@@ -44,6 +44,11 @@ export interface TenantLogState {
     filters: TenantLogFilters
 }
 
+export type TenantLogWSResponse =
+    | { event: 'HISTORY_LOADED'; data: TenantLogPaginatedResponse; status: 'success' }
+    | { event: 'NEW_ACTIVITY_LOG'; data: TenantLog; status: 'realtime_push' }
+    | { event: 'error'; detail: string; status: 'error' }
+
 export interface TenantLogActions {
     setActiveTenantLogId: (tenantLogId: ID | null) => void
     setUserId: (userId: ID | null) => void

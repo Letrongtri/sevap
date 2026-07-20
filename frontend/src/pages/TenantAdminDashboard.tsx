@@ -3,6 +3,8 @@ import TenantInfoCard from '../components/tenantAdmin/TenantInfoCard'
 import StatCardsRow from '../components/tenantAdmin/StatCardsRow'
 import QueryFrequencyChart from '../components/tenantAdmin/QueryFrequencyChart'
 import DocDistributionChart from '../components/tenantAdmin/DocDistributionChart'
+import ActiveSessionsPanel from '../components/tenantAdmin/ActiveSessionsPanel'
+import AuditLogTable from '../components/tenantAdmin/AuditLogTable'
 import Header from '../components/ui/Header'
 
 export default function TenantAdminDashboard() {
@@ -35,6 +37,16 @@ export default function TenantAdminDashboard() {
                 {/* PAR Gate donut chart takes 1/3 */}
                 <div>
                     <DocDistributionChart />
+                </div>
+            </div>
+
+            {/* ── SECTION 4: Audit + Activity Logs Row ─────────────────────── */}
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+                <div className="lg:col-span-3">
+                    <AuditLogTable />
+                </div>
+                <div className="lg:col-span-2">
+                    <ActiveSessionsPanel />
                 </div>
             </div>
         </div>

@@ -58,3 +58,30 @@ export type LogLevel = (typeof LOG_LEVELS)[number]
 
 export const SORT_ORDERS = ['asc', 'desc'] as const
 export type SortOrder = (typeof SORT_ORDERS)[number]
+
+export type WSStatus = 'CONNECTING' | 'OPEN' | 'CLOSED'
+
+export interface SocketState {
+    socket: WebSocket | null
+    status: WSStatus
+    connect: (token: string, onMessageCallback: (data: any) => void) => void
+    disconnect: () => void
+}
+
+export const ACTION_STYLES: Record<string, string> = {
+    CREATE: 'text-emerald-400',
+    UPDATE: 'text-blue-400',
+    DELETE: 'text-red-400',
+    LOGIN: 'text-violet-400',
+    LOGOUT: 'text-slate-400',
+    VIEW: 'text-sky-400',
+    EXPORT: 'text-amber-400',
+}
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+export const LOG_LEVEL_STYLES: Record<string, string> = {
+    info: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+    warning: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
+    error: 'bg-red-500/10 text-red-400 border border-red-500/20',
+    success: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+}

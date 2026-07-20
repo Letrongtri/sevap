@@ -157,3 +157,64 @@
 .animate-slide-right {
     animation: slideInRight 0.25s ease both;
 }
+
+/* ---- Audit Log: new row slide-in ---- */
+@keyframes logRowIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px) scaleY(0.95);
+        background-color: rgba(99, 102, 241, 0.12);
+    }
+    60% {
+        background-color: rgba(99, 102, 241, 0.06);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scaleY(1);
+        background-color: transparent;
+    }
+}
+
+@keyframes logRowWarning {
+    0% {
+        background-color: rgba(245, 158, 11, 0.22);
+        box-shadow: inset 3px 0 0 rgba(245, 158, 11, 0.8);
+    }
+    60% {
+        background-color: rgba(245, 158, 11, 0.10);
+        box-shadow: inset 3px 0 0 rgba(245, 158, 11, 0.4);
+    }
+    100% {
+        background-color: rgba(245, 158, 11, 0.05);
+        box-shadow: inset 3px 0 0 rgba(245, 158, 11, 0.25);
+    }
+}
+
+@keyframes logRowError {
+    0% {
+        background-color: rgba(239, 68, 68, 0.22);
+        box-shadow: inset 3px 0 0 rgba(239, 68, 68, 0.8);
+    }
+    60% {
+        background-color: rgba(239, 68, 68, 0.10);
+        box-shadow: inset 3px 0 0 rgba(239, 68, 68, 0.4);
+    }
+    100% {
+        background-color: rgba(239, 68, 68, 0.05);
+        box-shadow: inset 3px 0 0 rgba(239, 68, 68, 0.25);
+    }
+}
+
+.animate-log-row-in {
+    animation: logRowIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-log-row-warning {
+    animation:
+        logRowIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both,
+        logRowWarning 2.5s ease 0.45s forwards;
+}
+.animate-log-row-error {
+    animation:
+        logRowIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both,
+        logRowError 2.5s ease 0.45s forwards;
+}
