@@ -10,6 +10,16 @@ from app.core.enum import AccessLevel, DocumentStatus, LogLevel
 from app.models import Document, DocumentRoleAccess, DocumentUserAccess, User, UserRole, DocumentDepartmentAccess, ActivityLog
 
 
+def _format_vector(embedding: List[float] | list) -> str | None:
+    if not embedding:
+        return None
+    if isinstance(embedding[0], (list, tuple)):
+        if not embedding[0]:
+            return None
+        embedding = embedding[0]
+    return "[" + ",".join(str(float(v)) for v in embedding) + "]"
+
+
 class PARRepository:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
@@ -63,6 +73,10 @@ class PARRepository:
                 department_ids=department_ids,
             )
         except Exception as e:
+            try:
+                await self.db.rollback()
+            except Exception:
+                pass
             log = ActivityLog(
                 id=str(uuid_utils.uuid7()),
                 user_id=user_id,
@@ -70,11 +84,17 @@ class PARRepository:
                 action="rag.par_build_failed",
                 resource="user",
                 log_level=LogLevel.ERROR,
-                meta_data=str(e),
+                meta_data={"error": str(e)},
                 ip_address=security_ctx.ip_address,
             )
-            self.db.add(log)
-            await self.db.commit()
+            try:
+                self.db.add(log)
+                await self.db.commit()
+            except Exception:
+                try:
+                    await self.db.rollback()
+                except Exception:
+                    pass
             raise e
 
     async def get_allowed_document_ids(
@@ -87,98 +107,105 @@ class PARRepository:
         Chạy hoàn toàn trên PostgreSQL quan hệ, không liên quan vector.
         """
 
-        allowed_levels = ctx.allowed_access_levels()
-        allowed_ids = set()
+        try:
+            allowed_levels = ctx.allowed_access_levels()
+            allowed_ids = set()
 
-        # NHÁNH 1: TÀI LIỆU PUBLIC (Ai hợp lệ cũng được đọc)
-        stmt_public = select(Document.id).where(
-            and_(
-                Document.tenant_id == ctx.tenant_id,
-                Document.is_deleted == False,
-                Document.status == DocumentStatus.DONE,
-                Document.access_level == AccessLevel.PUBLIC
-            )
-        )
-        res_public = await self.db.execute(stmt_public)
-        allowed_ids.update({row[0] for row in res_public.fetchall()})
-
-
-        # NHÁNH 2: TÀI LIỆU MANAGERIAL (Chỉ Manager và Admin)
-        if AccessLevel.MANAGERIAL in allowed_levels:
-            stmt_managerial = select(Document.id).where(
+            # NHÁNH 1: TÀI LIỆU PUBLIC (Ai hợp lệ cũng được đọc)
+            stmt_public = select(Document.id).where(
                 and_(
                     Document.tenant_id == ctx.tenant_id,
                     Document.is_deleted == False,
                     Document.status == DocumentStatus.DONE,
-                    Document.access_level == AccessLevel.MANAGERIAL
+                    Document.access_level == AccessLevel.PUBLIC
                 )
             )
-            res_managerial = await self.db.execute(stmt_managerial)
-            allowed_ids.update({row[0] for row in res_managerial.fetchall()})
+            res_public = await self.db.execute(stmt_public)
+            allowed_ids.update({row[0] for row in res_public.fetchall()})
 
-        # NHÁNH 3: TÀI LIỆU PRIVATE
-        ## Điều kiện 1: Là người upload
-        stmt_private_base = select(Document.id).where(
-            and_(
-                Document.tenant_id == ctx.tenant_id,
-                Document.is_deleted == False,
-                Document.status == DocumentStatus.DONE,
-                Document.access_level == AccessLevel.PRIVATE,
-                or_(Document.uploader_id == ctx.user_id)
+
+            # NHÁNH 2: TÀI LIỆU MANAGERIAL (Chỉ Manager và Admin)
+            if AccessLevel.MANAGERIAL in allowed_levels:
+                stmt_managerial = select(Document.id).where(
+                    and_(
+                        Document.tenant_id == ctx.tenant_id,
+                        Document.is_deleted == False,
+                        Document.status == DocumentStatus.DONE,
+                        Document.access_level == AccessLevel.MANAGERIAL
+                    )
+                )
+                res_managerial = await self.db.execute(stmt_managerial)
+                allowed_ids.update({row[0] for row in res_managerial.fetchall()})
+
+            # NHÁNH 3: TÀI LIỆU PRIVATE
+            ## Điều kiện 1: Là người upload
+            stmt_private_base = select(Document.id).where(
+                and_(
+                    Document.tenant_id == ctx.tenant_id,
+                    Document.is_deleted == False,
+                    Document.status == DocumentStatus.DONE,
+                    Document.access_level == AccessLevel.PRIVATE,
+                    or_(Document.uploader_id == ctx.user_id)
+                )
             )
-        )
-        res_private_base = await self.db.execute(stmt_private_base)
-        allowed_ids.update({row[0] for row in res_private_base.fetchall()})
+            res_private_base = await self.db.execute(stmt_private_base)
+            allowed_ids.update({row[0] for row in res_private_base.fetchall()})
 
-        ## Điều kiện 2: Gán Explicit Quyền riêng cho User qua document_user_access
-        stmt_private_user = select(DocumentUserAccess.document_id).join(
-            Document, Document.id == DocumentUserAccess.document_id
-        ).where(
-            and_(
-                Document.tenant_id == ctx.tenant_id,
-                DocumentUserAccess.user_id == ctx.user_id,
-                Document.is_deleted == False,
-                Document.status == DocumentStatus.DONE,
-                Document.access_level == AccessLevel.PRIVATE
-            )
-        )
-        res_private_user = await self.db.execute(stmt_private_user)
-        allowed_ids.update({row[0] for row in res_private_user.fetchall()})
-
-        ## Điều kiện 3: Gán Explicit Quyền riêng cho Role (Ví dụ: HR chuyên trách)
-        if ctx.role_ids:
-            stmt_private_role = select(DocumentRoleAccess.document_id).join(
-                Document, Document.id == DocumentRoleAccess.document_id
+            ## Điều kiện 2: Gán Explicit Quyền riêng cho User qua document_user_access
+            stmt_private_user = select(DocumentUserAccess.document_id).join(
+                Document, Document.id == DocumentUserAccess.document_id
             ).where(
                 and_(
                     Document.tenant_id == ctx.tenant_id,
-                    DocumentRoleAccess.role_id.in_(ctx.role_ids),
+                    DocumentUserAccess.user_id == ctx.user_id,
                     Document.is_deleted == False,
                     Document.status == DocumentStatus.DONE,
                     Document.access_level == AccessLevel.PRIVATE
                 )
             )
-            res_private_role = await self.db.execute(stmt_private_role)
-            allowed_ids.update({row[0] for row in res_private_role.fetchall()})
+            res_private_user = await self.db.execute(stmt_private_user)
+            allowed_ids.update({row[0] for row in res_private_user.fetchall()})
 
-        ## Điều kiện 4: Gán Explicit Quyền riêng cho Department (Ví dụ: Phòng Marketing)
-        if ctx.department_ids:
-            stmt_private_department = select(DocumentDepartmentAccess.document_id).join(
-                Document, Document.id == DocumentDepartmentAccess.document_id
-            ).where(
-                and_(
-                    Document.tenant_id == ctx.tenant_id,
-                    DocumentDepartmentAccess.department_id.in_(ctx.department_ids),
-                    Document.is_deleted == False,
-                    Document.status == DocumentStatus.DONE,
-                    Document.access_level == AccessLevel.PRIVATE
+            ## Điều kiện 3: Gán Explicit Quyền riêng cho Role (Ví dụ: HR chuyên trách)
+            if ctx.role_ids:
+                stmt_private_role = select(DocumentRoleAccess.document_id).join(
+                    Document, Document.id == DocumentRoleAccess.document_id
+                ).where(
+                    and_(
+                        Document.tenant_id == ctx.tenant_id,
+                        DocumentRoleAccess.role_id.in_(ctx.role_ids),
+                        Document.is_deleted == False,
+                        Document.status == DocumentStatus.DONE,
+                        Document.access_level == AccessLevel.PRIVATE
+                    )
                 )
-            )
-            res_private_department = await self.db.execute(stmt_private_department)
-            allowed_ids.update({row[0] for row in res_private_department.fetchall()})
+                res_private_role = await self.db.execute(stmt_private_role)
+                allowed_ids.update({row[0] for row in res_private_role.fetchall()})
 
-        return allowed_ids
-    
+            ## Điều kiện 4: Gán Explicit Quyền riêng cho Department (Ví dụ: Phòng Marketing)
+            if ctx.department_ids:
+                stmt_private_department = select(DocumentDepartmentAccess.document_id).join(
+                    Document, Document.id == DocumentDepartmentAccess.document_id
+                ).where(
+                    and_(
+                        Document.tenant_id == ctx.tenant_id,
+                        DocumentDepartmentAccess.department_id.in_(ctx.department_ids),
+                        Document.is_deleted == False,
+                        Document.status == DocumentStatus.DONE,
+                        Document.access_level == AccessLevel.PRIVATE
+                    )
+                )
+                res_private_department = await self.db.execute(stmt_private_department)
+                allowed_ids.update({row[0] for row in res_private_department.fetchall()})
+
+            return allowed_ids
+        except Exception as e:
+            try:
+                await self.db.rollback()
+            except Exception:
+                pass
+            raise e
+
     async def similarity_search(
         self,
         query_embedding: List[float],
@@ -191,10 +218,12 @@ class PARRepository:
         Chỉ tìm kiếm trong vùng allowed_doc_ids — không biết gì về RBAC.
         """
 
-        if not allowed_doc_ids:
+        if not allowed_doc_ids or not query_embedding:
             return []
 
-        vec_literal = "[" + ",".join(str(v) for v in query_embedding) + "]"
+        vec_literal = _format_vector(query_embedding)
+        if not vec_literal:
+            return []
 
         sql = text("""
             SELECT
@@ -210,7 +239,7 @@ class PARRepository:
             JOIN  documents          d  ON d.id  = dc.document_id
             WHERE
                 d.tenant_id = :tenant_id
-                AND dc.document_id  = ANY(:doc_ids)     -- ← PAR boundary inject
+                AND dc.document_id  = ANY(CAST(:doc_ids AS VARCHAR[]))     -- ← PAR boundary inject
                 AND dc.embedding_status = 'done'
                 AND d.is_deleted = FALSE
             ORDER BY
@@ -218,24 +247,31 @@ class PARRepository:
             LIMIT :top_k
         """)
 
-        result = await self.db.execute(sql, {
-            "qvec":    vec_literal,
-            "doc_ids": list(allowed_doc_ids),
-            "tenant_id": tenant_id,
-            "top_k":   top_k,
-        })
+        try:
+            result = await self.db.execute(sql, {
+                "qvec":    vec_literal,
+                "doc_ids": list(allowed_doc_ids),
+                "tenant_id": tenant_id,
+                "top_k":   top_k,
+            })
 
-        return [
-            RetrievalResult(
-                chunk_id=row.chunk_id,
-                document_id=row.document_id,
-                content=row.content,
-                score=row.score,
-                doc_title=row.doc_title,
-                metadata=row.metadata,
-            )
-            for row in result.mappings().fetchall()
-        ]
+            return [
+                RetrievalResult(
+                    chunk_id=row.chunk_id,
+                    document_id=row.document_id,
+                    content=row.content,
+                    score=row.score,
+                    doc_title=row.doc_title,
+                    metadata=row.metadata,
+                )
+                for row in result.mappings().fetchall()
+            ]
+        except Exception as e:
+            try:
+                await self.db.rollback()
+            except Exception:
+                pass
+            raise e
 
     async def keyword_search(
         self,
@@ -268,7 +304,7 @@ class PARRepository:
             JOIN  documents        d  ON d.id = dc.document_id
             WHERE
                 d.tenant_id = :tenant_id
-                AND dc.document_id = ANY(:doc_ids)
+                AND dc.document_id = ANY(CAST(:doc_ids AS VARCHAR[]))
                 AND dc.embedding_status = 'done'
                 AND d.is_deleted = FALSE
                 AND dc.content_tsv @@ plainto_tsquery('simple', immutable_unaccent(:query))
@@ -276,24 +312,31 @@ class PARRepository:
             LIMIT :top_k
         """)
 
-        result = await self.db.execute(sql, {
-            "query":    query,
-            "doc_ids":  list(allowed_doc_ids),
-            "tenant_id": tenant_id,
-            "top_k":    top_k,
-        })
+        try:
+            result = await self.db.execute(sql, {
+                "query":    query,
+                "doc_ids":  list(allowed_doc_ids),
+                "tenant_id": tenant_id,
+                "top_k":    top_k,
+            })
 
-        return [
-            RetrievalResult(
-                chunk_id=row.chunk_id,
-                document_id=row.document_id,
-                content=row.content,
-                score=float(row.score),
-                doc_title=row.doc_title,
-                metadata=row.metadata,
-            )
-            for row in result.mappings().fetchall()
-        ]
+            return [
+                RetrievalResult(
+                    chunk_id=row.chunk_id,
+                    document_id=row.document_id,
+                    content=row.content,
+                    score=float(row.score),
+                    doc_title=row.doc_title,
+                    metadata=row.metadata,
+                )
+                for row in result.mappings().fetchall()
+            ]
+        except Exception as e:
+            try:
+                await self.db.rollback()
+            except Exception:
+                pass
+            raise e
 
 
     async def check_par_gate_blocked(
@@ -307,7 +350,12 @@ class PARRepository:
         Check if there are any chunks in the tenant matching the query
         that were excluded from allowed_doc_ids (i.e., blocked by PAR gate).
         """
-        vec_literal = "[" + ",".join(str(v) for v in query_embedding) + "]"
+        if not query_embedding:
+            return []
+
+        vec_literal = _format_vector(query_embedding)
+        if not vec_literal:
+            return []
         
         sql = text("""
             SELECT
@@ -322,29 +370,36 @@ class PARRepository:
                 d.tenant_id = :tenant_id
                 AND dc.embedding_status = 'done'
                 AND d.is_deleted = FALSE
-                AND (:doc_ids_empty = TRUE OR NOT (dc.document_id = ANY(:doc_ids)))
+                AND (:doc_ids_empty = TRUE OR NOT (dc.document_id = ANY(CAST(:doc_ids AS VARCHAR[]))))
                 AND (1 - (ve.embedding <=> CAST(:qvec AS vector))) >= :threshold
             ORDER BY score DESC
             LIMIT 10
         """)
         
-        result = await self.db.execute(sql, {
-            "qvec": vec_literal,
-            "tenant_id": tenant_id,
-            "doc_ids": list(allowed_doc_ids) if allowed_doc_ids else [],
-            "doc_ids_empty": len(allowed_doc_ids) == 0,
-            "threshold": threshold
-        })
-        
-        seen = set()
-        deduped = []
-        for row in result.mappings().fetchall():
-            if row.document_id not in seen:
-                seen.add(row.document_id)
-                deduped.append({
-                    "document_id": row.document_id,
-                    "doc_title": row.doc_title,
-                    "access_level": row.access_level,
-                    "score": row.score
-                })
-        return deduped
+        try:
+            result = await self.db.execute(sql, {
+                "qvec": vec_literal,
+                "tenant_id": tenant_id,
+                "doc_ids": list(allowed_doc_ids) if allowed_doc_ids else [],
+                "doc_ids_empty": len(allowed_doc_ids) == 0,
+                "threshold": threshold
+            })
+            
+            seen = set()
+            deduped = []
+            for row in result.mappings().fetchall():
+                if row.document_id not in seen:
+                    seen.add(row.document_id)
+                    deduped.append({
+                        "document_id": row.document_id,
+                        "doc_title": row.doc_title,
+                        "access_level": row.access_level,
+                        "score": row.score
+                    })
+            return deduped
+        except Exception as e:
+            try:
+                await self.db.rollback()
+            except Exception:
+                pass
+            raise e

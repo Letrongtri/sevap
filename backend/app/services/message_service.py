@@ -128,6 +128,10 @@ class MessageService:
                 user_id=user_id,
                 exc_info=True,
             )
+            try:
+                await self.msg_repo.db.rollback()
+            except Exception:
+                pass
             yield "event: error\ndata: " + json.dumps({
                 "message": "Không thể xác thực quyền truy cập. Vui lòng thử lại."
             }) + "\n\n"
@@ -155,6 +159,9 @@ class MessageService:
                 "router_reasoning": "",
                 "retrieved_chunks": [],
                 "reranked_chunks": [],
+                "sub_query_chunks": [],
+                "failed_sub_query_ids": [],
+                "passed_sub_query_ids": [],
                 "confidence_score": 0.0,
                 "final_answer": "",
                 "sources": [],
@@ -219,24 +226,43 @@ class MessageService:
                 conversation_id=conversation_id,
                 exc_info=True,
             )
+            # Rollback DB session để reset Postgres transaction state từ ABORTED
+            try:
+                await self.msg_repo.db.rollback()
+            except Exception:
+                pass
             full_answer = "Đã xảy ra lỗi khi xử lý câu hỏi. Vui lòng thử lại."
             yield "event: error\ndata: " + json.dumps({"message": full_answer}) + "\n\n"
 
         # ── 8. Persist assistant message ───────────────────────────────────
-        assistant_message = Message(
-            conversation_id=conversation_id,
-            actor="assistant",
-            agent_type=agent_type,
-            content=full_answer,
-            retrieval_context=sources if sources else None,
-            confidence_score=None,
-        )
-        new_assistant_message = await self.msg_repo.create_message(assistant_message)
+        assistant_message_id = None
+        try:
+            assistant_message = Message(
+                conversation_id=conversation_id,
+                actor="assistant",
+                agent_type=agent_type,
+                content=full_answer,
+                retrieval_context=sources if sources else None,
+                confidence_score=None,
+            )
+            new_assistant_message = await self.msg_repo.create_message(assistant_message)
+            if new_assistant_message:
+                assistant_message_id = new_assistant_message.id
+        except Exception:
+            logger.error(
+                "persist_assistant_message_failed",
+                conversation_id=conversation_id,
+                exc_info=True,
+            )
+            try:
+                await self.msg_repo.db.rollback()
+            except Exception:
+                pass
 
         # ── 9. Yield done (only when no error already signalled) ───────────
         if not had_error:
             yield "event: done\ndata: " + json.dumps({
-                "assistant_message_id": new_assistant_message.id,
+                "assistant_message_id": assistant_message_id,
                 "sources": sources,
                 "agent_type": agent_type,
             }) + "\n\n"

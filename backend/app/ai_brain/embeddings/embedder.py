@@ -23,7 +23,13 @@ class DocumentEmbedder:
             query,
             normalize_embeddings=True,
         )
-        return embedding.tolist()
+        if hasattr(embedding, "ndim") and embedding.ndim > 1 and len(embedding) > 0:
+            embedding = embedding[0]
+        elif isinstance(embedding, list) and len(embedding) > 0 and isinstance(embedding[0], list):
+            embedding = embedding[0]
+        if hasattr(embedding, "tolist"):
+            return embedding.tolist()
+        return list(embedding)
 
     async def embed(self, contextual_text: str) -> List[float]:
         """
@@ -38,8 +44,13 @@ class DocumentEmbedder:
                 normalize_embeddings=True,
                 show_progress_bar=False,
             )
-
-            return embeddings.tolist()
+            if hasattr(embeddings, "ndim") and embeddings.ndim > 1 and len(embeddings) > 0:
+                embeddings = embeddings[0]
+            elif isinstance(embeddings, list) and len(embeddings) > 0 and isinstance(embeddings[0], list):
+                embeddings = embeddings[0]
+            if hasattr(embeddings, "tolist"):
+                return embeddings.tolist()
+            return list(embeddings)
         except Exception as e:
             logger.error(f"Lỗi chuyển đổi sang vector embedding: {str(e)}", exc_info=True)
             raise

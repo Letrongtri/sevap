@@ -33,6 +33,11 @@ async def intent_node(state: AgentState, config: RunnableConfig) -> dict:
             "intent_type": IntentType.DIRECT.value,
             "execution_plan": RetrievalExecutionPlan.DIRECT.value,
             "sub_queries": [],
+            "sub_query_chunks": [],
+            "failed_sub_query_ids": [],
+            "passed_sub_query_ids": [],
+            "retrieved_chunks": [],
+            "reranked_chunks": [],
             "router_reasoning": "Tier-0 heuristic match: {}".format(heuristic.category_name),
             "_next": GraphNodeID.DIRECT_RESPONSE_GENERATOR.value,
         }
@@ -56,6 +61,11 @@ async def intent_node(state: AgentState, config: RunnableConfig) -> dict:
             "intent_type": IntentType.SECURITY_ANOMALY.value,
             "execution_plan": RetrievalExecutionPlan.UNKNOWN.value,
             "sub_queries": [],
+            "sub_query_chunks": [],
+            "failed_sub_query_ids": [],
+            "passed_sub_query_ids": [],
+            "retrieved_chunks": [],
+            "reranked_chunks": [],
             "router_reasoning": router_output.reasoning,
             "_next": GraphNodeID.SECURITY_KILL_SWITCH.value,
         }
@@ -65,6 +75,11 @@ async def intent_node(state: AgentState, config: RunnableConfig) -> dict:
         "intent_type": router_output.intent_type.value,
         "execution_plan": router_output.execution_plan.value,
         "sub_queries": router_output.sub_queries,
+        "sub_query_chunks": [],
+        "failed_sub_query_ids": [],
+        "passed_sub_query_ids": [],
+        "retrieved_chunks": [],
+        "reranked_chunks": [],
         "router_reasoning": router_output.reasoning,
         "_next": GraphNodeID.RETRIEVAL.value
     }

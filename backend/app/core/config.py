@@ -164,14 +164,22 @@ class Settings:
             [".pdf", ".docx", ".xlsx", ".pptx", ".html", ".md", ".txt"]
         )
 
-        # OLLAMA Configuration
+        # OLLAMA Configuration (local Docker)
         self.OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")
         self.OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen3:8b")
         self.OLLAMA_ROUTER_MODEL = os.getenv("OLLAMA_ROUTER_MODEL", "qwen2.5:3b")
         self.OLLAMA_SLM_MODEL = os.getenv("OLLAMA_SLM_MODEL", "qwen2.5:3b")
 
+        # Modal.com GPU Backend Configuration
+        # LLM_BACKEND: "local" → dùng OLLAMA_BASE_URL, "modal" → dùng MODAL_OLLAMA_URL
+        self.LLM_BACKEND = os.getenv("LLM_BACKEND", "local")
+        self.MODAL_OLLAMA_URL = os.getenv("MODAL_OLLAMA_URL", "")
+        # Modal.com Inference endpoints (Embedding + Reranker)
+        self.MODAL_EMBEDDING_URL = os.getenv("MODAL_EMBEDDING_URL", "")
+        self.MODAL_RERANKER_URL = os.getenv("MODAL_RERANKER_URL", "")
+
         self.RETRIEVAL_RELEVANCE_THRESHOLD = float(os.getenv("RETRIEVAL_RELEVANCE_THRESHOLD", "0.45"))
-        self.MAX_RETRY = int(os.getenv("MAX_RETRY", "2"))
+        self.MAX_RETRY = int(os.getenv("MAX_RETRY", "1"))
 
         # Reranker Configuration
         self.RERANKER_MODEL_PATH = os.getenv("RERANKER_MODEL_PATH", self.BASE_DIR / "data" / "models" / "bge-reranker-v2-m3")

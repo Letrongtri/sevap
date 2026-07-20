@@ -201,14 +201,12 @@ async def retrieval_node(state: AgentState, config: RunnableConfig) -> dict:
 
         for wave_idx, wave in enumerate(waves):
             wave_ids = [q.id for q in wave]
-            logger.info("[RetrievalNode] Wave %d → Q%s (parallel)", wave_idx, wave_ids)
+            logger.info("[RetrievalNode] Wave %d → Q%s", wave_idx, wave_ids)
 
-            wave_results: List[List[RetrievalResult]] = await asyncio.gather(
-                *[
-                    _retrieve_single(query, par_ctx, retrieval_service, context_map)
-                    for query in wave
-                ]
-            )
+            wave_results: List[List[RetrievalResult]] = []
+            for query in wave:
+                results = await _retrieve_single(query, par_ctx, retrieval_service, context_map)
+                wave_results.append(results)
 
             for query, results in zip(wave, wave_results):
                 context_map[query.id] = results

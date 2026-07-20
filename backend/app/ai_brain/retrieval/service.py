@@ -15,7 +15,7 @@ class RetrievalService:
         self,
         query: str,
         par_context: PARContext,
-        top_k: int = 30,
+        top_k: int = 10,
         rrf_k: int = 60,
     ) -> list[RetrievalResult]:
         """
@@ -33,12 +33,15 @@ class RetrievalService:
         query_embedding = document_embedder.encode_query(query)
 
         # Check if any documents matched but were blocked by PAR
-        blocked_docs = await self.repo.check_par_gate_blocked(
-            query_embedding=query_embedding,
-            allowed_doc_ids=allowed_ids,
-            tenant_id=par_context.tenant_id,
-            threshold=0.5
-        )
+        try:
+            blocked_docs = await self.repo.check_par_gate_blocked(
+                query_embedding=query_embedding,
+                allowed_doc_ids=allowed_ids,
+                tenant_id=par_context.tenant_id,
+                threshold=0.5
+            )
+        except Exception:
+            blocked_docs = []
 
         if blocked_docs:
             meta_data = {
@@ -64,28 +67,36 @@ class RetrievalService:
                 meta_data=meta_data,
                 ip_address=None
             )
-            self.repo.db.add(log)
-            await self.repo.db.commit()
+            try:
+                self.repo.db.add(log)
+                await self.repo.db.commit()
+            except Exception:
+                await self.repo.db.rollback()
 
         if not allowed_ids:
             return []  # Chặn sớm — không tốn tài nguyên embedding
 
-        # ── Bước 2: Chạy song song Vector Search + Keyword Search ─
+        # ── Bước 2: Chạy Vector Search + Keyword Search ───────────
         fetch_k = top_k * 2  # lấy nhiều hơn để merge
-        vector_results, keyword_results = await asyncio.gather(
-            self.repo.similarity_search(
+        try:
+            vector_results = await self.repo.similarity_search(
                 query_embedding=query_embedding,
                 allowed_doc_ids=allowed_ids,
                 tenant_id=par_context.tenant_id,
                 top_k=fetch_k,
-            ),
-            self.repo.keyword_search(
+            )
+            keyword_results = await self.repo.keyword_search(
                 query=query,
                 allowed_doc_ids=allowed_ids,
                 tenant_id=par_context.tenant_id,
                 top_k=fetch_k,
-            ),
-        )
+            )
+        except Exception as e:
+            try:
+                await self.repo.db.rollback()
+            except Exception:
+                pass
+            raise e
 
         # ── Bước 3: Reciprocal Rank Fusion ────────────────────────
         return self._rrf_merge(vector_results, keyword_results, top_k, rrf_k)
