@@ -19,11 +19,26 @@ export const registerTenant = async (
     return res.data
 }
 
+/** Lấy thông tin tenant */
+export const getTenantInfo = async (): Promise<Tenant> => {
+    const res = await axiosClient.get(`/tenants/info`)
+    return res.data
+}
+
 /** Cập nhật thông tin tenant */
 export const updateTenant = async (
     payload: UpdateTenantPayload
 ): Promise<Tenant> => {
-    const res = await axiosClient.put(`/tenants`, payload)
+    const tenantDomain = payload.tenant_domain
+        ? payload.tenant_domain.trim().endsWith('.hrnexus.com')
+            ? payload.tenant_domain.trim()
+            : `${payload.tenant_domain.trim()}.hrnexus.com`
+        : undefined
+
+    const res = await axiosClient.put(`/tenants`, {
+        ...payload,
+        tenant_domain: tenantDomain,
+    })
     return res.data
 }
 

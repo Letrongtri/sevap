@@ -1,8 +1,13 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Tenant } from '../types/tenant'
-import { deleteTenant, registerTenant, updateTenant } from '../api/tenant'
+import {
+    deleteTenant,
+    getTenantInfo,
+    registerTenant,
+    updateTenant,
+} from '../api/tenant'
 
-export const TENANTS_QUERY_KEY = ['tenants'] as const
+export const MY_TENANT_QUERY_KEY = ['my-tenant'] as const
 
 /** Hook tạo tenant mới */
 export function useRegisterTenant() {
@@ -10,8 +15,16 @@ export function useRegisterTenant() {
     return useMutation<Tenant, Error, Parameters<typeof registerTenant>[0]>({
         mutationFn: registerTenant,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: TENANTS_QUERY_KEY })
+            queryClient.invalidateQueries({ queryKey: MY_TENANT_QUERY_KEY })
         },
+    })
+}
+
+/** Hook lấy thông tin tenant */
+export function useGetTenantInfo() {
+    return useQuery<Tenant>({
+        queryKey: MY_TENANT_QUERY_KEY,
+        queryFn: getTenantInfo,
     })
 }
 
@@ -21,7 +34,7 @@ export function useUpdateTenant() {
     return useMutation<Tenant, Error, Parameters<typeof updateTenant>[0]>({
         mutationFn: updateTenant,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: TENANTS_QUERY_KEY })
+            queryClient.invalidateQueries({ queryKey: MY_TENANT_QUERY_KEY })
         },
     })
 }
@@ -32,7 +45,7 @@ export function useDeleteTenant() {
     return useMutation<Tenant, Error, void>({
         mutationFn: deleteTenant,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: TENANTS_QUERY_KEY })
+            queryClient.invalidateQueries({ queryKey: MY_TENANT_QUERY_KEY })
         },
     })
 }
