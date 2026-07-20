@@ -1,7 +1,10 @@
 import React from 'react'
 import { AlertCircle } from 'lucide-react'
 
-interface DomainInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> {
+interface DomainInputProps extends Omit<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    'value' | 'onChange'
+> {
     value: string
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
     label?: string
@@ -10,7 +13,20 @@ interface DomainInputProps extends Omit<React.InputHTMLAttributes<HTMLInputEleme
 }
 
 export const DomainInput = React.forwardRef<HTMLInputElement, DomainInputProps>(
-    ({ value, onChange, label = 'Tenant Domain', errorText, suffix = '.hrnexus.com', id, disabled, required, ...rest }, ref) => {
+    (
+        {
+            value,
+            onChange,
+            label,
+            errorText,
+            suffix = '.hrnexus.com',
+            id,
+            disabled,
+            required,
+            ...rest
+        },
+        ref
+    ) => {
         const inputId = id ?? 'tenant_domain'
         return (
             <div className="space-y-1.5 w-full">
@@ -38,10 +54,10 @@ export const DomainInput = React.forwardRef<HTMLInputElement, DomainInputProps>(
                         disabled={disabled}
                         value={value}
                         onChange={onChange}
-                        className="flex-1 bg-transparent px-4 py-2.5 text-sm text-text-primary placeholder:text-text-placeholder outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 min-w-0 bg-transparent px-4 py-2.5 text-sm text-text-primary placeholder:text-text-placeholder outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                         {...rest}
                     />
-                    <span className="bg-primary/5 border-l border-border px-4 py-2.5 text-sm text-text-secondary font-medium select-none flex items-center justify-center min-w-[120px]">
+                    <span className="bg-primary/5 border-l border-border px-3 py-2.5 text-sm text-text-secondary font-medium select-none flex items-center justify-center shrink-0 whitespace-nowrap">
                         {suffix}
                     </span>
                 </div>
