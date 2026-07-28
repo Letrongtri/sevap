@@ -8,6 +8,14 @@ Chiến lược thực thi:
   - Câu hỏi CÓ depends_on → đợi tất cả ID phụ thuộc hoàn thành trước.
   - Mỗi "wave" (lớp không có phụ thuộc tồn đọng) được chạy song song với asyncio.gather.
 
+Multi-hop Context-Aware Rewriting:
+  - Sau khi wave N hoàn thành, với mỗi query thuộc wave N+1 có depends_on:
+    1. Thu thập top-k (3) chunks của từng câu phụ thuộc từ context_map.
+    2. Gọi SLM (OLLAMA_SLM_MODEL) để tổng hợp câu trả lời ngắn và viết lại
+       câu hỏi bị phụ thuộc thành dạng self-contained, có đủ ngữ cảnh.
+    3. Dùng câu hỏi đã viết lại để thực hiện hybrid search.
+  - Chiến lược này thay thế việc gắn cố định 200 ký tự từ 2 chunk.
+
 Partial retry:
   - Khi rewrite_node chỉ rewrite một phần sub-queries (partial rewrite),
     `passed_sub_query_ids` trong state sẽ chứa IDs của sub-query đã pass.
@@ -16,19 +24,28 @@ Partial retry:
 """
 
 import asyncio
+import json
 import time
 from typing import Dict, List, Set
 
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 
+from app.ai_brain.llm import get_llm
+from app.ai_brain.prompts import (
+    CONTEXT_AWARE_REWRITE_SYSTEM_PROMPT,
+    CONTEXT_AWARE_REWRITE_USER_PROMPT,
+)
 from app.ai_brain.schemas import PARContext, RetrievalResult, SubQuery
 from app.ai_brain.state import AgentState
 from app.ai_brain.retrieval import RetrievalService
+from app.core.config import settings
 from app.core.logging import logger
+from app.utils.json_utils import clean_and_extract_json
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Helpers
+# Topo-sort helper
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _build_waves(sub_queries: List[SubQuery]) -> List[List[SubQuery]]:
@@ -72,34 +89,165 @@ def _build_waves(sub_queries: List[SubQuery]) -> List[List[SubQuery]]:
     return waves
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# SLM context-aware rewrite helper
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _format_chunks_for_prompt(chunks: List[RetrievalResult], top_k: int) -> str:
+    """
+    Format top-k chunks thành chuỗi văn bản để đưa vào prompt SLM.
+
+    Mỗi chunk hiển thị nội dung gốc (không cắt cứng ký tự) theo thứ tự score giảm dần.
+    """
+    selected = sorted(chunks, key=lambda r: r.score, reverse=True)[:top_k]
+    if not selected:
+        return "  (Không có chunk nào được truy xuất)"
+
+    lines = []
+    for i, chunk in enumerate(selected, start=1):
+        lines.append(f"  Chunk {i} (score={chunk.score:.3f}): {chunk.content.strip()}")
+    return "\n".join(lines)
+
+
+async def _slm_rewrite_query(
+    dep_query: SubQuery,
+    dep_chunks: List[RetrievalResult],
+    dependent_query: SubQuery,
+) -> str:
+    """
+    Gọi SLM để:
+      1. Tổng hợp câu trả lời ngắn từ top-k chunks của dep_query.
+      2. Viết lại dependent_query thành dạng self-contained.
+
+    Trả về chuỗi query đã được viết lại. Nếu SLM thất bại (parse lỗi
+    hoặc low_confidence), trả về câu gốc để retrieval vẫn tiếp tục.
+    """
+    chunks_text = _format_chunks_for_prompt(dep_chunks, top_k=settings.MAX_KNOWLEDGE_DOCUMENTS)
+
+    user_prompt = CONTEXT_AWARE_REWRITE_USER_PROMPT.format(
+        dep_id=dep_query.id,
+        dep_query=dep_query.query,
+        chunks_text=chunks_text,
+        dependent_id=dependent_query.id,
+        dependent_query=dependent_query.query,
+    )
+
+    llm = get_llm(
+        model_name=settings.OLLAMA_SLM_MODEL,
+        temperature=0.2,
+        format_json=True,
+    )
+
+    try:
+        response = await llm.ainvoke([
+            SystemMessage(content=CONTEXT_AWARE_REWRITE_SYSTEM_PROMPT),
+            HumanMessage(content=user_prompt),
+        ])
+        clean_json = clean_and_extract_json(response.content.strip())
+        result = json.loads(clean_json)
+
+        rewritten = result.get("rewritten_query", "").strip()
+        low_confidence = result.get("low_confidence", False)
+
+        if low_confidence:
+            logger.warning(
+                "[RetrievalNode] SLM low_confidence for Q%d→Q%d. Using rewritten anyway: %s",
+                dep_query.id, dependent_query.id, rewritten,
+            )
+
+        if rewritten:
+            logger.info(
+                "[RetrievalNode] SLM rewrite Q%d: [%s] → [%s]",
+                dependent_query.id, dependent_query.query, rewritten,
+            )
+            return rewritten
+
+    except Exception as exc:
+        logger.warning(
+            "[RetrievalNode] SLM rewrite failed for Q%d (dep=Q%d): %s. Falling back to original.",
+            dependent_query.id, dep_query.id, exc,
+        )
+
+    return dependent_query.query
+
+
+async def _build_enriched_query(
+    query: SubQuery,
+    context_map: Dict[int, List[RetrievalResult]],
+    id_map: Dict[int, SubQuery],
+) -> str:
+    """
+    Với mỗi dependency của `query`, gọi SLM rewrite tuần tự (nếu có nhiều dep,
+    mỗi dep sẽ enrich thêm).
+
+    Trả về chuỗi query đã được enrich với ngữ cảnh từ tất cả dependencies.
+
+    Lưu ý: nếu query có nhiều depends_on, chúng ta gọi SLM lần lượt cho từng dep,
+    kết quả rewrite của dep trước làm đầu vào cho dep tiếp theo để tích lũy ngữ cảnh.
+    """
+    if not query.depends_on:
+        return query.query
+
+    current_query_text = query.query
+
+    for dep_id in query.depends_on:
+        dep_chunks = context_map.get(dep_id, [])
+        dep_sub_query = id_map.get(dep_id)
+
+        if not dep_sub_query:
+            logger.warning(
+                "[RetrievalNode] depends_on ID=%d không tồn tại trong id_map. Bỏ qua.", dep_id
+            )
+            continue
+
+        if not dep_chunks:
+            logger.warning(
+                "[RetrievalNode] Q%d depends on Q%d nhưng Q%d không có chunks. "
+                "Giữ câu hỏi hiện tại.",
+                query.id, dep_id, dep_id,
+            )
+            continue
+
+        # Tạo SubQuery tạm thời với text hiện tại (đã enrich từ dep trước)
+        current_as_subquery = SubQuery(
+            id=query.id,
+            query=current_query_text,
+            depends_on=query.depends_on,
+        )
+
+        current_query_text = await _slm_rewrite_query(
+            dep_query=dep_sub_query,
+            dep_chunks=dep_chunks,
+            dependent_query=current_as_subquery,
+        )
+
+    return current_query_text
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Single query retrieval helper
+# ─────────────────────────────────────────────────────────────────────────────
+
 async def _retrieve_single(
     query: SubQuery,
     par_context: PARContext,
     retrieval_service: RetrievalService,
     context_map: Dict[int, List[RetrievalResult]],
+    id_map: Dict[int, SubQuery],
 ) -> List[RetrievalResult]:
     """
     Thực thi hybrid search cho một sub-query.
 
-    Nếu query có depends_on, context của các câu trước sẽ được inject vào
-    query text để tạo context-aware retrieval (multi-hop).
+    Nếu query có depends_on:
+      - Gọi SLM để tổng hợp context từ chunks của câu phụ thuộc.
+      - Viết lại câu hỏi thành dạng self-contained trước khi retrieve.
     """
-    enriched_query = query.query
-
-    # Multi-hop: bổ sung context từ câu hỏi phụ thuộc
-    if query.depends_on:
-        prior_contexts = []
-        for dep_id in query.depends_on:
-            prior_results = context_map.get(dep_id, [])
-            if prior_results:
-                combined = " ".join(r.content[:200] for r in prior_results[:2])
-                prior_contexts.append(f"[Context từ Q{dep_id}]: {combined}")
-
-        if prior_contexts:
-            enriched_query = "\n".join(prior_contexts) + "\n\nCâu hỏi: " + query.query
+    enriched_query = await _build_enriched_query(query, context_map, id_map)
 
     logger.info(
-        "[RetrievalNode] Retrieving Q%d: %s", query.id, query.query
+        "[RetrievalNode] Retrieving Q%d | enriched=%s",
+        query.id,
+        "yes" if enriched_query != query.query else "no",
     )
 
     results = await retrieval_service.retrieve(
@@ -115,7 +263,13 @@ async def _retrieve_single(
 
 async def retrieval_node(state: AgentState, config: RunnableConfig) -> dict:
     """
-    LangGraph node — thực thi retrieval theo DAG (song song + tuần tự).
+    LangGraph node — thực thi retrieval theo DAG.
+
+    Execution model:
+      - Các query trong cùng wave chạy SONG SONG với asyncio.gather.
+      - Các wave chạy TUẦN TỰ: wave sau đợi wave trước hoàn toàn.
+      - Trước mỗi wave, các query có depends_on được viết lại qua SLM
+        dựa trên chunks đã thu thập từ wave trước.
 
     RetrievalService được lấy từ config["configurable"]["retrieval_service"].
     Không lưu vào AgentState — tránh serialize issue với Postgres checkpointer.
@@ -185,6 +339,9 @@ async def retrieval_node(state: AgentState, config: RunnableConfig) -> dict:
 
     # ── Xây dựng DAG và thực thi theo wave ──────────────────────────────────
     if queries_to_retrieve:
+        # id_map toàn bộ (kể cả passed) để _build_enriched_query có thể resolve dep
+        id_map: Dict[int, SubQuery] = {q.id: q for q in sub_queries}
+
         try:
             waves = _build_waves(queries_to_retrieve)
         except ValueError as e:
@@ -196,18 +353,33 @@ async def retrieval_node(state: AgentState, config: RunnableConfig) -> dict:
             len(waves), len(queries_to_retrieve),
         )
 
+        # context_map: id → List[RetrievalResult] — dùng cho multi-hop
+        # Khởi tạo với chunks của passed sub-queries (nếu có) để dep resolve đúng
         context_map: Dict[int, List[RetrievalResult]] = {}
-        new_sqc_map: Dict[int, dict] = {}  # id → new sqc entry
+        for entry in existing_sqc:
+            sqid = entry["sub_query_id"]
+            if sqid in passed_ids:
+                # Reconstruct RetrievalResult từ dict đã lưu (chỉ cần score + content)
+                context_map[sqid] = [
+                    RetrievalResult(**chunk)
+                    for chunk in entry.get("chunks", [])
+                ]
+
+        new_sqc_map: Dict[int, dict] = {}
 
         for wave_idx, wave in enumerate(waves):
             wave_ids = [q.id for q in wave]
-            logger.info("[RetrievalNode] Wave %d → Q%s", wave_idx, wave_ids)
+            logger.info("[RetrievalNode] Wave %d → Q%s (parallel)", wave_idx, wave_ids)
 
-            wave_results: List[List[RetrievalResult]] = []
-            for query in wave:
-                results = await _retrieve_single(query, par_ctx, retrieval_service, context_map)
-                wave_results.append(results)
+            # Chạy song song tất cả query trong wave
+            wave_results: List[List[RetrievalResult]] = await asyncio.gather(
+                *[
+                    _retrieve_single(query, par_ctx, retrieval_service, context_map, id_map)
+                    for query in wave
+                ]
+            )
 
+            # Cập nhật context_map sau khi wave hoàn thành
             for query, results in zip(wave, wave_results):
                 context_map[query.id] = results
                 new_sqc_map[query.id] = {

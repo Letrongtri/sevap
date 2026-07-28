@@ -180,6 +180,7 @@ class Settings:
 
         self.RETRIEVAL_RELEVANCE_THRESHOLD = float(os.getenv("RETRIEVAL_RELEVANCE_THRESHOLD", "0.45"))
         self.MAX_RETRY = int(os.getenv("MAX_RETRY", "1"))
+        self.MAX_KNOWLEDGE_DOCUMENTS = int(os.getenv("MAX_KNOWLEDGE_DOCUMENTS", "3"))
 
         # Reranker Configuration
         self.RERANKER_MODEL_PATH = os.getenv("RERANKER_MODEL_PATH", self.BASE_DIR / "data" / "models" / "bge-reranker-v2-m3")
