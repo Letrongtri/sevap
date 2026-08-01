@@ -164,6 +164,8 @@ class TenantService:
             raise NotFoundError("Tenant not found")
         tenant.status = TenantStatus.DELETED.value
         updated_tenant = await self.tenant_repo.save(tenant)
+        # TODO: soft delete all users in tenant, also revoke all roles in tenant
+        
         return TenantResponse.model_validate(updated_tenant)
 
     async def get_tenants(

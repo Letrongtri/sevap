@@ -16,7 +16,7 @@ from app.utils.json_utils import clean_and_extract_json
 class IntentRouter:
     def __init__(
         self, 
-        base_url: str = settings.OLLAMA_BASE_URL,
+        base_url: str | None = None,
         router_model_name: str = settings.OLLAMA_ROUTER_MODEL
     ):
         self.base_url = base_url

@@ -123,7 +123,15 @@ class DocumentService:
                 existing.target_users = target_users
                 existing.departments = departments
 
-                updated_document = await self.repo.save_document(existing)
+                await self.repo.save_document(existing)
+
+                # Reload lại với eager loading đầy đủ để tránh MissingGreenlet
+                updated_document = await self.repo.get_document_by_id(
+                    existing.id,
+                    get_roles=True,
+                    get_users=True,
+                    get_departments=True
+                )
 
                 background_tasks.add_task(
                     sync_chunk_metadata_task,
@@ -150,7 +158,29 @@ class DocumentService:
                     raise Exception("Failed to move file to upload directory")
                 
                 await self.repo.update_document_status(existing.id, DocumentStatus.PROCESSING)
-                saved_document = existing
+
+                # Reload sau commit để tránh expired attributes gây MissingGreenlet
+                reloaded = await self.repo.get_document_by_id(
+                    existing.id,
+                    get_roles=True,
+                    get_users=True,
+                    get_departments=True
+                )
+
+                background_tasks.add_task(
+                    process_document_chunking_task,
+                    tenant_id=tenant_id,
+                    document_id=reloaded.id,
+                    file_path=str(uploaded_file_path),
+                    access_level=access_level,
+                    department_ids=department_ids,
+                    category=category,
+                    effective_date=effective_date,
+                    role_access=role_access,
+                    target_user_ids=target_user_ids
+                )
+
+                return DocumentResponse.model_validate(reloaded)
             else:
                 # Status không hợp lệ hoặc không xác định — dọn file tạm và báo lỗi
                 if os.path.exists(temp_file_path):
@@ -230,21 +260,22 @@ class DocumentService:
 
             saved_document = await self.repo.create_document(document)
 
-        if not existing or existing.status == DocumentStatus.FAILED:
-            if saved_document is None:
-                raise Exception("saved_document is None before scheduling background task — this is a bug")
-            background_tasks.add_task(
-                process_document_chunking_task,
-                tenant_id=tenant_id,
-                document_id=saved_document.id, 
-                file_path=str(uploaded_file_path),
-                access_level=access_level,
-                department_ids=department_ids,
-                category=category,
-                effective_date=effective_date,
-                role_access=role_access,
-                target_user_ids=target_user_ids
-            )
+        # Chỉ còn case D (new document) tới đây — case C đã return sớm
+        if saved_document is None:
+            raise Exception("saved_document is None before scheduling background task — this is a bug")
+
+        background_tasks.add_task(
+            process_document_chunking_task,
+            tenant_id=tenant_id,
+            document_id=saved_document.id, 
+            file_path=str(uploaded_file_path),
+            access_level=access_level,
+            department_ids=department_ids,
+            category=category,
+            effective_date=effective_date,
+            role_access=role_access,
+            target_user_ids=target_user_ids
+        )
 
         return DocumentResponse.model_validate(saved_document)
 

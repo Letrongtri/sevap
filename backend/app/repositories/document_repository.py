@@ -84,6 +84,9 @@ class DocumentRepository:
         options.append(selectinload(Document.uploader))
 
         stmt = stmt.options(*options)
+        # populate_existing=True: buộc reload từ DB ngay cả khi object đã có
+        # trong identity map (tránh expired attribute gây MissingGreenlet)
+        stmt = stmt.execution_options(populate_existing=True)
 
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()

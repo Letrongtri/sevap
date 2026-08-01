@@ -10,7 +10,7 @@ Tự động chọn backend dựa trên biến môi trường:
 Nếu MODAL_OLLAMA_URL chưa được set mà LLM_BACKEND=modal,
 sẽ fallback về OLLAMA_BASE_URL và log cảnh báo.
 """
-
+import os
 from langchain_ollama import ChatOllama
 
 from app.core.config import settings
@@ -22,25 +22,27 @@ def _resolve_base_url(override_url: str | None = None) -> str:
     Xác định base URL của Ollama server dựa trên cấu hình backend.
 
     Priority:
-      1. override_url (nếu caller truyền vào tường minh)
-      2. MODAL_OLLAMA_URL (nếu LLM_BACKEND=modal)
+      1. MODAL_OLLAMA_URL (nếu LLM_BACKEND=modal)
+      2. override_url (nếu caller truyền vào tường minh và không dùng modal)
       3. OLLAMA_BASE_URL (fallback local)
     """
-    # Caller tường minh chỉ định URL → dùng ngay
-    if override_url:
-        return override_url
-
     if settings.LLM_BACKEND == "modal":
         if settings.MODAL_OLLAMA_URL:
             return settings.MODAL_OLLAMA_URL
         else:
             logger.warning(
                 "[LLM Provider] LLM_BACKEND=modal nhưng MODAL_OLLAMA_URL chưa được set. "
-                "Fallback về OLLAMA_BASE_URL (local). "
-                "Hãy chạy `modal deploy` và điền URL vào .env."
+                "Fallback về OLLAMA_BASE_URL (local)."
             )
 
-    return settings.OLLAMA_BASE_URL
+    if override_url:
+        return override_url
+
+    url = settings.OLLAMA_BASE_URL
+    if "://ollama:" in url and (os.name == 'nt' or not os.path.exists('/.dockerenv')):
+        url = url.replace("://ollama:", "://localhost:")
+
+    return url
 
 
 def get_llm(

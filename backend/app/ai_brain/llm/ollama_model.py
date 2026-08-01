@@ -49,7 +49,7 @@ app = modal.App(name=APP_NAME)
 
 @app.cls(
     image=ollama_image,
-    gpu="t4",
+    gpu="l4",
     volumes={"/root/.ollama": volume},
     # Container ngủ sau 10 phút không có request → tiết kiệm chi phí
     scaledown_window=600,
