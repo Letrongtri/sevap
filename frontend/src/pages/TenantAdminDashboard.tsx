@@ -6,14 +6,16 @@ import DocDistributionChart from '../components/tenantAdmin/DocDistributionChart
 import ActiveSessionsPanel from '../components/tenantAdmin/ActiveSessionsPanel'
 import AuditLogTable from '../components/tenantAdmin/AuditLogTable'
 import Header from '../components/ui/Header'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function TenantAdminDashboard() {
+    usePageTitle('Tổng quan quản trị')
     return (
         <div className="space-y-4 pb-10 max-w-[1600px] mx-auto">
             {/* ── PAGE HEADER ─────────────────────────────────────────── */}
             <div className="flex-shrink-0">
                 <Header
-                    title="Dashboard"
+                    title="Tổng quan quản trị"
                     icon={<LayoutDashboard className="w-5 h-5" />}
                     isAdding={false}
                     onAdd={() => {}}

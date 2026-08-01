@@ -1,6 +1,7 @@
 import { useNavigate } from '@tanstack/react-router'
 import { ShieldOff, ArrowLeft, Home } from 'lucide-react'
 import { PRIVATE_ROUTES } from '../routes/paths'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 /* ============================================================
    ForbiddenPage — 403 Access Denied
@@ -8,6 +9,7 @@ import { PRIVATE_ROUTES } from '../routes/paths'
    ============================================================ */
 
 export default function ForbiddenPage() {
+    usePageTitle('Truy cập bị từ chối')
     const navigate = useNavigate()
 
     return (
@@ -37,7 +39,9 @@ export default function ForbiddenPage() {
                 {/* Actions */}
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <button
-                        onClick={() => navigate({ to: -1 as unknown as string })}
+                        onClick={() =>
+                            navigate({ to: -1 as unknown as string })
+                        }
                         className={[
                             'flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl',
                             'text-sm font-medium border border-border',

@@ -3,6 +3,7 @@ import { Eye, EyeOff, Lock, User, AlertCircle, ShieldCheck } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { useAuth } from '../hooks/useAuth'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 /* ============================================================
    GlobalAdminLoginPage — Zone 4 entry point
@@ -11,6 +12,7 @@ import { useAuth } from '../hooks/useAuth'
    ============================================================ */
 
 export default function GlobalAdminLoginPage() {
+    usePageTitle('Đăng nhập System Admin')
     const { loginGlobalAdmin, isLoading, error } = useAuth()
     const [values, setValues] = useState({ employeeCode: '', password: '' })
     const [showPassword, setShowPassword] = useState(false)

@@ -2,8 +2,10 @@ import RoleDetail from '../components/role/RoleDetail'
 import RoleTable from '../components/role/RoleTable'
 import Header from '../components/ui/Header'
 import { useRoleStore } from '../store/roleStore'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function RolesPage() {
+    usePageTitle('Quản lý phân quyền')
     const activeRoleId = useRoleStore((s) => s.activeRoleId)
     const isAddingRole = useRoleStore((s) => s.isAddingRole)
     const showDetail = activeRoleId !== null || isAddingRole
@@ -20,10 +22,10 @@ export default function RolesPage() {
             {/* Header section */}
             <div className="flex-shrink-0">
                 <Header
-                    title="Role Management"
+                    title="Quản lý phân quyền"
                     isAdding={isAddingRole}
                     onAdd={handleStartAddRole}
-                    btnTitle="Add Role"
+                    btnTitle="Thêm vai trò"
                 />
             </div>
 

@@ -2,8 +2,10 @@ import Header from '../components/ui/Header'
 import DocumentTable from '../components/documents/DocumentTable'
 import DocumentDetail from '../components/documents/DocumentDetail'
 import { useDocumentStore } from '../store/documentStore'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function DocumentsPage() {
+    usePageTitle('Quản lý tài liệu')
     const activeDocumentId = useDocumentStore((d) => d.activeDocumentId)
     const isAddingDocument = useDocumentStore((d) => d.isAddingDocument)
     const showDetail = activeDocumentId !== null || isAddingDocument
@@ -20,10 +22,10 @@ export default function DocumentsPage() {
             {/* Header section */}
             <div className="flex-shrink-0">
                 <Header
-                    title="Documents Management"
+                    title="Quản lý tài liệu"
                     isAdding={isAddingDocument}
                     onAdd={handleStartAddUser}
-                    btnTitle="Add Document"
+                    btnTitle="Thêm tài liệu"
                 />
             </div>
 

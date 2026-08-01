@@ -1,5 +1,11 @@
 import { useEffect } from 'react'
-import { Building2, Users, Briefcase, ShieldOff, type LucideIcon } from 'lucide-react'
+import {
+    Building2,
+    Users,
+    Briefcase,
+    ShieldOff,
+    type LucideIcon,
+} from 'lucide-react'
 import { useDirectoryStore } from '../store/directoryStore'
 import { DirectoryTab } from '../types/directory'
 import { useDirectoryOverview } from '../hooks/useDirectory'
@@ -7,6 +13,7 @@ import { useDirectoryPermissions } from '../hooks/useDirectoryPermissions'
 import Header from '../components/ui/Header'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import DirectoryTable from '../components/directory/DirectoryTable'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 const TabItem = ({
     label,
@@ -49,14 +56,18 @@ const AccessDenied = () => (
         <div className="w-16 h-16 rounded-2xl bg-error/10 flex items-center justify-center">
             <ShieldOff className="w-8 h-8 text-error" />
         </div>
-        <h3 className="text-lg font-semibold text-text-primary">Truy cập bị từ chối</h3>
+        <h3 className="text-lg font-semibold text-text-primary">
+            Truy cập bị từ chối
+        </h3>
         <p className="text-sm text-text-placeholder max-w-sm">
-            Bạn không có quyền xem Danh bạ công ty. Vui lòng liên hệ quản trị viên.
+            Bạn không có quyền xem Danh bạ công ty. Vui lòng liên hệ quản trị
+            viên.
         </p>
     </div>
 )
 
 export default function DirectoryPage() {
+    usePageTitle('Danh bạ công ty')
     const activeTab = useDirectoryStore((t) => t.activeTab)
     const setActiveTab = useDirectoryStore((t) => t.setActiveTab)
 

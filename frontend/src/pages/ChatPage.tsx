@@ -5,6 +5,7 @@ import { useMessages } from '../hooks/useMessages'
 import { useSendMessage } from '../hooks/useSendMessage'
 import MessageList from '../components/chat/MessageList'
 import InputBox from '../components/chat/InputBox'
+import { usePageTitle } from '../hooks/usePageTitle'
 import type { Message } from '../types/chat'
 import type { ID } from '../types/common'
 
@@ -13,6 +14,7 @@ import type { ID } from '../types/common'
    ───────────────────────────────────────────────────────────── */
 
 export default function ChatPage() {
+    usePageTitle('Trợ lý AI')
     const navigate = useNavigate()
 
     // ── URL param (có thể undefined khi ở /chat) ──────────────────────

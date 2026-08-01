@@ -2,8 +2,10 @@ import Header from '../components/ui/Header'
 import UserTable from '../components/account/UserTable'
 import UserDetail from '../components/account/UserDetail'
 import { useUserStore } from '../store/usersStore'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function AccountsPage() {
+    usePageTitle('Quản lý tài khoản')
     const activeUserId = useUserStore((s) => s.activeUserId)
     const isAddingUser = useUserStore((s) => s.isAddingUser)
     const showDetail = activeUserId !== null || isAddingUser
@@ -20,10 +22,10 @@ export default function AccountsPage() {
             {/* Header section */}
             <div className="flex-shrink-0">
                 <Header
-                    title="Account Management"
+                    title="Quản lý tài khoản"
                     isAdding={isAddingUser}
                     onAdd={handleStartAddUser}
-                    btnTitle="Add User"
+                    btnTitle="Thêm tài khoản"
                 />
             </div>
 

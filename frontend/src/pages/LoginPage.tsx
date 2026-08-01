@@ -1,8 +1,10 @@
 import { LoginForm } from '../components/auth/LoginForm'
 import type { LoginCredentials } from '../types/auth'
 import { useAuth } from '../hooks/useAuth'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function LoginPage() {
+    usePageTitle('Đăng nhập')
     const { login, isLoading, error } = useAuth()
 
     const handleSubmit = (credentials: LoginCredentials) => {

@@ -2,8 +2,10 @@ import JobTitleDetail from '../components/jobTitle/JobTitleDetail'
 import JobTitleTable from '../components/jobTitle/JobTitleTable'
 import Header from '../components/ui/Header'
 import { useJobTitleStore } from '../store/jobTitleStore'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function JobTitlesPage() {
+    usePageTitle('Quản lý chức danh')
     const activeJobTitleId = useJobTitleStore((s) => s.activeJobTitleId)
     const isAddingJobTitle = useJobTitleStore((s) => s.isAddingJobTitle)
     const showDetail = activeJobTitleId !== null || isAddingJobTitle
@@ -20,10 +22,10 @@ export default function JobTitlesPage() {
             {/* Header section */}
             <div className="flex-shrink-0">
                 <Header
-                    title="Job Title Management"
+                    title="Quản lý chức danh"
                     isAdding={isAddingJobTitle}
                     onAdd={handleStartAddDepartment}
-                    btnTitle="Add Job Title"
+                    btnTitle="Thêm chức danh"
                 />
             </div>
 

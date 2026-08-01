@@ -4,6 +4,7 @@ import SecurityCard from '../components/profile/SecurityCard'
 import { useMyProfile } from '../hooks/useUsers'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import { toast } from 'sonner'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 /* ============================================================
    MyProfilePage — orchestrator page
@@ -12,11 +13,12 @@ import { toast } from 'sonner'
    ============================================================ */
 
 const MyProfilePage = () => {
+    usePageTitle('Hồ sơ cá nhân')
     const { data: user, isLoading, error } = useMyProfile()
 
     const handleSaveSuccess = () => {
-        toast.success('Profile updated', {
-            description: 'Your changes have been saved successfully.',
+        toast.success('Hồ sơ cá nhân đã được cập nhật', {
+            description: 'Các thay đổi của bạn đã được lưu thành công.',
         })
     }
 
@@ -25,20 +27,20 @@ const MyProfilePage = () => {
             <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3">
                 <LoadingSpinner />
                 <p className="text-sm text-text-placeholder">
-                    Loading profile...
+                    Đang tải hồ sơ...
                 </p>
             </div>
         )
     }
 
     if (error) {
-        toast.error('Failed to load profile', {
+        toast.error('Tải hồ sơ thất bại', {
             description: error.message,
         })
         return (
             <div className="min-h-full flex flex-col gap-6">
                 <div className="flex-shrink-0">
-                    <Header title="My Profile" />
+                    <Header title="Hồ sơ cá nhân" />
                 </div>
             </div>
         )
@@ -48,7 +50,7 @@ const MyProfilePage = () => {
         <div className="min-h-full flex flex-col gap-6">
             {/* Page header */}
             <div className="flex-shrink-0">
-                <Header title="My Profile" />
+                <Header title="Hồ sơ cá nhân" />
             </div>
 
             {/* Card 1 — Profile info */}

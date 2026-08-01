@@ -2,8 +2,10 @@ import Header from '../components/ui/Header'
 import TenantLogList from '../components/tenantLog/TenantLogList'
 import { useTenantLogStore } from '../store/tenantLogStore'
 import TenantLogDetail from '../components/tenantLog/TenantLogDetail'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function TenantLogPage() {
+    usePageTitle('Nhật ký kiểm toán')
     const activeTenantLogId = useTenantLogStore((s) => s.activeTenantLogId)
     const showDetail = activeTenantLogId !== null
 
@@ -11,7 +13,7 @@ export default function TenantLogPage() {
         <div className="h-full flex flex-col gap-4 overflow-hidden">
             {/* Header section */}
             <div className="flex-shrink-0">
-                <Header title="Activity Log Management" />
+                <Header title="Nhật ký kiểm toán" />
             </div>
 
             {/* Filter and Content layout */}

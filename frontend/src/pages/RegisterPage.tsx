@@ -1,6 +1,8 @@
 import { RegisterForm } from '../components/auth/register/RegisterForm'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 export const RegisterPage = () => {
+    usePageTitle('Đăng ký doanh nghiệp')
     return (
         <div className="h-screen w-screen flex flex-col lg:flex-row overflow-hidden">
             {/* Left Column: Branding (visible on lg screens, nicely styled on smaller) */}

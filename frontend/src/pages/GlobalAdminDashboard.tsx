@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react'
 import {
     Users,
@@ -16,6 +15,7 @@ import {
 } from 'lucide-react'
 import axiosClient from '../api/axios'
 import { useAuthStore } from '../store/authStore'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 // Interfaces for Types
 interface DashboardStats {
@@ -74,6 +74,7 @@ interface RealtimeData {
 }
 
 export default function GlobalAdminDashboard() {
+    usePageTitle('Tổng quan hệ thống')
     const accessToken = useAuthStore((s) => s.accessToken)
 
     // Core states

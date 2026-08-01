@@ -1,3 +1,5 @@
+import { usePageTitle } from '../hooks/usePageTitle'
+
 interface PlaceholderProps {
     title: string
     description: string
@@ -18,6 +20,7 @@ function AdminPagePlaceholder({ title, description }: PlaceholderProps) {
 }
 
 export function GlobalAdminTenants() {
+    usePageTitle('Quản lý Tenants - System Admin')
     return (
         <AdminPagePlaceholder
             title="Tenants Management"
@@ -27,6 +30,7 @@ export function GlobalAdminTenants() {
 }
 
 export function GlobalAdminPermissions() {
+    usePageTitle('Phân quyền - System Admin')
     return (
         <AdminPagePlaceholder
             title="Global Permissions Master"
@@ -36,6 +40,7 @@ export function GlobalAdminPermissions() {
 }
 
 export function GlobalAdminInfrastructure() {
+    usePageTitle('Hạ tầng AI - System Admin')
     return (
         <AdminPagePlaceholder
             title="AI Models & Infrastructure"
@@ -45,6 +50,7 @@ export function GlobalAdminInfrastructure() {
 }
 
 export function GlobalAdminLogs() {
+    usePageTitle('Nhật ký hệ thống - System Admin')
     return (
         <AdminPagePlaceholder
             title="System Logs"

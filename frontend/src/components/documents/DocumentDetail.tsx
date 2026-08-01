@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
 import { X, AlertCircle, CheckCircle } from 'lucide-react'
 import { useDocumentStore } from '../../store/documentStore'
@@ -123,7 +122,7 @@ const DocumentDetail = () => {
             {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto p-6 pt-4 scrollbar-thin">
                 {isLoadingDoc && activeDocumentId && !isAddingDocument ? (
-                    <div className="flex flex-col items-center justify-center py-20 space-y-3">
+                    <div className="flex flex-col items-center justify-center py-20 space-y-3 h-100">
                         <LoadingSpinner />
                         <p className="text-xs text-text-placeholder">
                             Đang tải chi tiết tài liệu...

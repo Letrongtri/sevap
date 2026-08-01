@@ -2,8 +2,10 @@ import DepartmentDetail from '../components/department/DepartmentDetail'
 import DepartmentTable from '../components/department/DepartmentTable'
 import Header from '../components/ui/Header'
 import { useDepartmentStore } from '../store/departmentStore'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function DepartmentsPage() {
+    usePageTitle('Quản lý phòng ban')
     const activeDepartmentId = useDepartmentStore((s) => s.activeDepartmentId)
     const isAddingDepartment = useDepartmentStore((s) => s.isAddingDepartment)
     const showDetail = activeDepartmentId !== null || isAddingDepartment
@@ -24,10 +26,10 @@ export default function DepartmentsPage() {
             {/* Header section */}
             <div className="flex-shrink-0">
                 <Header
-                    title="Department Management"
+                    title="Quản lý phòng ban"
                     isAdding={isAddingDepartment}
                     onAdd={handleStartAddDepartment}
-                    btnTitle="Add Department"
+                    btnTitle="Thêm phòng ban"
                 />
             </div>
 

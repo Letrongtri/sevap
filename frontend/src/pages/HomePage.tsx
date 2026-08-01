@@ -1,7 +1,9 @@
 import InputBox from '../components/home/InputBox'
 import { useAuthStore } from '../store/authStore'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function HomePage() {
+    usePageTitle()
     const user = useAuthStore((s) => s.user)
 
     const greeting = () => {
