@@ -4,8 +4,8 @@ from app.schemas import TenantCreate, TenantUpdate, TenantResponse
 from app.services import TenantService, TenantAlreadyExistsError, NotFoundError
 from app.decorators import log_activity
 from app.core.logging import logger
-from app.core.enum import PermissionAction, PermissionResource
-from app.dependencies import check_permission
+from app.core.enum import DefaultRole
+from app.dependencies import check_role
 
 router = APIRouter()
 
@@ -37,9 +37,7 @@ async def register_tenant(
 @router.put(
     "", 
     response_model=TenantResponse,
-    dependencies=[Depends(check_permission(
-        PermissionResource.TENANTS, PermissionAction.UPDATE
-    ))]
+    dependencies=[Depends(check_role(DefaultRole.ADMIN))]
 )
 @log_activity(
     action="tenant.update",
@@ -69,9 +67,7 @@ async def update_tenant(
 @router.delete(
     "", 
     response_model=TenantResponse,
-    dependencies=[Depends(check_permission(
-        PermissionResource.TENANTS, PermissionAction.DELETE
-    ))]
+    dependencies=[Depends(check_role(DefaultRole.ADMIN))]
 )
 @log_activity(
     action="tenant.delete",

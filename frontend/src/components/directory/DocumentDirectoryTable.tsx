@@ -200,7 +200,7 @@ const DocumentDirectoryTable = () => {
                                 key={doc.id}
                                 className="group hover:bg-bg/20 transition-colors duration-150"
                             >
-                                <td className="px-5 py-3.5 text-sm text-text-secondary font-mono">
+                                <td className="px-5 py-3.5 text-sm text-text-secondary">
                                     {(page - 1) * limit + index + 1}
                                 </td>
                                 <td className="px-5 py-3.5 text-sm font-semibold text-text-primary group-hover:text-primary transition-colors">
@@ -226,7 +226,7 @@ const DocumentDirectoryTable = () => {
                                         {getShortFileType(doc.file_type)}
                                     </span>
                                 </td>
-                                <td className="px-5 py-3.5 text-sm text-text-secondary font-mono">
+                                <td className="px-5 py-3.5 text-sm text-text-secondary">
                                     {formatBytes(doc.file_size)}
                                 </td>
                                 <td className="px-5 py-3.5 text-sm text-text-secondary">
@@ -344,7 +344,7 @@ const DocumentDirectoryTable = () => {
                                     Mã / Tên file:
                                 </span>
                             </div>
-                            <div className="text-text-primary truncate font-mono text-xs">
+                            <div className="text-text-primary truncate text-xs">
                                 {selectedDoc.file_name || selectedDoc.id}
                             </div>
 

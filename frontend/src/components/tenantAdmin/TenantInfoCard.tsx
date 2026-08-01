@@ -24,7 +24,7 @@ export default function TenantInfoCard() {
         data?.company_address || ''
     )
     const [companyDomain, setCompanyDomain] = useState(
-        data?.tenant_domain || ''
+        data?.tenant_domain?.replace('.sevap.com', '') || ''
     )
     const [companyDescription, setCompanyDescription] = useState(
         data?.company_description || ''
@@ -35,7 +35,7 @@ export default function TenantInfoCard() {
         setCompanyEmail(data?.company_email || '')
         setCompanyPhone(data?.company_phone || '')
         setCompanyAddress(data?.company_address || '')
-        setCompanyDomain(data?.tenant_domain || '')
+        setCompanyDomain(data?.tenant_domain?.replace('.sevap.com', '') || '')
         setCompanyDescription(data?.company_description || '')
         setIsEditingTenant(true)
     }

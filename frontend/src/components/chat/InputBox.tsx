@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react'
-import { Send, Loader2 } from 'lucide-react'
+import { Send, Loader2, Mic } from 'lucide-react'
 
 /* ============================================================
    Props
@@ -18,7 +18,11 @@ interface InputBoxProps {
    Component
    ============================================================ */
 
-export default function InputBox({ onSend, isSending, disabled = false }: InputBoxProps) {
+export default function InputBox({
+    onSend,
+    isSending,
+    disabled = false,
+}: InputBoxProps) {
     const [value, setValue] = useState('')
     const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -66,6 +70,11 @@ export default function InputBox({ onSend, isSending, disabled = false }: InputB
                     disabled={isBlocked}
                     className="input-box__textarea"
                 />
+                <div className="flex items-center justify-center h-full">
+                    <button className="text-text-placeholder hover:text-text-primary p-2">
+                        <Mic className="w-5 h-5" />
+                    </button>
+                </div>
                 <button
                     id="chat-send-btn"
                     onClick={handleSend}

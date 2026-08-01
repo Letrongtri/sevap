@@ -382,7 +382,7 @@
 .input-box__row {
     display: flex;
     gap: var(--space-3);
-    align-items: flex-end;
+    align-items: center;
 }
 
 .input-box__textarea {

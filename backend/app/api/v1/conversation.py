@@ -25,13 +25,7 @@ from app.core.logging import logger
 
 router = APIRouter()
 
-@router.get(
-    "",
-    response_model=ConversationPaginatedResponse,
-    dependencies=[Depends(check_permission(
-        PermissionResource.CONVERSATIONS, PermissionAction.READ
-    ))]
-)
+@router.get("", response_model=ConversationPaginatedResponse)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_personal_conversations(
     request: Request,
@@ -114,13 +108,7 @@ async def send_message(
         raise HTTPException(status_code=422, detail="Failed to send message")
 
 
-@router.get(
-    "/{conversation_id}",
-    response_model=ConversationDetailResponse,
-    dependencies=[Depends(check_permission(
-        PermissionResource.CONVERSATIONS, PermissionAction.READ
-    ))]
-)
+@router.get("/{conversation_id}", response_model=ConversationDetailResponse)
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_conversation(
     request: Request, 
@@ -147,13 +135,7 @@ async def get_conversation(
         )
         raise HTTPException(status_code=422, detail="Failed to get conversation")
 
-@router.patch(
-    "/{conversation_id}", 
-    response_model=ConversationResponse,
-    dependencies=[Depends(check_permission(
-        PermissionResource.CONVERSATIONS, PermissionAction.UPDATE
-    ))]
-)
+@router.patch("/{conversation_id}", response_model=ConversationResponse)
 @log_activity(
     action="conversation.update",
     resource="conversation",
@@ -188,13 +170,7 @@ async def update_conversation(
         )
         raise HTTPException(status_code=422, detail="Failed to update conversation")
 
-@router.delete(
-    "/{conversation_id}", 
-    response_model=ConversationResponse,
-    dependencies=[Depends(check_permission(
-        PermissionResource.CONVERSATIONS, PermissionAction.DELETE
-    ))]
-)
+@router.delete("/{conversation_id}", response_model=ConversationResponse)
 @log_activity(
     action="conversation.delete",
     resource="conversation",
@@ -226,13 +202,7 @@ async def delete_conversation(
         )
         raise HTTPException(status_code=422, detail="Failed to delete conversation")
 
-@router.get(
-    "/{conversation_id}/messages",
-    response_model=List[MessageResponse],
-    dependencies=[Depends(check_permission(
-        PermissionResource.CONVERSATIONS, PermissionAction.READ
-    ))]
-)
+@router.get("/{conversation_id}/messages", response_model=List[MessageResponse])
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_messages_by_conversation_id(
     request: Request,

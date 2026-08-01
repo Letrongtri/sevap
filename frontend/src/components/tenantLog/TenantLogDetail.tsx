@@ -23,7 +23,10 @@ import { useTenantLogById } from '../../hooks/useTenantLog'
 import { formatDateTimeToDDMMYYYYHHMMSS } from '../../../utils/formater'
 import { stringToLabel } from '../../../utils/utils'
 
-const LOG_LEVEL_BADGE_VARIANT: Record<string, 'info' | 'warning' | 'error' | 'default'> = {
+const LOG_LEVEL_BADGE_VARIANT: Record<
+    string,
+    'info' | 'warning' | 'error' | 'default'
+> = {
     info: 'info',
     warning: 'warning',
     error: 'error',
@@ -34,22 +37,22 @@ function InfoRow({
     icon,
     label,
     value,
-    mono = false,
 }: {
     icon: React.ReactNode
     label: string
     value: React.ReactNode
-    mono?: boolean
 }) {
     if (value === null || value === undefined || value === '') return null
     return (
         <div className="flex items-start gap-3 py-2.5 border-b border-[#D4D7DE]/30 last:border-0">
-            <span className="mt-0.5 flex-shrink-0 text-text-placeholder">{icon}</span>
+            <span className="mt-0.5 flex-shrink-0 text-text-placeholder">
+                {icon}
+            </span>
             <div className="flex flex-col min-w-0 flex-1">
                 <span className="text-[10px] uppercase tracking-wider font-bold text-text-placeholder mb-0.5">
                     {label}
                 </span>
-                <span className={['text-sm text-text-primary break-all', mono ? 'font-mono text-xs' : 'font-medium'].join(' ')}>
+                <span className="text-sm text-text-primary break-all font-medium">
                     {value}
                 </span>
             </div>
@@ -60,15 +63,22 @@ function InfoRow({
 /** Renders the metadata JSON object in a pretty, readable way */
 function MetaDataBlock({ data }: { data: Record<string, any> }) {
     const entries = Object.entries(data)
-    if (entries.length === 0) return <span className="text-xs text-text-placeholder italic">Empty</span>
+    if (entries.length === 0)
+        return (
+            <span className="text-xs text-text-placeholder italic">Empty</span>
+        )
 
     return (
         <div className="flex flex-col gap-1">
             {entries.map(([key, val]) => (
                 <div key={key} className="flex gap-2 text-xs">
-                    <span className="font-semibold text-text-secondary min-w-[80px] shrink-0">{key}:</span>
-                    <span className="font-mono text-text-primary break-all">
-                        {typeof val === 'object' ? JSON.stringify(val) : String(val ?? '—')}
+                    <span className="font-semibold text-text-secondary min-w-[80px] shrink-0">
+                        {key}:
+                    </span>
+                    <span className="text-text-primary break-all">
+                        {typeof val === 'object'
+                            ? JSON.stringify(val)
+                            : String(val ?? '—')}
                     </span>
                 </div>
             ))}
@@ -78,9 +88,13 @@ function MetaDataBlock({ data }: { data: Record<string, any> }) {
 
 const TenantLogDetail = () => {
     const activeTenantLogId = useTenantLogStore((s) => s.activeTenantLogId)
-    const setActiveTenantLogId = useTenantLogStore((s) => s.setActiveTenantLogId)
+    const setActiveTenantLogId = useTenantLogStore(
+        (s) => s.setActiveTenantLogId
+    )
 
-    const { data, isLoading, error, refetch } = useTenantLogById(activeTenantLogId!)
+    const { data, isLoading, error, refetch } = useTenantLogById(
+        activeTenantLogId!
+    )
 
     const handleCloseCard = () => {
         setActiveTenantLogId(null)
@@ -102,7 +116,7 @@ const TenantLogDetail = () => {
                     Activity Log Detail
                 </h2>
                 {data && (
-                    <p className="text-xs text-text-placeholder mt-0.5 font-mono truncate pr-8">
+                    <p className="text-xs text-text-placeholder mt-0.5 truncate pr-8">
                         ID: {data.id}
                     </p>
                 )}
@@ -136,7 +150,6 @@ const TenantLogDetail = () => {
                     </div>
                 ) : data ? (
                     <div className="flex flex-col gap-5">
-
                         {/* ── Section: Event ── */}
                         <section>
                             <div className="flex items-center gap-2 mb-2">
@@ -150,20 +163,24 @@ const TenantLogDetail = () => {
                                     icon={<Code className="w-3.5 h-3.5" />}
                                     label="Action"
                                     value={data.action}
-                                    mono
                                 />
                                 <InfoRow
                                     icon={<Database className="w-3.5 h-3.5" />}
                                     label="Resource"
                                     value={data.resource || '—'}
-                                    mono
                                 />
                                 <InfoRow
-                                    icon={<ShieldAlert className="w-3.5 h-3.5" />}
+                                    icon={
+                                        <ShieldAlert className="w-3.5 h-3.5" />
+                                    }
                                     label="Log Level"
                                     value={
                                         <Badge
-                                            variant={LOG_LEVEL_BADGE_VARIANT[data.log_level] ?? 'default'}
+                                            variant={
+                                                LOG_LEVEL_BADGE_VARIANT[
+                                                    data.log_level
+                                                ] ?? 'default'
+                                            }
                                             size="sm"
                                             dot
                                         >
@@ -174,7 +191,9 @@ const TenantLogDetail = () => {
                                 <InfoRow
                                     icon={<Clock className="w-3.5 h-3.5" />}
                                     label="Created At"
-                                    value={formatDateTimeToDDMMYYYYHHMMSS(data.created_at)}
+                                    value={formatDateTimeToDDMMYYYYHHMMSS(
+                                        data.created_at
+                                    )}
                                 />
                             </div>
                         </section>
@@ -197,25 +216,21 @@ const TenantLogDetail = () => {
                                     icon={<Hash className="w-3.5 h-3.5" />}
                                     label="Employee Code"
                                     value={data.employee_code || '—'}
-                                    mono
                                 />
                                 <InfoRow
                                     icon={<Mail className="w-3.5 h-3.5" />}
                                     label="Email"
                                     value={data.email || '—'}
-                                    mono
                                 />
                                 <InfoRow
                                     icon={<Hash className="w-3.5 h-3.5" />}
                                     label="User ID"
                                     value={data.user_id || '—'}
-                                    mono
                                 />
                                 <InfoRow
                                     icon={<Building2 className="w-3.5 h-3.5" />}
                                     label="Tenant ID"
                                     value={data.tenant_id || '—'}
-                                    mono
                                 />
                             </div>
                         </section>
@@ -233,7 +248,6 @@ const TenantLogDetail = () => {
                                     icon={<Globe className="w-3.5 h-3.5" />}
                                     label="IP Address"
                                     value={data.ip_address || '—'}
-                                    mono
                                 />
                                 <InfoRow
                                     icon={<MapPin className="w-3.5 h-3.5" />}
@@ -249,25 +263,25 @@ const TenantLogDetail = () => {
                                     icon={<Info className="w-3.5 h-3.5" />}
                                     label="User Agent"
                                     value={data.user_agent || '—'}
-                                    mono
                                 />
                             </div>
                         </section>
 
                         {/* ── Section: Metadata ── */}
-                        {data.meta_data && Object.keys(data.meta_data).length > 0 && (
-                            <section>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <Code className="w-3.5 h-3.5 text-primary" />
-                                    <span className="text-xs font-bold uppercase tracking-wider text-primary">
-                                        Metadata
-                                    </span>
-                                </div>
-                                <div className="bg-bg/40 rounded-xl p-4 border border-[#D4D7DE]/30">
-                                    <MetaDataBlock data={data.meta_data} />
-                                </div>
-                            </section>
-                        )}
+                        {data.meta_data &&
+                            Object.keys(data.meta_data).length > 0 && (
+                                <section>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Code className="w-3.5 h-3.5 text-primary" />
+                                        <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                                            Metadata
+                                        </span>
+                                    </div>
+                                    <div className="bg-bg/40 rounded-xl p-4 border border-[#D4D7DE]/30">
+                                        <MetaDataBlock data={data.meta_data} />
+                                    </div>
+                                </section>
+                            )}
                     </div>
                 ) : null}
             </div>

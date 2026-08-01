@@ -1353,7 +1353,7 @@ export default function GlobalAdminDashboard() {
                         </h3>
                     </div>
 
-                    <div className="flex-1 bg-slate-900 text-slate-200 font-mono text-[11px] p-4 rounded-xl overflow-y-auto space-y-2 shadow-inner border border-slate-950">
+                    <div className="flex-1 bg-slate-900 text-slate-200 text-[11px] p-4 rounded-xl overflow-y-auto space-y-2 shadow-inner border border-slate-950">
                         {logLines.map((log, i) => {
                             let colorClass = 'text-sky-400'
                             if (log.color === 'green')

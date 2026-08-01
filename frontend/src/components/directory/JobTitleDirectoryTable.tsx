@@ -91,10 +91,10 @@ const JobTitleDirectoryTable = () => {
                                 key={job.id}
                                 className="group hover:bg-bg/20 transition-colors duration-150"
                             >
-                                <td className="px-5 py-3.5 text-sm text-text-secondary font-mono">
+                                <td className="px-5 py-3.5 text-sm text-text-secondary">
                                     {(page - 1) * limit + index + 1}
                                 </td>
-                                <td className="px-5 py-3.5 text-sm text-text-secondary font-mono">
+                                <td className="px-5 py-3.5 text-sm text-text-secondary">
                                     {job.code}
                                 </td>
                                 <td className="px-5 py-3.5 text-sm font-semibold text-text-primary group-hover:text-primary transition-colors">

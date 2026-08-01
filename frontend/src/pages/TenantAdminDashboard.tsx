@@ -17,9 +17,6 @@ export default function TenantAdminDashboard() {
                 <Header
                     title="Tổng quan quản trị"
                     icon={<LayoutDashboard className="w-5 h-5" />}
-                    isAdding={false}
-                    onAdd={() => {}}
-                    btnTitle="Refresh"
                 />
             </div>
 

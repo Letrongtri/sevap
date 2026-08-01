@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
-import { ArrowUp, BadgeQuestionMark } from 'lucide-react'
+import { ArrowUp, BadgeQuestionMark, Mic } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useChatStore } from '../../store/chatStore'
 import { PRIVATE_ROUTES } from '../../routes/paths'
@@ -102,8 +102,11 @@ const InputBox = () => {
                             style={{ minHeight: '52px', maxHeight: '180px' }}
                         />
 
-                        {/* Bottom Toolbar: Plus on left, Mic & Send on right */}
+                        {/* Bottom Toolbar: Mic & Send on right */}
                         <div className="flex items-center justify-end pt-2 border-t border-border-subtle/60 mt-1">
+                            <button className="text-text-placeholder hover:text-text-primary p-2 mr-2">
+                                <Mic className="w-4 h-4" />
+                            </button>
                             <button
                                 id="home-send-btn"
                                 onClick={() => void handleSubmit()}
@@ -141,6 +144,10 @@ const InputBox = () => {
                             ].join(' ')}
                             style={{ minHeight: '24px', maxHeight: '180px' }}
                         />
+
+                        <button className="text-text-placeholder hover:text-text-primary p-2">
+                            <Mic className="w-4 h-4" />
+                        </button>
 
                         <button
                             id="home-send-btn"
