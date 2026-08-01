@@ -20,10 +20,10 @@ export function TwoFactorSection({ enabled, onToggle }: TwoFactorSectionProps) {
                 </SecurityIcon>
                 <div>
                     <p className="text-sm font-semibold text-text-primary">
-                        Two-factor authentication (2FA)
+                        Xác thực 2 yếu tố (2FA)
                     </p>
                     <p className="text-xs text-text-muted mt-0.5">
-                        Protect your account with a second layer of security.
+                        Bảo vệ tài khoản của bạn với lớp bảo mật thứ hai.
                     </p>
                 </div>
             </div>

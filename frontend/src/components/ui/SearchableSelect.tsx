@@ -34,7 +34,7 @@ export default function SearchableSelect({
     options = [],
     value,
     onChange,
-    placeholder = 'Select option...',
+    placeholder = 'Chọn tùy chọn...',
     label,
     disabled = false,
     className = '',
@@ -144,7 +144,7 @@ export default function SearchableSelect({
                         <Search className="w-3.5 h-3.5 text-text-placeholder" />
                         <input
                             type="text"
-                            placeholder="Search..."
+                            placeholder="Tìm kiếm..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full bg-transparent text-xs text-text-primary outline-none placeholder:text-text-placeholder"
@@ -164,7 +164,7 @@ export default function SearchableSelect({
                     <div className="overflow-y-auto flex-1 py-1 max-h-48 divide-y divide-[#D4D7DE]/20">
                         {filteredOptions.length === 0 ? (
                             <div className="px-3 py-2 text-xs text-text-placeholder text-center">
-                                No results found
+                                Không tìm thấy kết quả
                             </div>
                         ) : (
                             filteredOptions.map((option) => {

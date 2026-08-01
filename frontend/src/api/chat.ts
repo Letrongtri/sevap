@@ -32,7 +32,7 @@ export const fetchConversations = async (
     const d = res.data
     return {
         conversations:
-            d?.conversations?.map((conv) => ({
+            d?.conversations?.map((conv: any) => ({
                 id: conv.id,
                 title: conv.title,
                 createdAt: conv.created_at,

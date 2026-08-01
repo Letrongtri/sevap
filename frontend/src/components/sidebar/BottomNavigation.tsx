@@ -96,10 +96,10 @@ const BottomNavigation = ({
                             </p>
                             <p className="text-[10px] text-text-placeholder mt-0.5 truncate">
                                 {user?.roles?.includes('admin')
-                                    ? 'Admin'
+                                    ? 'Quản trị viên'
                                     : user?.roles?.includes('hr_manager')
-                                      ? 'HR Manager'
-                                      : 'Employee'}
+                                      ? 'Quản lý HR'
+                                      : 'Nhân viên'}
                             </p>
                         </div>
                     </button>

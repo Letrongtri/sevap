@@ -37,7 +37,7 @@ export const CompanyInfoSection: React.FC<CompanyInfoSectionProps> = ({
             {/* Section Header */}
             <div className="flex items-center gap-2 text-xs font-bold text-primary tracking-wider uppercase border-b border-border/40 pb-2">
                 <Building2 className="w-4 h-4" />
-                <span>Company Information</span>
+                <span>Thông tin Doanh nghiệp</span>
             </div>
 
             {/* Company Name */}
@@ -45,8 +45,8 @@ export const CompanyInfoSection: React.FC<CompanyInfoSectionProps> = ({
                 id="company_name"
                 name="company_name"
                 type="text"
-                label="Company Name"
-                placeholder="e.g., SEVAP Co., Ltd."
+                label="Tên Doanh nghiệp"
+                placeholder="ví dụ: Công ty TNHH SEVAP"
                 value={values.company_name ?? ''}
                 onChange={onChange}
                 errorText={errors.company_name}
@@ -58,7 +58,7 @@ export const CompanyInfoSection: React.FC<CompanyInfoSectionProps> = ({
             <DomainInput
                 id="tenant_domain"
                 name="tenant_domain"
-                label="Tenant Domain"
+                label="Tên miền Doanh nghiệp"
                 placeholder="company"
                 value={values.tenant_domain ?? ''}
                 onChange={onChange}
@@ -73,7 +73,7 @@ export const CompanyInfoSection: React.FC<CompanyInfoSectionProps> = ({
                     id="company_email"
                     name="company_email"
                     type="email"
-                    label="Contact Email"
+                    label="Email liên hệ"
                     placeholder="contact@company.com"
                     value={values.company_email ?? ''}
                     onChange={onChange}
@@ -85,7 +85,7 @@ export const CompanyInfoSection: React.FC<CompanyInfoSectionProps> = ({
                     id="company_phone"
                     name="company_phone"
                     type="tel"
-                    label="Phone Number"
+                    label="Số điện thoại"
                     placeholder="(+84) 123 456 789"
                     value={values.company_phone ?? ''}
                     onChange={onChange}
@@ -100,8 +100,8 @@ export const CompanyInfoSection: React.FC<CompanyInfoSectionProps> = ({
                 id="company_address"
                 name="company_address"
                 type="text"
-                label="Headquarters Address"
-                placeholder="e.g., 123 ABC Street, District XYZ, HCMC"
+                label="Địa chỉ trụ sở chính"
+                placeholder="ví dụ: 123 Đường ABC, Quận XYZ, TP.HCM"
                 value={values.company_address ?? ''}
                 onChange={onChange}
                 errorText={errors.company_address}
@@ -115,14 +115,14 @@ export const CompanyInfoSection: React.FC<CompanyInfoSectionProps> = ({
                     htmlFor="company_description"
                     className="block text-sm font-semibold text-text-secondary"
                 >
-                    Brief Description
+                    Mô tả doanh nghiệp
                 </label>
                 <textarea
                     id="company_description"
                     name="company_description"
                     rows={3}
                     disabled={disabled}
-                    placeholder="Enter a short description of your company..."
+                    placeholder="Nhập mô tả ngắn về doanh nghiệp của bạn..."
                     value={values.company_description ?? ''}
                     onChange={onChange}
                     className={[

@@ -10,7 +10,7 @@ import { SidebarFooter } from './SidebarFooter'
    ============================================================ */
 
 const docNav = [
-    { label: 'Documents', icon: FileText, to: PRIVATE_ROUTES.DOCUMENTS },
+    { label: 'Tài liệu', icon: FileText, to: PRIVATE_ROUTES.DOCUMENTS },
 ] as const
 
 interface DocumentSidebarProps {

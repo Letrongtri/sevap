@@ -15,7 +15,7 @@ export default function Pagination({
     limit,
     totalPages,
     totalItems,
-    unit = 'items',
+    unit = 'mục',
     onPageChange,
     onLimitChange,
 }: PaginationProps) {
@@ -62,7 +62,7 @@ export default function Pagination({
         <div className="flex flex-wrap items-center justify-end gap-3.5 px-6 py-4 border-t border-[#D4D7DE]/40 bg-bg/5 select-none font-medium text-xs text-text-secondary">
             {/* Total items count display */}
             <span className="mr-auto text-text-placeholder">
-                Total {totalItems} {unit}
+                Tổng số {totalItems} {unit}
             </span>
 
             {/* Pagination Controls Wrapper */}
@@ -126,9 +126,9 @@ export default function Pagination({
                     onChange={(e) => onLimitChange(Number(e.target.value))}
                     className="appearance-none pl-3 pr-7 py-1 bg-white border border-border text-text-secondary text-xs font-semibold rounded-full outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 cursor-pointer hover:border-text-placeholder transition-all"
                 >
-                    <option value={10}>10 / page</option>
-                    <option value={20}>20 / page</option>
-                    <option value={50}>50 / page</option>
+                    <option value={10}>10 / trang</option>
+                    <option value={20}>20 / trang</option>
+                    <option value={50}>50 / trang</option>
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-text-placeholder">
                     {/* Native arrow replacement with Lucide styling on wrapper */}

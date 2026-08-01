@@ -18,31 +18,31 @@ import { SidebarFooter } from './SidebarFooter'
 
 const adminNav = [
     {
-        label: 'Dashboard',
+        label: 'Tổng quan',
         icon: LayoutDashboard,
         to: PRIVATE_ROUTES.TENANT_ADMIN_DASHBOARD,
     },
     {
-        label: 'User Accounts',
+        label: 'Tài khoản người dùng',
         icon: UserCog,
         to: PRIVATE_ROUTES.ADMIN_ACCOUNTS,
     },
     {
-        label: 'Roles & Permissions',
+        label: 'Vai trò & Phân quyền',
         icon: ShieldCheck,
         to: PRIVATE_ROUTES.ADMIN_ROLES,
     },
     {
-        label: 'Departments',
+        label: 'Phòng ban',
         icon: Building2,
         to: PRIVATE_ROUTES.ADMIN_DEPARTMENTS,
     },
     {
-        label: 'Job Titles',
+        label: 'Chức danh',
         icon: Briefcase,
         to: PRIVATE_ROUTES.ADMIN_JOB_TITLES,
     },
-    { label: 'Activity Logs', icon: History, to: PRIVATE_ROUTES.TENANT_LOGS },
+    { label: 'Nhật ký hoạt động', icon: History, to: PRIVATE_ROUTES.TENANT_LOGS },
 ] as const
 
 interface AdminSidebarProps {

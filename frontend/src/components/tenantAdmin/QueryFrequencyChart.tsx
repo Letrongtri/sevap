@@ -177,10 +177,10 @@ const QueryFrequencyChartMain = ({ data }: { data: TenantChatStatsItem[] }) => {
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <h3 className="text-sm font-bold text-text-primary">
-                        Interaction frequency
+                        Tần suất tương tác
                     </h3>
                     <p className="text-xs text-text-muted mt-0.5">
-                        Number of conversations and messages over time periods
+                        Số lượng cuộc hội thoại và tin nhắn theo các khoảng thời gian
                     </p>
                 </div>
 

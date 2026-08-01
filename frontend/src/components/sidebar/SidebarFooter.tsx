@@ -26,11 +26,11 @@ export function SidebarFooter({ collapsed, user, backTo }: SidebarFooterProps) {
                 {/* Back button (optional) */}
                 {backTo &&
                     (collapsed ? (
-                        <Tooltip content="Back to Chat" position="right">
+                        <Tooltip content="Quay lại Chat" position="right">
                             <button
                                 onClick={() => navigate({ to: backTo })}
                                 className="flex items-center justify-center w-full px-3 py-2 rounded-xl text-text-placeholder hover:text-primary hover:bg-primary/10 transition-all duration-150"
-                                aria-label="Back to Chat"
+                                aria-label="Quay lại Chat"
                             >
                                 <ArrowLeft className="w-5 h-5" />
                             </button>
@@ -41,7 +41,7 @@ export function SidebarFooter({ collapsed, user, backTo }: SidebarFooterProps) {
                             className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm text-text-muted hover:text-primary hover:bg-primary/10 transition-all duration-150"
                         >
                             <ArrowLeft className="w-4 h-4 flex-shrink-0" />
-                            <span className="truncate">Back to Chat</span>
+                            <span className="truncate">Quay lại Chat</span>
                         </button>
                     ))}
             </div>

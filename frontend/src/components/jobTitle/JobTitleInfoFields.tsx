@@ -23,15 +23,15 @@ const JobTitleInfoFields = ({
     return (
         <div className="space-y-4">
             <Input
-                label="Job Title Name"
-                placeholder="Job title name"
+                label="Tên chức danh"
+                placeholder="Tên chức danh"
                 value={editJobTitleName}
                 onChange={(e) => setEditJobTitleName(e.target.value)}
                 leftIcon={<Briefcase className="w-4 h-4" />}
             />
             <Input
-                label="Job Title Code"
-                placeholder="Job title code"
+                label="Mã chức danh"
+                placeholder="Mã chức danh"
                 value={editCode}
                 onChange={(e) => setEditCode(e.target.value)}
                 leftIcon={<Hash className="w-4 h-4" />}
@@ -39,8 +39,8 @@ const JobTitleInfoFields = ({
             />
 
             <Input
-                label="Job Title Description"
-                placeholder="Job title description"
+                label="Mô tả chức danh"
+                placeholder="Mô tả chức danh"
                 value={editDescription}
                 onChange={(e) => setEditDescription(e.target.value)}
             />

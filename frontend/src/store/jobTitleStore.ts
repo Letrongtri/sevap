@@ -23,7 +23,7 @@ export const useJobTitleStore = create<JobTitleStore>((set) => ({
 
     setPage: (page: number | null) => set({ page }),
 
-    setLimit: (limit: number) => set({ limit }),
+    setLimit: (limit: number | null) => set({ limit: limit ?? 10 }),
 
     /** Bỏ chọn job title hiện tại */
     clearActiveJobTitle: () => set({ activeJobTitleId: null }),

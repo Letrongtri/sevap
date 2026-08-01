@@ -58,12 +58,12 @@ const UserTable = () => {
 
     // Map metadata to select options
     const departmentOptions = [
-        { value: null, label: 'All Departments' },
+        { value: null, label: 'Tất cả phòng ban' },
         ...(departmentsData || []).map((d) => ({ value: d.id, label: d.name })),
     ]
 
     const jobTitleOptions = [
-        { value: null, label: 'All Job Titles' },
+        { value: null, label: 'Tất cả chức danh' },
         ...(jobTitlesData || []).map((j) => ({
             value: j.id,
             label: j.title_name,
@@ -71,7 +71,7 @@ const UserTable = () => {
     ]
 
     const roleOptions = [
-        { value: null, label: 'All Roles' },
+        { value: null, label: 'Tất cả vai trò' },
         ...(rolesData || []).map((r) => ({ value: r.id, label: r.name })),
     ]
 
@@ -90,6 +90,12 @@ const UserTable = () => {
         return status === filter
     }
 
+    const statusLabels: Record<'all' | 'active' | 'inactive', string> = {
+        all: 'Tất cả',
+        active: 'Đang hoạt động',
+        inactive: 'Ngưng hoạt động',
+    }
+
     return (
         <div className="bg-white rounded-2xl border border-[#D4D7DE]/60 shadow-sm overflow-hidden flex flex-col h-full">
             {/* Search & filters bar */}
@@ -101,7 +107,7 @@ const UserTable = () => {
                         <Search className="w-4 h-4 text-text-placeholder absolute left-3.5 top-1/2 -translate-y-1/2" />
                         <input
                             type="text"
-                            placeholder="Search by name, code, email..."
+                            placeholder="Tìm kiếm theo tên, mã, email..."
                             value={localSearch}
                             onChange={(e) => setLocalSearch(e.target.value)}
                             className="w-full pl-10 pr-4 py-2 text-sm bg-surface-raised border border-border rounded-xl focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-text-placeholder"
@@ -122,7 +128,7 @@ const UserTable = () => {
                                             : 'text-text-placeholder hover:text-text-secondary',
                                     ].join(' ')}
                                 >
-                                    {filter}
+                                    {statusLabels[filter]}
                                 </button>
                             )
                         )}
@@ -138,7 +144,7 @@ const UserTable = () => {
                             setDepartmentId(val)
                             setPage(1)
                         }}
-                        placeholder="All Departments"
+                        placeholder="Tất cả phòng ban"
                     />
                     <SearchableSelect
                         options={jobTitleOptions}
@@ -147,7 +153,7 @@ const UserTable = () => {
                             setJobTitleId(val)
                             setPage(1)
                         }}
-                        placeholder="All Job Titles"
+                        placeholder="Tất cả chức danh"
                     />
                     <SearchableSelect
                         options={roleOptions}
@@ -156,7 +162,7 @@ const UserTable = () => {
                             setRoleId(val)
                             setPage(1)
                         }}
-                        placeholder="All Roles"
+                        placeholder="Tất cả vai trò"
                     />
                 </div>
             </div>
@@ -167,34 +173,34 @@ const UserTable = () => {
                     <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3">
                         <LoadingSpinner />
                         <p className="text-sm text-text-placeholder">
-                            Loading accounts...
+                            Đang tải danh sách tài khoản...
                         </p>
                     </div>
                 ) : error ? (
                     <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-6 space-y-2">
                         <AlertCircle className="w-10 h-10 text-error" />
                         <h3 className="text-lg font-semibold text-text-primary">
-                            Failed to load accounts
+                            Tải danh sách tài khoản thất bại
                         </h3>
                         <p className="text-sm text-text-placeholder max-w-sm">
-                            {error.message || 'An error occurred'}
+                            {error.message || 'Đã có lỗi xảy ra'}
                         </p>
                         <Button
                             variant="secondary"
                             size="sm"
                             onClick={() => refetch()}
                         >
-                            Retry
+                            Thử lại
                         </Button>
                     </div>
                 ) : users.length === 0 ? (
                     <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-6 space-y-2">
                         <UserIcon className="w-10 h-10 text-text-placeholder" />
                         <h3 className="text-base font-semibold text-text-secondary">
-                            No accounts found
+                            Không tìm thấy tài khoản nào
                         </h3>
                         <p className="text-sm text-text-placeholder max-w-xs">
-                            Try adjusting your search query or filters.
+                            Hãy thử điều chỉnh từ khóa tìm kiếm hoặc bộ lọc.
                         </p>
                     </div>
                 ) : (
@@ -203,22 +209,22 @@ const UserTable = () => {
                             <tr className="text-text-secondary text-xs uppercase font-bold tracking-wider">
                                 {/* Đưa sticky và bg-white vào từng thẻ th để làm nền cứng chặn text cuộn phía dưới */}
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                    No.
+                                    STT
                                 </th>
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                    Full Name
+                                    Họ và tên
                                 </th>
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                    Employee Code
+                                    Mã nhân viên
                                 </th>
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
                                     Email
                                 </th>
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                    Roles
+                                    Vai trò
                                 </th>
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                    Status
+                                    Trạng thái
                                 </th>
                             </tr>
                         </thead>
@@ -247,7 +253,7 @@ const UserTable = () => {
                                             </p>
                                             {user.last_login && (
                                                 <p className="text-[10px] text-text-placeholder mt-0.5">
-                                                    Last login:{' '}
+                                                    Đăng nhập gần nhất:{' '}
                                                     {new Date(
                                                         user.last_login
                                                     ).toLocaleDateString()}
@@ -262,7 +268,7 @@ const UserTable = () => {
                                         <td className="px-5 py-3.5 text-sm text-text-secondary">
                                             {user.email || (
                                                 <span className="italic text-text-placeholder">
-                                                    No email
+                                                    Chưa có email
                                                 </span>
                                             )}
                                         </td>
@@ -272,7 +278,7 @@ const UserTable = () => {
                                                 ?.map((role) =>
                                                     stringToLabel(role.name)
                                                 )
-                                                .join(', ') || 'Employee'}
+                                                .join(', ') || 'Nhân viên'}
                                         </td>
                                         {/* Status badge */}
                                         <td className="px-5 py-3.5">
@@ -286,8 +292,8 @@ const UserTable = () => {
                                                 dot
                                             >
                                                 {user.is_active
-                                                    ? 'Active'
-                                                    : 'Inactive'}
+                                                    ? 'Hoạt động'
+                                                    : 'Ngưng hoạt động'}
                                             </Badge>
                                         </td>
                                     </tr>
@@ -306,7 +312,7 @@ const UserTable = () => {
                         limit={limit}
                         totalPages={pagination.total_pages}
                         totalItems={pagination.total}
-                        unit="accounts"
+                        unit="tài khoản"
                         onPageChange={setPage}
                         onLimitChange={setLimit}
                     />

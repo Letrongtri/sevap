@@ -57,7 +57,7 @@ const DepartmentTable = () => {
                         <Search className="w-4 h-4 text-text-placeholder absolute left-3.5 top-1/2 -translate-y-1/2" />
                         <input
                             type="text"
-                            placeholder="Search by department name or code..."
+                            placeholder="Tìm kiếm theo tên hoặc mã phòng ban..."
                             value={localSearch}
                             onChange={(e) => setLocalSearch(e.target.value)}
                             className="w-full pl-10 pr-4 py-2 text-sm bg-surface-raised border border-border rounded-xl focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-text-placeholder"
@@ -72,31 +72,31 @@ const DepartmentTable = () => {
                     <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3">
                         <LoadingSpinner />
                         <p className="text-sm text-text-placeholder">
-                            Loading departments...
+                            Đang tải danh sách phòng ban...
                         </p>
                     </div>
                 ) : error ? (
                     <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-6 space-y-2">
                         <AlertCircle className="w-10 h-10 text-error" />
                         <h3 className="text-lg font-semibold text-text-primary">
-                            Failed to load departments
+                            Tải danh sách phòng ban thất bại
                         </h3>
                         <p className="text-sm text-text-placeholder max-w-sm">
-                            {error.message || 'An error occurred'}
+                            {error.message || 'Đã có lỗi xảy ra'}
                         </p>
                         <Button
                             variant="secondary"
                             size="sm"
                             onClick={() => refetch()}
                         >
-                            Retry
+                            Thử lại
                         </Button>
                     </div>
                 ) : departments.length === 0 ? (
                     <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-6 space-y-2">
                         <ShieldCheck className="w-10 h-10 text-text-placeholder" />
                         <h3 className="text-base font-semibold text-text-secondary">
-                            No departments found
+                            Không tìm thấy phòng ban nào
                         </h3>
                     </div>
                 ) : (
@@ -105,22 +105,22 @@ const DepartmentTable = () => {
                             <tr className="text-text-secondary text-xs uppercase font-bold tracking-wider">
                                 {/* Đưa sticky và bg-white vào từng thẻ th để làm nền cứng chặn text cuộn phía dưới */}
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                    No.
+                                    STT
                                 </th>
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                    Name
+                                    Tên phòng ban
                                 </th>
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                    Code
+                                    Mã phòng ban
                                 </th>
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                    Description
+                                    Mô tả
                                 </th>
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                    Created At
+                                    Ngày tạo
                                 </th>
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                    Updated At
+                                    Ngày cập nhật
                                 </th>
                             </tr>
                         </thead>
@@ -185,6 +185,7 @@ const DepartmentTable = () => {
                         limit={limit}
                         totalPages={pagination.total_pages}
                         totalItems={pagination.total}
+                        unit="phòng ban"
                         onPageChange={setPage}
                         onLimitChange={setLimit}
                     />

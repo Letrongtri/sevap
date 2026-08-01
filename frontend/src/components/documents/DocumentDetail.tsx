@@ -58,7 +58,7 @@ const DocumentDetail = () => {
                 onError: (err: any) => {
                     setFormError(
                         err.response?.data?.detail ??
-                            'Failed to download document file.'
+                            'Tải tệp tài liệu thất bại.'
                     )
                 },
             }
@@ -72,12 +72,12 @@ const DocumentDetail = () => {
 
         deleteMutation.mutate(document.id, {
             onSuccess: () => {
-                setFormSuccess('Document deleted successfully.')
+                setFormSuccess('Xóa tài liệu thành công.')
                 handleCloseCard()
             },
             onError: (err: any) => {
                 setFormError(
-                    err.response?.data?.detail ?? 'Failed to delete document.'
+                    err.response?.data?.detail ?? 'Xóa tài liệu thất bại.'
                 )
             },
         })
@@ -91,7 +91,7 @@ const DocumentDetail = () => {
             <div className="px-6 py-4 border-b border-[#D4D7DE]/40 flex-shrink-0 relative">
                 <button
                     onClick={handleCloseCard}
-                    title="Close detail panel"
+                    title="Đóng bảng chi tiết"
                     className="absolute top-3 right-3 p-1.5 rounded-lg text-text-placeholder hover:text-text-primary hover:bg-bg transition-all duration-150 z-20 cursor-pointer"
                 >
                     <X className="w-5 h-5" />
@@ -99,10 +99,10 @@ const DocumentDetail = () => {
 
                 <h2 className="text-lg font-bold text-text-primary">
                     {isAddingDocument
-                        ? 'Upload New Document'
+                        ? 'Tải lên tài liệu mới'
                         : isEditing
-                          ? 'Edit Document Details'
-                          : 'Document Information'}
+                          ? 'Chỉnh sửa thông tin tài liệu'
+                          : 'Thông tin tài liệu'}
                 </h2>
 
                 {/* Banner feedback */}
@@ -126,14 +126,14 @@ const DocumentDetail = () => {
                     <div className="flex flex-col items-center justify-center py-20 space-y-3">
                         <LoadingSpinner />
                         <p className="text-xs text-text-placeholder">
-                            Loading document details...
+                            Đang tải chi tiết tài liệu...
                         </p>
                     </div>
                 ) : loadError && activeDocumentId && !isAddingDocument ? (
                     <div className="flex flex-col items-center justify-center py-20 text-center space-y-2">
                         <AlertCircle className="w-8 h-8 text-error" />
                         <h4 className="text-sm font-semibold text-text-primary">
-                            Failed to load details
+                            Tải chi tiết thất bại
                         </h4>
                         <p className="text-xs text-text-placeholder max-w-xs">
                             {loadError.message}

@@ -32,7 +32,7 @@ export default function StatCardsRow() {
             <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3">
                 <LoadingSpinner />
                 <p className="text-sm text-text-placeholder">
-                    Loading company information...
+                    Đang tải thông tin công ty...
                 </p>
             </div>
         )
@@ -43,13 +43,13 @@ export default function StatCardsRow() {
             <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-6 space-y-2">
                 <AlertCircle className="w-10 h-10 text-error" />
                 <h3 className="text-lg font-semibold text-text-primary">
-                    Failed to load company information
+                    Tải thông tin công ty thất bại
                 </h3>
                 <p className="text-sm text-text-placeholder max-w-sm">
-                    {'An error occurred while loading company information'}
+                    Đã xảy ra lỗi khi tải thông tin công ty
                 </p>
                 <Button variant="secondary" size="sm" onClick={() => refetch()}>
-                    Retry
+                    Thử lại
                 </Button>
             </div>
         )
@@ -57,39 +57,39 @@ export default function StatCardsRow() {
 
     const cards: StatCardItem[] = [
         {
-            label: 'Users Active',
+            label: 'Tài khoản',
             value: data?.total_users.toLocaleString() ?? '',
-            subLabel: 'Active accounts',
+            subLabel: 'Tài khoản hoạt động',
             icon: <Users className="w-3.5 h-3.5" />,
             iconBg: 'bg-primary/10',
             iconColor: 'text-primary',
         },
         {
-            label: 'Custom Roles',
+            label: 'Vai trò tùy chỉnh',
             value: data?.total_custom_roles.toLocaleString() ?? '',
-            subLabel: 'RBAC permissions',
+            subLabel: 'Phân quyền RBAC',
             icon: <Shield className="w-3.5 h-3.5" />,
             iconBg: 'bg-purple-50',
             iconColor: 'text-purple-600',
         },
         {
-            label: 'Departments',
+            label: 'Phòng ban',
             value: data?.total_departments.toLocaleString() ?? '',
             icon: <Layers className="w-3.5 h-3.5" />,
-            subLabel: 'Org structure',
+            subLabel: 'Cơ cấu tổ chức',
             iconBg: 'bg-amber-50',
             iconColor: 'text-amber-600',
         },
         {
-            label: 'Job Titles',
+            label: 'Chức danh',
             value: data?.total_job_titles.toLocaleString() ?? '',
-            subLabel: 'Designations mapped',
+            subLabel: 'Danh mục chức danh',
             icon: <Briefcase className="w-3.5 h-3.5" />,
             iconBg: 'bg-rose-50',
             iconColor: 'text-rose-600',
         },
         {
-            label: 'Knowledge Docs',
+            label: 'Tài liệu tri thức',
             value: data?.total_documents.toLocaleString() ?? '',
             icon: <FileText className="w-3.5 h-3.5" />,
             iconBg: 'bg-emerald-50',
@@ -97,22 +97,22 @@ export default function StatCardsRow() {
             badge: (
                 <div className="mt-2 text-[11px] font-semibold text-success flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-success inline-block" />
-                    100% Embedded
+                    100% Đã nhúng
                 </div>
             ),
         },
         {
-            label: 'Embedding Chunks',
+            label: 'Đoạn nhúng Vector',
             value: data?.total_embeddings.toLocaleString() ?? '',
-            subLabel: 'BGE-M3 (1024-dim)',
+            subLabel: 'BGE-M3 (1024 chiều)',
             icon: <Database className="w-3.5 h-3.5" />,
             iconBg: 'bg-cyan-50',
             iconColor: 'text-cyan-600',
         },
         {
-            label: 'Tenant Storage',
+            label: 'Dung lượng lưu trữ',
             value: formatBytes(data?.total_storage ?? 0),
-            subLabel: 'Total disk usage',
+            subLabel: 'Tổng dung lượng đĩa',
             icon: <HardDrive className="w-3.5 h-3.5" />,
             iconBg: 'bg-sky-50',
             iconColor: 'text-sky-600',

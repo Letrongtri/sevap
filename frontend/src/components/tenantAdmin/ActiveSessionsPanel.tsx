@@ -81,7 +81,7 @@ function SessionRow({
                     className="flex-shrink-0 flex items-center gap-1 text-[10px] font-semibold text-error border border-error/25 bg-error/5 hover:bg-error/15 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
                 >
                     <LogOut className="w-3 h-3" />
-                    Revoke
+                    Thu hồi
                 </button>
             )}
         </div>
@@ -114,16 +114,16 @@ export default function ActiveSessionsPanel() {
             <div className="flex items-start justify-between mb-3">
                 <div>
                     <h3 className="text-sm font-bold text-text-primary">
-                        Active User Sessions
+                        Phiên người dùng đang hoạt động
                     </h3>
                     <p className="text-[11px] text-text-muted mt-0.5">
-                        Real-time session monitoring of current tenant
+                        Theo dõi phiên làm việc thời gian thực của công ty
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1.5 text-[10px] font-bold text-success bg-success/10 border border-success/20 px-2.5 py-1 rounded-xl">
                         <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse inline-block" />
-                        {activeCount} Active
+                        {activeCount} Đang hoạt động
                     </div>
                     <WSStatusBadge status={status} />
                 </div>
@@ -144,8 +144,8 @@ export default function ActiveSessionsPanel() {
                 ) : sessions.length === 0 ? (
                     <div className="py-10 text-center text-text-muted text-xs">
                         {status === 'CLOSED'
-                            ? 'WebSocket disconnected. Waiting for connection…'
-                            : 'No active user sessions found.'}
+                            ? 'Đã ngắt kết nối WebSocket. Đang chờ kết nối lại…'
+                            : 'Không tìm thấy phiên làm việc nào đang hoạt động.'}
                     </div>
                 ) : (
                     sessions.map((session) => (
@@ -162,8 +162,7 @@ export default function ActiveSessionsPanel() {
             <div className="mt-3 pt-3 border-t border-border/40 flex items-center gap-1.5 text-[10px] text-text-muted">
                 <MonitorX className="w-3 h-3" />
                 <span>
-                    Revoking a session will immediately invalidate all active
-                    tokens.
+                    Thu hồi phiên làm việc sẽ vô hiệu hóa tất cả token đang hoạt động ngay lập tức.
                 </span>
             </div>
         </div>

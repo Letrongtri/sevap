@@ -47,7 +47,7 @@ export default function ProfileInfoCard({
     const updateProfileMutation = useUpdateMyProfile()
 
     const roleLabel = stringToLabel(
-        user?.roles?.map((r) => stringToLabel(r.name)).join(', ') || 'Employee'
+        user?.roles?.map((r) => stringToLabel(r.name)).join(', ') || 'Nhân viên'
     )
 
     /* ── form state ─────────────────────────────────────────── */
@@ -76,9 +76,9 @@ export default function ProfileInfoCard({
 
     const validate = (): boolean => {
         const next: ProfileFormErrors = {}
-        if (!form.fullName.trim()) next.fullName = 'Full name is required.'
+        if (!form.fullName.trim()) next.fullName = 'Họ và tên không được để trống.'
         if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
-            next.email = 'Please enter a valid email address.'
+            next.email = 'Vui lòng nhập địa chỉ email hợp lệ.'
         setFormError(next)
         return Object.keys(next).length === 0
     }
@@ -106,8 +106,8 @@ export default function ProfileInfoCard({
                 onError: (err: any) => {
                     const msg: string =
                         err?.response?.data?.detail ??
-                        'Failed to update profile. Please try again.'
-                    toast.error('Update failed', { description: msg })
+                        'Cập nhật hồ sơ thất bại. Vui lòng thử lại.'
+                    toast.error('Cập nhật thất bại', { description: msg })
                     setIsUpdatingProfile(false)
                 },
             }
@@ -118,17 +118,17 @@ export default function ProfileInfoCard({
     const accountDetails: InfoField[] = [
         {
             icon: <IdCard className="w-4 h-4" />,
-            label: 'Employee Code',
+            label: 'Mã nhân viên',
             value: user?.employee_code ?? '—',
         },
         {
             icon: <Shield className="w-4 h-4" />,
-            label: 'Role',
+            label: 'Vai trò',
             value: roleLabel,
         },
         {
             icon: <Clock className="w-4 h-4" />,
-            label: 'Last Login',
+            label: 'Đăng nhập gần nhất',
             value: formatDateTimeToDDMMYYYY(user?.last_login || ''),
         },
     ]
@@ -138,7 +138,7 @@ export default function ProfileInfoCard({
             ? [
                   {
                       icon: <Building2 className="w-4 h-4" />,
-                      label: 'Company',
+                      label: 'Công ty',
                       value: user.tenant.company_name,
                   },
               ]
@@ -147,7 +147,7 @@ export default function ProfileInfoCard({
             ? [
                   {
                       icon: <Building2 className="w-4 h-4" />,
-                      label: 'Department',
+                      label: 'Phòng ban',
                       value: user.department.name,
                   },
               ]
@@ -156,7 +156,7 @@ export default function ProfileInfoCard({
             ? [
                   {
                       icon: <Briefcase className="w-4 h-4" />,
-                      label: 'Job Title',
+                      label: 'Chức danh',
                       value: user.job_title.title_name,
                   },
               ]
@@ -165,7 +165,7 @@ export default function ProfileInfoCard({
             ? [
                   {
                       icon: <IdCard className="w-4 h-4" />,
-                      label: 'Domain',
+                      label: 'Tên miền',
                       value: `${user.tenant.tenant_domain}`,
                   },
               ]
@@ -176,8 +176,8 @@ export default function ProfileInfoCard({
         <div className="bg-surface rounded-2xl border border-border shadow-sm">
             {/* Card header */}
             <CardHeader
-                title="Profile Information"
-                subtitle="Manage your personal details"
+                title="Thông tin cá nhân"
+                subtitle="Quản lý chi tiết thông tin cá nhân của bạn"
                 icon={
                     <UserIcon
                         style={{ width: 18, height: 18 }}
@@ -195,14 +195,14 @@ export default function ProfileInfoCard({
                             onClick={handleCancel}
                             disabled={updateProfileMutation.isPending}
                         >
-                            Cancel
+                            Hủy
                         </Button>
                         <Button
                             id="profile-save-btn"
                             variant="primary"
                             size="sm"
                             isLoading={updateProfileMutation.isPending}
-                            loadingText="Saving…"
+                            loadingText="Đang lưu…"
                             leftIcon={
                                 !updateProfileMutation.isPending ? (
                                     <Check className="w-3.5 h-3.5" />
@@ -210,7 +210,7 @@ export default function ProfileInfoCard({
                             }
                             onClick={handleSave}
                         >
-                            Save Changes
+                            Lưu thay đổi
                         </Button>
                     </>
                 ) : (
@@ -221,7 +221,7 @@ export default function ProfileInfoCard({
                         leftIcon={<Pencil className="w-3.5 h-3.5" />}
                         onClick={() => setIsUpdatingProfile(true)}
                     >
-                        Edit Profile
+                        Chỉnh sửa hồ sơ
                     </Button>
                 )}
             </CardHeader>
@@ -229,11 +229,11 @@ export default function ProfileInfoCard({
             {/* Card body */}
             <div className="p-6">
                 {/* ── Personal Information ──────────────────── */}
-                <SectionLabel>Personal Information</SectionLabel>
+                <SectionLabel>Thông tin cá nhân</SectionLabel>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 mb-6">
                     <ProfileInfoField
                         id="profile-fullname-input"
-                        label="Full Name"
+                        label="Họ và tên"
                         value={form.fullName}
                         required
                         editMode={isUpdatingProfile}
@@ -243,7 +243,7 @@ export default function ProfileInfoCard({
                     />
                     <ProfileInfoField
                         id="profile-email-input"
-                        label="Email Address"
+                        label="Địa chỉ Email"
                         type="email"
                         value={form.email}
                         editMode={isUpdatingProfile}
@@ -255,7 +255,7 @@ export default function ProfileInfoCard({
 
                 {/* ── Account Details ───────────────────────── */}
                 <div className="border-t border-border/50 pt-6 mb-6">
-                    <SectionLabel>Account Details</SectionLabel>
+                    <SectionLabel>Chi tiết tài khoản</SectionLabel>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
                         {accountDetails.map((f) => (
                             <ReadOnlyField
@@ -271,7 +271,7 @@ export default function ProfileInfoCard({
                 {/* ── Organization ──────────────────────────── */}
                 {orgDetails.length > 0 && (
                     <div className="border-t border-border/50 pt-6">
-                        <SectionLabel>Organization</SectionLabel>
+                        <SectionLabel>Tổ chức</SectionLabel>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
                             {orgDetails.map((f) => (
                                 <ReadOnlyField

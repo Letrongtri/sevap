@@ -23,7 +23,7 @@ export const useDepartmentStore = create<DepartmentStore>((set) => ({
 
     setPage: (page: number | null) => set({ page }),
 
-    setLimit: (limit: number) => set({ limit }),
+    setLimit: (limit: number | null) => set({ limit: limit ?? 10 }),
 
     /** Bỏ chọn department hiện tại */
     clearActiveDepartment: () => set({ activeDepartmentId: null }),

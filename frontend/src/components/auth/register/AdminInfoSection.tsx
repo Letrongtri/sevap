@@ -32,7 +32,7 @@ export const AdminInfoSection: React.FC<AdminInfoSectionProps> = ({
             {/* Section Header */}
             <div className="flex items-center gap-2 text-xs font-bold text-primary tracking-wider uppercase border-b border-border/40 pb-2">
                 <ShieldCheck className="w-4 h-4" />
-                <span>Administrator Information</span>
+                <span>Thông tin Quản trị viên</span>
             </div>
 
             {/* Employee Code & Full Name (Side-by-Side) */}
@@ -41,8 +41,8 @@ export const AdminInfoSection: React.FC<AdminInfoSectionProps> = ({
                     id="admin_employee_code"
                     name="admin_employee_code"
                     type="text"
-                    label="Employee Code"
-                    placeholder="e.g., ADM001"
+                    label="Mã nhân viên"
+                    placeholder="ví dụ: ADM001"
                     value={values.admin_employee_code || ''}
                     onChange={onChange}
                     leftIcon={<User className="w-4 h-4" />}
@@ -54,8 +54,8 @@ export const AdminInfoSection: React.FC<AdminInfoSectionProps> = ({
                     id="admin_full_name"
                     name="admin_full_name"
                     type="text"
-                    label="Full Name"
-                    placeholder="e.g., John Doe"
+                    label="Họ và tên"
+                    placeholder="ví dụ: Nguyễn Văn A"
                     value={values.admin_full_name || ''}
                     onChange={onChange}
                     errorText={errors.admin_full_name}
@@ -69,8 +69,8 @@ export const AdminInfoSection: React.FC<AdminInfoSectionProps> = ({
                 id="admin_email"
                 name="admin_email"
                 type="email"
-                label="Login Email"
-                placeholder="admin@company.sevap.com"
+                label="Email đăng nhập"
+                placeholder="admin@company.com"
                 value={values.admin_email || ''}
                 onChange={onChange}
                 leftIcon={<Mail className="w-4 h-4" />}
@@ -85,7 +85,7 @@ export const AdminInfoSection: React.FC<AdminInfoSectionProps> = ({
                     htmlFor="admin_password"
                     className="block text-sm font-semibold text-text-secondary"
                 >
-                    Password <span className="text-error">*</span>
+                    Mật khẩu <span className="text-error">*</span>
                 </label>
                 <Input
                     id="admin_password"
@@ -100,7 +100,7 @@ export const AdminInfoSection: React.FC<AdminInfoSectionProps> = ({
                             type="button"
                             onClick={() => setShowPassword((p) => !p)}
                             aria-label={
-                                showPassword ? 'Hide password' : 'Show password'
+                                showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'
                             }
                             className="text-text-placeholder hover:text-text-muted transition-colors duration-150 p-0.5"
                         >
@@ -112,7 +112,7 @@ export const AdminInfoSection: React.FC<AdminInfoSectionProps> = ({
                         </button>
                     }
                     errorText={errors.admin_password}
-                    helperText="Password must contain at least 8 characters, including uppercase, lowercase letters and numbers."
+                    helperText="Mật khẩu phải chứa ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường và chữ số."
                     disabled={disabled}
                 />
             </div>

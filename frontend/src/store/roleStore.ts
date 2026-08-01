@@ -26,7 +26,7 @@ export const useRoleStore = create<RoleStore>((set) => ({
 
     setPage: (page: number | null) => set({ page }),
 
-    setLimit: (limit: number) => set({ limit }),
+    setLimit: (limit: number | null) => set({ limit: limit ?? 10 }),
 
     /** Bỏ chọn role hiện tại */
     clearActiveRole: () => set({ activeRoleId: null }),

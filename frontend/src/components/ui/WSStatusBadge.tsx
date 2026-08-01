@@ -21,7 +21,7 @@ export default function WSStatusBadge({
         return (
             <div className="flex items-center gap-1.5 text-[10px] font-semibold text-amber-400">
                 <Loader2 className="w-3 h-3 animate-spin" />
-                Connecting…
+                Đang kết nối…
             </div>
         )
     }

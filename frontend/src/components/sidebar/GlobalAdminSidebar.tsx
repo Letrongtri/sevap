@@ -11,22 +11,22 @@ import { SidebarFooter } from './SidebarFooter'
 
 const globalAdminNav = [
     {
-        label: 'Dashboards',
+        label: 'Tổng quan',
         icon: ChartPie,
         to: PRIVATE_ROUTES.GLOBAL_DASHBOARD,
     },
-    { label: 'Tenants', icon: Building2, to: PRIVATE_ROUTES.GLOBAL_TENANTS },
+    { label: 'Doanh nghiệp', icon: Building2, to: PRIVATE_ROUTES.GLOBAL_TENANTS },
     {
-        label: 'Infrastructure',
+        label: 'Hạ tầng',
         icon: Cpu,
         to: PRIVATE_ROUTES.GLOBAL_INFRASTRUCTURE,
     },
     {
-        label: 'Permissions',
+        label: 'Phân quyền',
         icon: ShieldCheck,
         to: PRIVATE_ROUTES.GLOBAL_PERMISSIONS,
     },
-    { label: 'Activity Logs', icon: History, to: PRIVATE_ROUTES.GLOBAL_LOGS },
+    { label: 'Nhật ký hoạt động', icon: History, to: PRIVATE_ROUTES.GLOBAL_LOGS },
 ] as const
 
 interface GlobalAdminSidebarProps {

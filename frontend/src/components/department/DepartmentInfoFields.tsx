@@ -23,15 +23,15 @@ const DepartmentInfoFields = ({
     return (
         <div className="space-y-4">
             <Input
-                label="Department Name"
-                placeholder="Department name"
+                label="Tên phòng ban"
+                placeholder="Tên phòng ban"
                 value={editDepartmentName}
                 onChange={(e) => setEditDepartmentName(e.target.value)}
                 leftIcon={<Building2 className="w-4 h-4" />}
             />
             <Input
-                label="Department Code"
-                placeholder="Department code"
+                label="Mã phòng ban"
+                placeholder="Mã phòng ban"
                 value={editCode}
                 onChange={(e) => setEditCode(e.target.value)}
                 leftIcon={<Hash className="w-4 h-4" />}
@@ -39,8 +39,8 @@ const DepartmentInfoFields = ({
             />
 
             <Input
-                label="Department Description"
-                placeholder="Department description"
+                label="Mô tả phòng ban"
+                placeholder="Mô tả phòng ban"
                 value={editDescription}
                 onChange={(e) => setEditDescription(e.target.value)}
             />

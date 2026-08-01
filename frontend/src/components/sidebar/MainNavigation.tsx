@@ -14,8 +14,8 @@ import { SwitchButton } from './SwitchButton'
    ============================================================ */
 
 const tenantZoneNav = [
-    { label: 'New Chat', icon: SquarePen, to: PRIVATE_ROUTES.HOME },
-    { label: 'Directory', icon: Users, to: PRIVATE_ROUTES.DIRECTORY },
+    { label: 'Đoạn chat mới', icon: SquarePen, to: PRIVATE_ROUTES.HOME },
+    { label: 'Danh bạ', icon: Users, to: PRIVATE_ROUTES.DIRECTORY },
 ] as const
 
 const MainNavigation = ({
@@ -57,12 +57,12 @@ const MainNavigation = ({
                 >
                     {!collapsed && (
                         <p className="text-[10px] font-semibold uppercase tracking-widest text-text-placeholder px-3 pb-1">
-                            Switch to
+                            Chuyển đến
                         </p>
                     )}
                     {showDocManager && (
                         <SwitchButton
-                            label="Document Manager"
+                            label="Quản lý tài liệu"
                             icon={FileText}
                             to={PRIVATE_ROUTES.DOCUMENTS}
                             collapsed={collapsed}
@@ -70,7 +70,7 @@ const MainNavigation = ({
                     )}
                     {showAdminPanel && (
                         <SwitchButton
-                            label="Admin Panel"
+                            label="Trang quản trị"
                             icon={Settings2}
                             to={PRIVATE_ROUTES.TENANT_ADMIN_DASHBOARD}
                             collapsed={collapsed}

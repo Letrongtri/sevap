@@ -25,7 +25,7 @@ const sizeMap: Record<SelectSize, string> = {
 export default function SearchableUserSelect({
     value,
     onChange,
-    placeholder = 'Search account...',
+    placeholder = 'Tìm tài khoản...',
     label,
     disabled = false,
     className = '',
@@ -197,7 +197,7 @@ export default function SearchableUserSelect({
                     >
                         {users.length === 0 && !isLoading ? (
                             <div className="px-3 py-3 text-xs text-text-placeholder text-center">
-                                No accounts found
+                                Không tìm thấy tài khoản nào
                             </div>
                         ) : (
                             users.map((userOption) => {
@@ -221,7 +221,7 @@ export default function SearchableUserSelect({
                                             </span>
                                             <span className="text-[10px] text-text-placeholder truncate">
                                                 {userOption.employee_code} •{' '}
-                                                {userOption.email || 'No email'}
+                                                {userOption.email || 'Chưa có email'}
                                             </span>
                                         </div>
                                     </button>
@@ -232,7 +232,7 @@ export default function SearchableUserSelect({
                         {(isLoading || isLoadingMore) && (
                             <div className="px-3 py-2 flex items-center justify-center gap-2 text-xs text-text-placeholder bg-bg/5">
                                 <LoadingSpinner />
-                                <span>Loading...</span>
+                                <span>Đang tải...</span>
                             </div>
                         )}
                     </div>

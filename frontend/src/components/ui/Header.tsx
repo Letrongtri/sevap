@@ -30,7 +30,7 @@ const Header = ({
                     leftIcon={<Plus className="w-4 h-4" />}
                     onClick={onAdd}
                 >
-                    {btnTitle || 'Add'}
+                    {btnTitle || 'Thêm'}
                 </Button>
             )}
         </div>

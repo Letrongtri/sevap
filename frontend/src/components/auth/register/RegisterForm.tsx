@@ -59,42 +59,42 @@ export const RegisterForm = () => {
 
         // Company validations
         if (!values.company_name.trim()) {
-            tempErrors.company_name = 'Company name is required.'
+            tempErrors.company_name = 'Vui lòng nhập tên doanh nghiệp.'
         }
 
         if (!values.tenant_domain.trim()) {
-            tempErrors.tenant_domain = 'Tenant domain is required.'
+            tempErrors.tenant_domain = 'Vui lòng nhập tên miền doanh nghiệp.'
         } else if (!domainRegex.test(values.tenant_domain)) {
             tempErrors.tenant_domain =
-                'Domain can only contain lowercase letters, numbers, and hyphens (no spaces/dots).'
+                'Tên miền chỉ được chứa chữ cái viết thường, chữ số và dấu gạch ngang.'
         }
 
         if (!values.company_email.trim()) {
-            tempErrors.company_email = 'Contact email is required.'
+            tempErrors.company_email = 'Vui lòng nhập email liên hệ.'
         } else if (!emailRegex.test(values.company_email)) {
-            tempErrors.company_email = 'Please enter a valid email address.'
+            tempErrors.company_email = 'Vui lòng nhập địa chỉ email hợp lệ.'
         }
 
         // Admin validations
         if (!values.admin_employee_code.trim()) {
-            tempErrors.admin_employee_code = 'Admin employee code is required.'
+            tempErrors.admin_employee_code = 'Vui lòng nhập mã nhân viên quản trị.'
         }
 
         if (!values.admin_full_name.trim()) {
-            tempErrors.admin_full_name = 'Admin full name is required.'
+            tempErrors.admin_full_name = 'Vui lòng nhập họ và tên quản trị viên.'
         }
 
         if (!values.admin_email?.trim()) {
-            tempErrors.admin_email = 'Admin email is required.'
+            tempErrors.admin_email = 'Vui lòng nhập email quản trị viên.'
         } else if (!emailRegex.test(values.admin_email)) {
-            tempErrors.admin_email = 'Please enter a valid email address.'
+            tempErrors.admin_email = 'Vui lòng nhập địa chỉ email hợp lệ.'
         }
 
         if (!values.admin_password) {
-            tempErrors.admin_password = 'Password is required.'
+            tempErrors.admin_password = 'Vui lòng nhập mật khẩu.'
         } else if (!passwordRegex.test(values.admin_password)) {
             tempErrors.admin_password =
-                'Password must meet the security requirements below.'
+                'Mật khẩu phải đáp ứng các yêu cầu bảo mật bên dưới.'
         }
 
         setErrors(tempErrors)
@@ -130,16 +130,16 @@ export const RegisterForm = () => {
                 </div>
                 <div className="space-y-2">
                     <h2 className="text-2xl font-bold text-text-primary">
-                        Registration Complete!
+                        Đăng ký thành công!
                     </h2>
                     <p className="text-sm text-text-muted">
-                        Your organization has been successfully provisioned.
+                        Tổ chức/Doanh nghiệp của bạn đã được khởi tạo thành công.
                     </p>
                 </div>
 
                 <div className="bg-bg rounded-xl p-4 w-full text-left border border-border/40">
                     <p className="text-xs text-text-muted uppercase font-bold tracking-wider mb-1">
-                        Your Workspace Link
+                        Liên kết không gian làm việc
                     </p>
                     <p className="text-sm font-semibold text-text-primary break-all">
                         {registeredDomain}
@@ -153,7 +153,7 @@ export const RegisterForm = () => {
                     fullWidth
                     rightIcon={<ArrowRight className="w-4 h-4" />}
                 >
-                    Sign In to Platform
+                    Đăng nhập vào Hệ thống
                 </Button>
             </div>
         )
@@ -169,7 +169,7 @@ export const RegisterForm = () => {
         if (responseData && typeof responseData.message === 'string') {
             return responseData.message
         }
-        return 'An error occurred during registration. Please verify your details and try again.'
+        return 'Đã xảy ra lỗi trong quá trình đăng ký. Vui lòng kiểm tra lại thông tin và thử lại.'
     }
 
     return (
@@ -177,10 +177,10 @@ export const RegisterForm = () => {
             {/* Form Header */}
             <div className="px-8 pt-8 pb-6 border-b border-border flex flex-col gap-1.5 flex-shrink-0">
                 <h2 className="text-2xl font-bold text-text-primary tracking-tight">
-                    Register Organization
+                    Đăng ký Doanh nghiệp
                 </h2>
                 <p className="text-sm text-text-muted">
-                    Set up a new workspace for your company.
+                    Thiết lập không gian làm việc mới cho công ty của bạn.
                 </p>
             </div>
 
@@ -232,21 +232,21 @@ export const RegisterForm = () => {
                             size="md"
                             className="w-full min-w-[160px]"
                             isLoading={isLoading}
-                            loadingText="Provisioning..."
+                            loadingText="Đang khởi tạo..."
                         >
-                            Complete Registration
+                            Hoàn tất Đăng ký
                         </Button>
                     </div>
 
                     {/* Link to Login */}
                     <div className="text-center pt-2 border-t border-border">
                         <p className="text-sm text-text-muted">
-                            Already have an organization?{' '}
+                            Đã có tổ chức/doanh nghiệp?{' '}
                             <Link
                                 to="/login"
                                 className="font-semibold text-primary hover:text-primary-hover transition-colors duration-150"
                             >
-                                Sign in
+                                Đăng nhập
                             </Link>
                         </p>
                     </div>

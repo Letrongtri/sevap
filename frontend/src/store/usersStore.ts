@@ -43,7 +43,7 @@ export const useUserStore = create<UserStore>((set) => ({
 
     setPage: (page: number | null) => set({ page }),
 
-    setLimit: (limit: number) => set({ limit }),
+    setLimit: (limit: number | null) => set({ limit: limit ?? 10 }),
 
     /** Bỏ chọn user hiện tại */
     clearActiveUser: () => set({ activeUserId: null }),

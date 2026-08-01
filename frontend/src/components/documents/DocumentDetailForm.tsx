@@ -70,9 +70,9 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
         })) ?? []
 
     const accessLevelOptions = [
-        { value: 'public', label: 'Public' },
-        { value: 'private', label: 'Private' },
-        { value: 'managerial', label: 'Managerial' },
+        { value: 'public', label: 'Công khai' },
+        { value: 'private', label: 'Riêng tư' },
+        { value: 'managerial', label: 'Quản lý' },
     ]
 
     // Reset scroll when state changes
@@ -143,7 +143,7 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
                 targetUserIds.length === 0
             ) {
                 setFormError(
-                    'For Private documents, you must select at least one Department, Role, or Target User.'
+                    'Đối với tài liệu Riêng tư, bạn phải chọn ít nhất một Phòng ban, Vai trò hoặc Tài khoản.'
                 )
                 return
             }
@@ -151,7 +151,7 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
 
         if (isAddingDocument) {
             if (!selectedFile) {
-                setFormError('Please select a file to upload.')
+                setFormError('Vui lòng chọn tệp để tải lên.')
                 return
             }
 
@@ -170,7 +170,7 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
                 },
                 {
                     onSuccess: (created) => {
-                        setFormSuccess('Document uploaded successfully!')
+                        setFormSuccess('Tải lên tài liệu thành công!')
                         setActiveDocumentId(created.id)
                         setIsAddingDocumentStore(false)
                         setIsEditing(false)
@@ -178,7 +178,7 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
                     onError: (err: any) => {
                         setFormError(
                             err.response?.data?.detail ??
-                                'Failed to upload document.'
+                                'Tải lên tài liệu thất bại.'
                         )
                     },
                 }
@@ -199,13 +199,13 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
                 },
                 {
                     onSuccess: () => {
-                        setFormSuccess('Document updated successfully!')
+                        setFormSuccess('Cập nhật tài liệu thành công!')
                         setIsEditing(false)
                     },
                     onError: (err: any) => {
                         setFormError(
                             err.response?.data?.detail ??
-                                'Failed to update document.'
+                                'Cập nhật tài liệu thất bại.'
                         )
                     },
                 }
@@ -219,7 +219,7 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
             {isAddingDocument && (
                 <div className="space-y-1">
                     <label className="block text-sm font-semibold text-text-secondary">
-                        Document File (
+                        Tệp tài liệu (
                         {ALLOWED_DOCUMENT_FILE_TYPES.map((e) => `.${e}`).join(
                             ', '
                         )}
@@ -248,14 +248,13 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
                             <>
                                 <UploadCloud className="w-10 h-10 text-text-placeholder mb-2 group-hover:scale-110 transition-transform" />
                                 <p className="text-xs font-semibold text-text-secondary">
-                                    Click or drag file to upload
+                                    Nhấn hoặc kéo thả tệp vào đây để tải lên
                                 </p>
                                 <p className="text-[10px] text-text-placeholder mt-0.5">
-                                    Only
+                                    Chỉ hỗ trợ các tệp{' '}
                                     {ALLOWED_DOCUMENT_FILE_TYPES.map(
                                         (e) => `.${e}`
-                                    ).join(', ')}{' '}
-                                    files supported
+                                    ).join(', ')}
                                 </p>
                             </>
                         )}
@@ -264,8 +263,8 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
             )}
 
             <Input
-                label="Document Title"
-                placeholder="Enter document title"
+                label="Tiêu đề tài liệu"
+                placeholder="Nhập tiêu đề tài liệu"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
@@ -273,20 +272,20 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input
-                    label="Category"
-                    placeholder="e.g. Policy, Guide..."
+                    label="Danh mục"
+                    placeholder="Ví dụ: Quy định, Hướng dẫn..."
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
                 />
 
                 <div className="space-y-1">
                     <label className="block text-sm font-semibold text-text-secondary">
-                        Effective Date
+                        Ngày hiệu lực
                     </label>
                     <DatePicker
                         value={effectiveDate}
                         onChange={(val) => setEffectiveDate(val)}
-                        placeholder="Select effective date"
+                        placeholder="Chọn ngày hiệu lực"
                     />
                 </div>
             </div>
@@ -303,8 +302,8 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
                         setTargetUserIds([])
                     }
                 }}
-                label="Access Level"
-                placeholder="Select access level"
+                label="Cấp độ truy cập"
+                placeholder="Chọn cấp độ truy cập"
             />
 
             {/* ACCESS RESTRICTIONS SECTION (Only visible when Access Level is Private) */}
@@ -312,39 +311,39 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
                 <div className="bg-bg/10 rounded-2xl p-4 border border-[#D4D7DE]/40 space-y-4 animate-fade-in">
                     <div className="flex items-center gap-1.5 text-text-secondary font-bold text-xs uppercase tracking-wider mb-1">
                         <Shield className="w-3.5 h-3.5" />
-                        <span>Private Access Restrictions</span>
+                        <span>Giới hạn truy cập riêng tư</span>
                     </div>
 
                     <SearchableMultiSelect
                         options={departmentOptions}
                         value={departmentIds}
                         onChange={(val) => setDepartmentIds(val)}
-                        placeholder="No departments selected"
-                        label="Allowed Departments"
+                        placeholder="Chưa chọn phòng ban"
+                        label="Phòng ban được phép"
                     />
 
                     <SearchableMultiSelect
                         options={roleOptions}
                         value={roleAccess}
                         onChange={(val) => setRoleAccess(val)}
-                        placeholder="No roles selected"
-                        label="Allowed Roles"
+                        placeholder="Chưa chọn vai trò"
+                        label="Vai trò được phép"
                     />
 
                     <SearchableUserMultiSelect
                         value={targetUserIds}
                         onChange={(val) => setTargetUserIds(val)}
                         initialSelectedUsers={document?.target_users ?? []}
-                        placeholder="No users selected"
-                        label="Allowed Users"
+                        placeholder="Chưa chọn tài khoản"
+                        label="Tài khoản được phép"
                     />
 
                     <div className="flex items-start gap-1.5 text-[10px] text-text-placeholder bg-white p-2.5 rounded-lg border border-border">
                         <Info className="w-3.5 h-3.5 text-primary flex-shrink-0 mt-0.5" />
                         <p className="leading-normal">
-                            Private documents require at least one department,
-                            role, or user restriction. Only matched entities can
-                            read it.
+                            Tài liệu riêng tư yêu cầu chọn ít nhất một phòng ban,
+                            vai trò hoặc tài khoản. Chỉ những đối tượng phù hợp mới
+                            có thể xem được.
                         </p>
                     </div>
                 </div>
@@ -364,7 +363,7 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
                     }}
                     disabled={isSubmitting}
                 >
-                    Cancel
+                    Hủy
                 </Button>
                 <Button
                     type="submit"
@@ -372,10 +371,10 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
                     fullWidth
                     isLoading={isSubmitting}
                     loadingText={
-                        isAddingDocument ? 'Uploading...' : 'Saving...'
+                        isAddingDocument ? 'Đang tải lên...' : 'Đang lưu...'
                     }
                 >
-                    {isAddingDocument ? 'Upload Document' : 'Save Changes'}
+                    {isAddingDocument ? 'Tải lên tài liệu' : 'Lưu thay đổi'}
                 </Button>
             </div>
         </form>

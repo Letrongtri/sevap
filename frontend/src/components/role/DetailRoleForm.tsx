@@ -54,9 +54,9 @@ const DetailRoleForm = ({
     }
 
     const accessLevelOptions = [
-        { value: 'public', label: 'Public' },
-        { value: 'private', label: 'Private' },
-        { value: 'managerial', label: 'Managerial' },
+        { value: 'public', label: 'Công khai (Public)' },
+        { value: 'private', label: 'Riêng tư (Private)' },
+        { value: 'managerial', label: 'Quản lý (Managerial)' },
     ]
 
     const isAddingRole = useRoleStore((s) => s.isAddingRole)
@@ -95,13 +95,13 @@ const DetailRoleForm = ({
             },
             {
                 onSuccess: (created) => {
-                    toast.success('Role created successfully!')
+                    toast.success('Tạo vai trò thành công!')
                     setActiveRoleId(created.id)
                     setIsAddingRole(false)
                 },
                 onError: (err: any) => {
                     toast.error(
-                        err.response?.data?.detail ?? 'Failed to create role.'
+                        err.response?.data?.detail ?? 'Tạo vai trò thất bại.'
                     )
                 },
             }
@@ -133,11 +133,11 @@ const DetailRoleForm = ({
             },
             {
                 onSuccess: async () => {
-                    toast.success('Role updated successfully!')
+                    toast.success('Cập nhật vai trò thành công!')
                 },
                 onError: (err: any) => {
                     toast.error(
-                        err.response?.data?.detail ?? 'Failed to update role.'
+                        err.response?.data?.detail ?? 'Cập nhật vai trò thất bại.'
                     )
                 },
             }
@@ -149,12 +149,12 @@ const DetailRoleForm = ({
 
         deleteRoleMutation.mutate(selectedRole.id, {
             onSuccess: () => {
-                toast.success('Role deleted successfully.')
+                toast.success('Xóa vai trò thành công.')
                 setActiveRoleId(null)
             },
             onError: (err: any) => {
                 toast.error(
-                    err.response?.data?.detail ?? 'Failed to delete role.'
+                    err.response?.data?.detail ?? 'Xóa vai trò thất bại.'
                 )
             },
         })
@@ -194,16 +194,16 @@ const DetailRoleForm = ({
                         onClick={onCloseCard}
                         disabled={isSubmitting}
                     >
-                        Cancel
+                        Hủy
                     </Button>
                     <Button
                         type="submit"
                         variant="primary"
                         fullWidth
                         isLoading={isSubmitting}
-                        loadingText={isAddingRole ? 'Creating...' : 'Saving...'}
+                        loadingText={isAddingRole ? 'Đang tạo...' : 'Đang lưu...'}
                     >
-                        {isAddingRole ? 'Create Role' : 'Save Changes'}
+                        {isAddingRole ? 'Tạo vai trò' : 'Lưu thay đổi'}
                     </Button>
                 </div>
             </form>
@@ -213,10 +213,10 @@ const DetailRoleForm = ({
                 <div className="flex items-center justify-between gap-4 p-3 hover:bg-error-bg/10 rounded-xl transition-all">
                     <div>
                         <p className="text-xs font-semibold text-error-text">
-                            Delete Role
+                            Xóa vai trò
                         </p>
                         <p className="text-[10px] text-text-placeholder leading-normal mt-0.5">
-                            Permanently delete role and its permissions
+                            Xóa vĩnh viễn vai trò và các quyền hạn của vai trò này
                         </p>
                     </div>
                     <Button
@@ -226,7 +226,7 @@ const DetailRoleForm = ({
                         onClick={() => setShowDeleteConfirm(true)}
                         disabled={isSubmitting}
                     >
-                        Delete
+                        Xóa
                     </Button>
                 </div>
             )}
@@ -235,9 +235,9 @@ const DetailRoleForm = ({
                 isOpen={showDeleteConfirm}
                 onClose={() => setShowDeleteConfirm(false)}
                 onConfirm={handleDeleteRole}
-                title="Delete Role?"
-                description="This will delete the role immediately. This action is irreversible."
-                confirmLabel="Yes, delete"
+                title="Xóa vai trò?"
+                description="Hành động này sẽ xóa vai trò ngay lập tức và không thể hoàn tác."
+                confirmLabel="Xóa vai trò"
                 variant="danger"
                 isLoading={isSubmitting}
             />

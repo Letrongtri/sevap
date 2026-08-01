@@ -39,14 +39,14 @@ export default function UserSessionsSection() {
             <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3">
                 <LoadingSpinner />
                 <p className="text-sm text-text-placeholder">
-                    Loading sessions...
+                    Đang tải danh sách phiên đăng nhập...
                 </p>
             </div>
         )
     }
 
     if (error) {
-        toast.error('Failed to load profile', {
+        toast.error('Tải hồ sơ thất bại', {
             description: error.message,
         })
         return <></>
@@ -57,10 +57,10 @@ export default function UserSessionsSection() {
             <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-6 space-y-2">
                 <MonitorSmartphone className="w-10 h-10 text-text-placeholder" />
                 <h3 className="text-base font-semibold text-text-secondary">
-                    No sessions found
+                    Không tìm thấy phiên đăng nhập nào
                 </h3>
                 <p className="text-sm text-text-placeholder max-w-xs">
-                    No active sessions.
+                    Không có phiên đăng nhập nào đang hoạt động.
                 </p>
             </div>
         )
@@ -85,7 +85,7 @@ export default function UserSessionsSection() {
                         <MonitorSmartphone className="w-4 h-4" />
                     </SecurityIcon>
                     <p className="text-sm font-semibold text-text-primary">
-                        Active Sessions
+                        Các phiên đăng nhập đang hoạt động
                     </p>
                 </div>
 
@@ -110,7 +110,7 @@ export default function UserSessionsSection() {
                                 limit={limit}
                                 totalPages={pagination.total_pages}
                                 totalItems={pagination.total}
-                                unit="sessions"
+                                unit="phiên đăng nhập"
                                 onPageChange={setPage}
                                 onLimitChange={setLimit}
                             />
@@ -124,9 +124,9 @@ export default function UserSessionsSection() {
                 isOpen={showConfirm}
                 onClose={() => setShowConfirm(false)}
                 onConfirm={handleConfirm}
-                title="Revoke Session?"
-                description="This will revoke the selected session immediately."
-                confirmLabel="Yes, revoke it"
+                title="Thu hồi phiên đăng nhập?"
+                description="Hành động này sẽ thu hồi và đăng xuất khỏi phiên đã chọn ngay lập tức."
+                confirmLabel="Thu hồi phiên"
                 variant="danger"
                 isLoading={revokeSessionMutation.isPending}
             />
@@ -183,7 +183,7 @@ function SessionItem({ session, idx, onRevoke }: SessionItemProps) {
                                     color: 'var(--color-success)',
                                 }}
                             >
-                                Current
+                                Hiện tại
                             </span>
                         )}
                     </div>
@@ -209,7 +209,7 @@ function SessionItem({ session, idx, onRevoke }: SessionItemProps) {
                         onClick={() => onRevoke(session.id)}
                         className="flex-shrink-0 text-xs font-semibold text-error hover:text-error/70 transition-colors duration-150 px-2 py-1 rounded-lg hover:bg-error-bg"
                     >
-                        Sign out
+                        Đăng xuất
                     </button>
                 )}
             </div>

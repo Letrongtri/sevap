@@ -20,7 +20,7 @@ const sizeMap: Record<SelectSize, string> = {
 export default function DatePicker({
     value,
     onChange,
-    placeholder = 'Select date...',
+    placeholder = 'Chọn ngày...',
     disabled = false,
     className = '',
     size = 'md',

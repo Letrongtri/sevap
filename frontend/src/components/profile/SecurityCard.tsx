@@ -16,8 +16,8 @@ export function SecurityCard() {
     return (
         <div className="bg-surface rounded-2xl border border-border shadow-sm">
             <CardHeader
-                title="Security & Authentication"
-                subtitle="Manage your password, 2FA, and active sessions"
+                title="Bảo mật & Xác thực"
+                subtitle="Quản lý mật khẩu, 2FA và các phiên đăng nhập đang hoạt động"
                 icon={
                     <Shield
                         style={{ width: 18, height: 18 }}

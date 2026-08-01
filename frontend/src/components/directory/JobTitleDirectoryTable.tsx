@@ -25,7 +25,7 @@ const JobTitleDirectoryTable = () => {
             <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3">
                 <LoadingSpinner />
                 <p className="text-sm text-text-placeholder">
-                    Loading job titles...
+                    Đang tải danh sách chức danh...
                 </p>
             </div>
         )
@@ -36,15 +36,15 @@ const JobTitleDirectoryTable = () => {
             <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-6 space-y-2">
                 <AlertCircle className="w-10 h-10 text-error" />
                 <h3 className="text-lg font-semibold text-text-primary">
-                    Failed to load job titles
+                    Tải danh sách chức danh thất bại
                 </h3>
                 <p className="text-sm text-text-placeholder max-w-sm">
                     {error instanceof Error
                         ? error.message
-                        : 'An error occurred'}
+                        : 'Đã có lỗi xảy ra'}
                 </p>
                 <Button variant="secondary" size="sm" onClick={() => refetch()}>
-                    Retry
+                    Thử lại
                 </Button>
             </div>
         )
@@ -55,10 +55,10 @@ const JobTitleDirectoryTable = () => {
             <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-6 space-y-2">
                 <Briefcase className="w-10 h-10 text-text-placeholder" />
                 <h3 className="text-base font-semibold text-text-secondary">
-                    No job titles found
+                    Không tìm thấy chức danh nào
                 </h3>
                 <p className="text-sm text-text-placeholder max-w-xs">
-                    Try adjusting your search query.
+                    Thử điều chỉnh từ khóa tìm kiếm.
                 </p>
             </div>
         )
@@ -72,16 +72,16 @@ const JobTitleDirectoryTable = () => {
                     <thead>
                         <tr className="text-text-secondary text-xs uppercase font-bold tracking-wider">
                             <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                No.
+                                STT
                             </th>
                             <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                Code
+                                Mã chức danh
                             </th>
                             <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                Title Name
+                                Tên chức danh
                             </th>
                             <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                Description
+                                Mô tả
                             </th>
                         </tr>
                     </thead>
@@ -103,7 +103,7 @@ const JobTitleDirectoryTable = () => {
                                 <td className="px-5 py-3.5 text-sm text-text-secondary max-w-[300px] truncate">
                                     {job.description || (
                                         <span className="italic text-text-placeholder">
-                                            No description
+                                            Không có mô tả
                                         </span>
                                     )}
                                 </td>
@@ -121,6 +121,7 @@ const JobTitleDirectoryTable = () => {
                         limit={limit}
                         totalPages={pagination.total_pages}
                         totalItems={pagination.total}
+                        unit="chức danh"
                         onPageChange={setPage}
                         onLimitChange={setLimit}
                     />

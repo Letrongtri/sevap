@@ -78,13 +78,13 @@ const DetailJobTitleForm = ({
         }
         createJobTitleMutation.mutate(payload, {
             onSuccess: (created) => {
-                toast.success('Job title created successfully!')
+                toast.success('Tạo chức danh thành công!')
                 setActiveJobTitleId(created.id)
                 setIsAddingJobTitle(false)
             },
             onError: (err: any) => {
                 toast.error(
-                    err.response?.data?.detail ?? 'Failed to create job title.'
+                    err.response?.data?.detail ?? 'Tạo chức danh thất bại.'
                 )
             },
         })
@@ -110,12 +110,12 @@ const DetailJobTitleForm = ({
             },
             {
                 onSuccess: async () => {
-                    toast.success('Job title updated successfully!')
+                    toast.success('Cập nhật chức danh thành công!')
                 },
                 onError: (err: any) => {
                     toast.error(
                         err.response?.data?.detail ??
-                            'Failed to update job title.'
+                            'Cập nhật chức danh thất bại.'
                     )
                 },
             }
@@ -127,12 +127,12 @@ const DetailJobTitleForm = ({
 
         deleteJobTitleMutation.mutate(selectedJobTitle.id, {
             onSuccess: () => {
-                toast.success('Job title deleted successfully.')
+                toast.success('Xóa chức danh thành công.')
                 setActiveJobTitleId(null)
             },
             onError: (err: any) => {
                 toast.error(
-                    err.response?.data?.detail ?? 'Failed to delete job title.'
+                    err.response?.data?.detail ?? 'Xóa chức danh thất bại.'
                 )
             },
         })
@@ -172,7 +172,7 @@ const DetailJobTitleForm = ({
                             onClick={onCloseCard}
                             disabled={isSubmitting}
                         >
-                            Cancel
+                            Hủy
                         </Button>
                         <Button
                             type="submit"
@@ -180,12 +180,12 @@ const DetailJobTitleForm = ({
                             fullWidth
                             isLoading={isSubmitting}
                             loadingText={
-                                isAddingJobTitle ? 'Creating...' : 'Saving...'
+                                isAddingJobTitle ? 'Đang tạo...' : 'Đang lưu...'
                             }
                         >
                             {isAddingJobTitle
-                                ? 'Create Job Title'
-                                : 'Save Changes'}
+                                ? 'Tạo chức danh'
+                                : 'Lưu thay đổi'}
                         </Button>
                     </div>
 
@@ -194,10 +194,10 @@ const DetailJobTitleForm = ({
                         <div className="flex items-center justify-between gap-4 py-3 hover:bg-error-bg/10 rounded-xl transition-all">
                             <div>
                                 <p className="text-xs font-semibold text-error-text">
-                                    Delete Job Title
+                                    Xóa chức danh
                                 </p>
                                 <p className="text-[10px] text-text-placeholder leading-normal mt-0.5">
-                                    Permanently delete job title
+                                    Xóa vĩnh viễn chức danh
                                 </p>
                             </div>
                             <Button
@@ -207,7 +207,7 @@ const DetailJobTitleForm = ({
                                 onClick={() => setShowDeleteConfirm(true)}
                                 disabled={isSubmitting}
                             >
-                                Delete
+                                Xóa
                             </Button>
                         </div>
                     )}
@@ -218,9 +218,9 @@ const DetailJobTitleForm = ({
                 isOpen={showDeleteConfirm}
                 onClose={() => setShowDeleteConfirm(false)}
                 onConfirm={handleDeleteJobTitle}
-                title="Delete Job Title?"
-                description="This will delete the job title immediately. This action is irreversible."
-                confirmLabel="Yes, delete"
+                title="Xóa chức danh?"
+                description="Hành động này sẽ xóa chức danh ngay lập tức và không thể hoàn tác."
+                confirmLabel="Xóa chức danh"
                 variant="danger"
                 isLoading={isSubmitting}
             />

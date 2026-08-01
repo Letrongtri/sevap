@@ -103,21 +103,21 @@ export const ProfilePopover = ({
                     <div className="flex items-center justify-between gap-1">
                         <div className="flex items-center gap-1 text-xs text-text-secondary">
                             <Building2 className="w-3 h-3" />
-                            <span>Company:</span>
+                            <span>Công ty:</span>
                         </div>
                         <p className="text-xs text-text-secondary truncate">
-                            {user?.companyName ?? 'Company'}
+                            {user?.companyName ?? 'Công ty'}
                         </p>
                     </div>
                     <div className="flex items-center justify-between gap-1">
                         <div className="flex items-center gap-1 text-xs text-text-secondary">
                             <Shield className="w-3 h-3" />
-                            <span>Roles:</span>
+                            <span>Vai trò:</span>
                         </div>
                         <Badge size="sm" variant="primary">
                             {user?.roles
                                 ?.map((role) => stringToLabel(role))
-                                .join(', ') || 'Employee'}
+                                .join(', ') || 'Nhân viên'}
                         </Badge>
                     </div>
                 </div>
@@ -133,7 +133,7 @@ export const ProfilePopover = ({
                 >
                     <User className="w-4 h-4 text-text-placeholder group-hover:text-primary transition-colors" />
                     <span className="flex-1 text-left font-medium">
-                        My Profile
+                        Trang cá nhân
                     </span>
                     <ChevronRight className="w-3.5 h-3.5 text-text-placeholder opacity-0 group-hover:opacity-100 transition-opacity" />
                 </button>
@@ -148,7 +148,7 @@ export const ProfilePopover = ({
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-error hover:bg-error-bg transition-all duration-150 group"
                 >
                     <LogOut className="w-4 h-4" />
-                    <span className="font-medium">Sign Out</span>
+                    <span className="font-medium">Đăng xuất</span>
                 </button>
             </div>
         </div>

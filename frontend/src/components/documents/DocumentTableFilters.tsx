@@ -44,20 +44,26 @@ const DocumentTableFilters = () => {
 
     // Map metadata to select options
     const departmentOptions = [
-        { value: null, label: 'All Departments' },
+        { value: null, label: 'Tất cả phòng ban' },
         ...(departmentsData || []).map((d) => ({ value: d.id, label: d.name })),
     ]
 
+    const accessLevelLabels: Record<string, string> = {
+        public: 'Công khai',
+        private: 'Riêng tư',
+        managerial: 'Quản lý',
+    }
+
     const access_level_options = [
-        { value: null, label: 'All Access Levels' },
+        { value: null, label: 'Tất cả cấp độ truy cập' },
         ...ACCESS_LEVELS.map((l) => ({
             value: l.toLowerCase(),
-            label: l,
+            label: accessLevelLabels[l.toLowerCase()] || l,
         })),
     ]
 
     const roleOptions = [
-        { value: null, label: 'All Roles' },
+        { value: null, label: 'Tất cả vai trò' },
         ...(rolesData || []).map((r) => ({ value: r.id, label: r.name })),
     ]
 
@@ -70,7 +76,7 @@ const DocumentTableFilters = () => {
                     <Search className="w-4 h-4 text-text-placeholder absolute left-3.5 top-1/2 -translate-y-1/2" />
                     <input
                         type="text"
-                        placeholder="Search by title, file name, category,..."
+                        placeholder="Tìm kiếm theo tiêu đề, tên tệp, danh mục,..."
                         value={localSearch}
                         onChange={(e) => setLocalSearch(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 text-sm bg-surface-raised border border-border rounded-xl focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-text-placeholder"
@@ -85,7 +91,7 @@ const DocumentTableFilters = () => {
                             setEffectiveDate(val)
                             setPage(1)
                         }}
-                        placeholder="Effective Date"
+                        placeholder="Ngày hiệu lực"
                         className="w-full sm:w-44"
                     />
                     <SearchableUserSelect
@@ -94,7 +100,7 @@ const DocumentTableFilters = () => {
                             setTargetUserId(val)
                             setPage(1)
                         }}
-                        placeholder="Select Account..."
+                        placeholder="Chọn tài khoản..."
                         className="w-full sm:w-56"
                     />
                 </div>
@@ -109,7 +115,7 @@ const DocumentTableFilters = () => {
                         setDepartmentId(val)
                         setPage(1)
                     }}
-                    placeholder="All Departments"
+                    placeholder="Tất cả phòng ban"
                 />
                 <SearchableSelect
                     options={access_level_options}
@@ -118,7 +124,7 @@ const DocumentTableFilters = () => {
                         setAccessLevel(val)
                         setPage(1)
                     }}
-                    placeholder="All Access Level"
+                    placeholder="Tất cả cấp độ truy cập"
                 />
                 <SearchableSelect
                     options={roleOptions}
@@ -127,7 +133,7 @@ const DocumentTableFilters = () => {
                         setRoleAccess(val)
                         setPage(1)
                     }}
-                    placeholder="All Roles"
+                    placeholder="Tất cả vai trò"
                 />
             </div>
         </div>

@@ -27,7 +27,7 @@ const PermissionsMatrix = ({
     return (
         <div className="space-y-2">
             <label className="block text-sm font-semibold text-text-secondary">
-                Permissions Matrix
+                Ma trận quyền hạn
             </label>
             <div className="overflow-x-auto rounded-xl border border-border bg-surface shadow-sm">
                 <table className="min-w-full table-fixed border-collapse text-xs">
@@ -35,7 +35,7 @@ const PermissionsMatrix = ({
                         <tr className="bg-surface-raised border-b border-border">
                             {/* Resource Column: 25% width */}
                             <th className="border-r border-border p-3 font-semibold text-text-secondary text-left w-[25%]">
-                                Resource
+                                Tài nguyên
                             </th>
                             {/* Action Columns: Each 15% width, total 75%, headings centered */}
                             {actions.map((act) => (
@@ -113,8 +113,7 @@ const PermissionsMatrix = ({
                 </table>
             </div>
             <p className="text-[10px] text-text-muted mt-1">
-                * Click on cells with available permissions (hovering shows
-                placeholder 'X') to toggle.
+                * Nhấp vào ô tương ứng với quyền khả dụng (rê chuột hiện ký tự 'X') để bật/tắt quyền.
             </p>
         </div>
     )

@@ -26,7 +26,7 @@ export default function SearchableUserMultiSelect({
     value = [],
     onChange,
     initialSelectedUsers = [],
-    placeholder = 'Search accounts...',
+    placeholder = 'Tìm các tài khoản...',
     label,
     disabled = false,
     className = '',
@@ -202,7 +202,7 @@ export default function SearchableUserMultiSelect({
                         <User className="w-3.5 h-3.5 text-text-placeholder" />
                         <input
                             type="text"
-                            placeholder="Type to search users..."
+                            placeholder="Nhập để tìm người dùng..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full bg-transparent text-xs text-text-primary outline-none placeholder:text-text-placeholder"
@@ -226,7 +226,7 @@ export default function SearchableUserMultiSelect({
                     >
                         {users.length === 0 && !isLoading ? (
                             <div className="px-3 py-3 text-xs text-text-placeholder text-center">
-                                No accounts found
+                                Không tìm thấy tài khoản nào
                             </div>
                         ) : (
                             users.map((userOption) => {
@@ -250,7 +250,7 @@ export default function SearchableUserMultiSelect({
                                             </span>
                                             <span className="text-[10px] text-text-placeholder truncate">
                                                 {userOption.employee_code} •{' '}
-                                                {userOption.email || 'No email'}
+                                                {userOption.email || 'Chưa có email'}
                                             </span>
                                         </div>
                                         {isSelected && (
@@ -264,7 +264,7 @@ export default function SearchableUserMultiSelect({
                         {(isLoading || isLoadingMore) && (
                             <div className="px-3 py-2 flex items-center justify-center gap-2 text-xs text-text-placeholder bg-bg/5">
                                 <LoadingSpinner />
-                                <span>Loading...</span>
+                                <span>Đang tải...</span>
                             </div>
                         )}
                     </div>

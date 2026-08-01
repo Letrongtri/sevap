@@ -78,13 +78,13 @@ const DetailDepartmentForm = ({
         }
         createDepartmentMutation.mutate(payload, {
             onSuccess: (created) => {
-                toast.success('Department created successfully!')
+                toast.success('Tạo phòng ban thành công!')
                 setActiveDepartmentId(created.id)
                 setIsAddingDepartment(false)
             },
             onError: (err: any) => {
                 toast.error(
-                    err.response?.data?.detail ?? 'Failed to create department.'
+                    err.response?.data?.detail ?? 'Tạo phòng ban thất bại.'
                 )
             },
         })
@@ -110,12 +110,12 @@ const DetailDepartmentForm = ({
             },
             {
                 onSuccess: async () => {
-                    toast.success('Department updated successfully!')
+                    toast.success('Cập nhật phòng ban thành công!')
                 },
                 onError: (err: any) => {
                     toast.error(
                         err.response?.data?.detail ??
-                            'Failed to update department.'
+                            'Cập nhật phòng ban thất bại.'
                     )
                 },
             }
@@ -127,12 +127,12 @@ const DetailDepartmentForm = ({
 
         deleteDepartmentMutation.mutate(selectedDepartment.id, {
             onSuccess: () => {
-                toast.success('Department deleted successfully.')
+                toast.success('Xóa phòng ban thành công.')
                 setActiveDepartmentId(null)
             },
             onError: (err: any) => {
                 toast.error(
-                    err.response?.data?.detail ?? 'Failed to delete department.'
+                    err.response?.data?.detail ?? 'Xóa phòng ban thất bại.'
                 )
             },
         })
@@ -172,7 +172,7 @@ const DetailDepartmentForm = ({
                             onClick={onCloseCard}
                             disabled={isSubmitting}
                         >
-                            Cancel
+                            Hủy
                         </Button>
                         <Button
                             type="submit"
@@ -180,12 +180,12 @@ const DetailDepartmentForm = ({
                             fullWidth
                             isLoading={isSubmitting}
                             loadingText={
-                                isAddingDepartment ? 'Creating...' : 'Saving...'
+                                isAddingDepartment ? 'Đang tạo...' : 'Đang lưu...'
                             }
                         >
                             {isAddingDepartment
-                                ? 'Create Department'
-                                : 'Save Changes'}
+                                ? 'Tạo phòng ban'
+                                : 'Lưu thay đổi'}
                         </Button>
                     </div>
 
@@ -194,10 +194,10 @@ const DetailDepartmentForm = ({
                         <div className="flex items-center justify-between gap-4 py-3 hover:bg-error-bg/10 rounded-xl transition-all">
                             <div>
                                 <p className="text-xs font-semibold text-error-text">
-                                    Delete Department
+                                    Xóa phòng ban
                                 </p>
                                 <p className="text-[10px] text-text-placeholder leading-normal mt-0.5">
-                                    Permanently delete department
+                                    Xóa vĩnh viễn phòng ban
                                 </p>
                             </div>
                             <Button
@@ -207,7 +207,7 @@ const DetailDepartmentForm = ({
                                 onClick={() => setShowDeleteConfirm(true)}
                                 disabled={isSubmitting}
                             >
-                                Delete
+                                Xóa
                             </Button>
                         </div>
                     )}
@@ -218,9 +218,9 @@ const DetailDepartmentForm = ({
                 isOpen={showDeleteConfirm}
                 onClose={() => setShowDeleteConfirm(false)}
                 onConfirm={handleDeleteDepartment}
-                title="Delete department?"
-                description="This will delete the department immediately. This action is irreversible."
-                confirmLabel="Yes, delete"
+                title="Xóa phòng ban?"
+                description="Hành động này sẽ xóa phòng ban ngay lập tức và không thể hoàn tác."
+                confirmLabel="Xóa phòng ban"
                 variant="danger"
                 isLoading={isSubmitting}
             />

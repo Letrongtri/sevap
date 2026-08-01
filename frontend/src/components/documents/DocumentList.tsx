@@ -32,6 +32,19 @@ const DocumentList = () => {
         setActiveDocumentId(document.id)
     }
 
+    const statusLabels: Record<string, string> = {
+        done: 'Hoàn tất',
+        pending: 'Chờ xử lý',
+        processing: 'Đang xử lý',
+        failed: 'Thất bại',
+    }
+
+    const accessLevelLabels: Record<string, string> = {
+        public: 'Công khai',
+        private: 'Riêng tư',
+        managerial: 'Quản lý',
+    }
+
     return (
         <>
             {/* Document list table container */}
@@ -40,34 +53,34 @@ const DocumentList = () => {
                     <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3">
                         <LoadingSpinner />
                         <p className="text-sm text-text-placeholder">
-                            Loading documents...
+                            Đang tải danh sách tài liệu...
                         </p>
                     </div>
                 ) : error ? (
                     <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-6 space-y-2">
                         <AlertCircle className="w-10 h-10 text-error" />
                         <h3 className="text-lg font-semibold text-text-primary">
-                            Failed to load documents
+                            Tải danh sách tài liệu thất bại
                         </h3>
                         <p className="text-sm text-text-placeholder max-w-sm">
-                            {error.message || 'An error occurred'}
+                            {error.message || 'Đã có lỗi xảy ra'}
                         </p>
                         <Button
                             variant="secondary"
                             size="sm"
                             onClick={() => refetch()}
                         >
-                            Retry
+                            Thử lại
                         </Button>
                     </div>
                 ) : documents.length === 0 ? (
                     <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-6 space-y-2">
                         <File className="w-10 h-10 text-text-placeholder" />
                         <h3 className="text-base font-semibold text-text-secondary">
-                            No documents found
+                            Không tìm thấy tài liệu nào
                         </h3>
                         <p className="text-sm text-text-placeholder max-w-xs">
-                            Try adjusting your search query or filters.
+                            Thử điều chỉnh từ khóa tìm kiếm hoặc bộ lọc.
                         </p>
                     </div>
                 ) : (
@@ -75,31 +88,31 @@ const DocumentList = () => {
                         <thead>
                             <tr className="text-text-secondary text-xs uppercase font-bold tracking-wider">
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                    No.
+                                    STT
                                 </th>
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                    Title
+                                    Tiêu đề
                                 </th>
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                    File Type
+                                    Loại tệp
                                 </th>
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                    File Size
+                                    Kích thước
                                 </th>
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                    Status
+                                    Trạng thái
                                 </th>
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                    Access Level
+                                    Cấp độ truy cập
                                 </th>
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                    Effective Date
+                                    Ngày hiệu lực
                                 </th>
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                    Uploader
+                                    Người tải lên
                                 </th>
                                 <th className="sticky top-0 z-10 bg-white border-b border-[#D4D7DE]/40 px-5 py-4 font-bold">
-                                    Uploaded At
+                                    Ngày tải lên
                                 </th>
                             </tr>
                         </thead>
@@ -153,7 +166,8 @@ const DocumentList = () => {
                                                 size="sm"
                                                 dot
                                             >
-                                                {document?.status?.toUpperCase() ||
+                                                {(document?.status && statusLabels[document.status.toLowerCase()]) ||
+                                                    document?.status?.toUpperCase() ||
                                                     '-'}
                                             </Badge>
                                         </td>
@@ -172,12 +186,9 @@ const DocumentList = () => {
                                                 size="sm"
                                                 dot
                                             >
-                                                {document.access_level
-                                                    ?.charAt(0)
-                                                    .toUpperCase() +
-                                                    document.access_level?.slice(
-                                                        1
-                                                    ) || '-'}
+                                                {accessLevelLabels[document?.access_level?.toLowerCase()] ||
+                                                    document?.access_level ||
+                                                    '-'}
                                             </Badge>
                                         </td>
                                         <td className="px-5 py-3.5 text-sm text-text-secondary max-w-[300px] truncate">
@@ -214,6 +225,7 @@ const DocumentList = () => {
                         limit={limit}
                         totalPages={pagination.total_pages}
                         totalItems={pagination.total}
+                        unit="tài liệu"
                         onPageChange={setPage}
                         onLimitChange={setLimit}
                     />

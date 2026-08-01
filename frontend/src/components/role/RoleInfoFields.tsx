@@ -25,8 +25,8 @@ const RoleInfoFields = ({
         <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input
-                    label="Role Name"
-                    placeholder="Role name"
+                    label="Tên vai trò"
+                    placeholder="Tên vai trò"
                     value={editRoleName}
                     onChange={(e) => setEditRoleName(e.target.value)}
                     leftIcon={<Shield className="w-4 h-4" />}
@@ -36,14 +36,14 @@ const RoleInfoFields = ({
                     options={accessLevelOptions}
                     value={editAccessLevel}
                     onChange={setEditAccessLevel}
-                    placeholder="Select Access Level"
-                    label="Access Level"
+                    placeholder="Chọn cấp độ truy cập"
+                    label="Cấp độ truy cập"
                 />
             </div>
 
             <Input
-                label="Role Description"
-                placeholder="Role description"
+                label="Mô tả vai trò"
+                placeholder="Mô tả vai trò"
                 value={editDescription}
                 onChange={(e) => setEditDescription(e.target.value)}
             />

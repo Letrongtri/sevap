@@ -105,12 +105,12 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
             },
             {
                 onSuccess: async () => {
-                    toast.success('Account updated successfully!')
+                    toast.success('Cập nhật tài khoản thành công!')
                 },
                 onError: (err: any) => {
                     toast.error(
                         err.response?.data?.detail ??
-                            'Failed to update user account.'
+                            'Cập nhật tài khoản thất bại.'
                     )
                 },
             }
@@ -121,7 +121,7 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
         if (!selectedUser) return
         if (
             !window.confirm(
-                `Are you sure you want to reset password for ${selectedUser.full_name} to the default password?`
+                `Bạn có chắc chắn muốn đặt lại mật khẩu cho ${selectedUser.full_name} về mật khẩu mặc định?`
             )
         ) {
             return
@@ -129,13 +129,11 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
 
         resetPasswordMutation.mutate(selectedUser.id, {
             onSuccess: () => {
-                toast.success(
-                    "Password reset successfully to default ('password')."
-                )
+                toast.success('Đặt lại mật khẩu thành công về mặc định.')
             },
             onError: (err: any) => {
                 toast.error(
-                    err.response?.data?.detail ?? 'Failed to reset password.'
+                    err.response?.data?.detail ?? 'Đặt lại mật khẩu thất bại.'
                 )
             },
         })
@@ -146,12 +144,12 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
 
         deleteUserMutation.mutate(selectedUser.id, {
             onSuccess: () => {
-                toast.success('Account deleted successfully.')
+                toast.success('Xóa tài khoản thành công.')
                 setActiveUserId(null)
             },
             onError: (err: any) => {
                 toast.error(
-                    err.response?.data?.detail ?? 'Failed to delete account.'
+                    err.response?.data?.detail ?? 'Xóa tài khoản thất bại.'
                 )
             },
         })
@@ -165,13 +163,13 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
             {
                 onSuccess: () => {
                     toast.success(
-                        `Account ${!editIsActive ? 'activated' : 'deactivated'} successfully.`
+                        `Đã ${!editIsActive ? 'kích hoạt' : 'vô hiệu hóa'} tài khoản thành công.`
                     )
                 },
                 onError: (err: any) => {
                     toast.error(
                         err.response?.data?.detail ??
-                            'Failed to activate account.'
+                            'Thao tác trạng thái tài khoản thất bại.'
                     )
                 },
             }
@@ -191,8 +189,8 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
             {/* Form: Update Details */}
             <form onSubmit={handleUpdateUser} className="space-y-4">
                 <Input
-                    label="Employee Code"
-                    placeholder="e.g. EMP-0105"
+                    label="Mã nhân viên"
+                    placeholder="ví dụ: NV-0105"
                     value={selectedUser.employee_code}
                     readOnly
                     leftIcon={<UserIcon className="w-4 h-4" />}
@@ -200,17 +198,17 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
                 />
 
                 <Input
-                    label="Full Name"
-                    placeholder="User full name"
+                    label="Họ và tên"
+                    placeholder="Họ và tên người dùng"
                     value={editFullName}
                     onChange={(e) => setEditFullName(e.target.value)}
                     leftIcon={<UserIcon className="w-4 h-4" />}
                 />
 
                 <Input
-                    label="Email Address"
+                    label="Địa chỉ Email"
                     type="email"
-                    placeholder="User email"
+                    placeholder="Email người dùng"
                     value={editEmail}
                     onChange={(e) => setEditEmail(e.target.value)}
                     leftIcon={<Mail className="w-4 h-4" />}
@@ -223,8 +221,8 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
                         onChange={(val) => {
                             setDepartmentId(val)
                         }}
-                        placeholder="Select Department"
-                        label="Department"
+                        placeholder="Chọn phòng ban"
+                        label="Phòng ban"
                     />
                     <SearchableSelect
                         options={jobTitleOptions}
@@ -232,8 +230,8 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
                         onChange={(val) => {
                             setJobTitleId(val)
                         }}
-                        placeholder="Select Job Title"
-                        label="Job Title"
+                        placeholder="Chọn chức danh"
+                        label="Chức danh"
                     />
                 </div>
 
@@ -243,8 +241,8 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
                     onChange={(val) => {
                         setRoleIds(val)
                     }}
-                    placeholder="Select Roles"
-                    label="Roles"
+                    placeholder="Chọn vai trò"
+                    label="Vai trò"
                 />
 
                 {/* Save details button */}
@@ -253,22 +251,22 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
                     variant="primary"
                     fullWidth
                     isLoading={isSubmitting}
-                    loadingText="Saving..."
+                    loadingText="Đang lưu..."
                 >
-                    Save Changes
+                    Lưu thay đổi
                 </Button>
             </form>
 
             {/* Section: Admin Quick Settings */}
             <div className="border-t border-border/60 pt-4 space-y-3">
                 <h4 className="text-xs font-bold text-text-placeholder uppercase tracking-wider">
-                    Security & Management
+                    Bảo mật & Quản lý
                 </h4>
 
                 {/* Created at */}
                 <div className="flex items-center justify-between p-3">
                     <p className="text-sm font-medium text-text-secondary">
-                        Account Created Date
+                        Ngày tạo tài khoản
                     </p>
                     <p className="text-sm font-medium text-text-secondary">
                         {formatDateTimeToDDMMYYYY(
@@ -281,10 +279,10 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
                 <div className="flex items-center justify-between p-3 bg-surface-raised border border-border rounded-xl">
                     <div>
                         <p className="text-sm font-semibold text-text-secondary">
-                            Account Status
+                            Trạng thái tài khoản
                         </p>
                         <p className="text-[10px] text-text-placeholder mt-0.5">
-                            Toggle active or inactive status
+                            Bật/tắt trạng thái hoạt động
                         </p>
                     </div>
                     <button
@@ -310,10 +308,10 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
                 <div className="flex items-center justify-between gap-4 p-3 hover:bg-bg/20 rounded-xl transition-all">
                     <div>
                         <p className="text-sm font-semibold text-text-secondary">
-                            Reset Password
+                            Đặt lại mật khẩu
                         </p>
                         <p className="text-[10px] text-text-placeholder leading-normal mt-0.5">
-                            Resets password to default ('password')
+                            Đặt lại mật khẩu về mặc định
                         </p>
                     </div>
                     <Button
@@ -323,7 +321,7 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
                         onClick={() => setShowResetPasswordConfirm(true)}
                         disabled={isSubmitting}
                     >
-                        Reset
+                        Đặt lại
                     </Button>
                 </div>
 
@@ -331,10 +329,10 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
                 <div className="flex items-center justify-between gap-4 p-3 bg-error-bg/30 border border-error-border/60 rounded-xl">
                     <div>
                         <p className="text-sm font-semibold text-error-text">
-                            Delete Account
+                            Xóa tài khoản
                         </p>
                         <p className="text-[10px] text-text-placeholder leading-normal mt-0.5">
-                            Permanently delete user profile and logs
+                            Xóa vĩnh viễn hồ sơ và nhật ký người dùng
                         </p>
                     </div>
                     <Button
@@ -344,7 +342,7 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
                         onClick={() => setShowDeleteConfirm(true)}
                         disabled={isSubmitting}
                     >
-                        Delete
+                        Xóa
                     </Button>
                 </div>
 
@@ -352,9 +350,9 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
                     isOpen={showDeleteConfirm}
                     onClose={() => setShowDeleteConfirm(false)}
                     onConfirm={handleDeleteUser}
-                    title="Delete account?"
-                    description="This will delete the account immediately. This action is irreversible."
-                    confirmLabel="Yes, delete"
+                    title="Xóa tài khoản?"
+                    description="Hành động này sẽ xóa tài khoản ngay lập tức và không thể hoàn tác."
+                    confirmLabel="Xóa tài khoản"
                     variant="danger"
                     isLoading={isSubmitting}
                 />
@@ -363,9 +361,9 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
                     isOpen={showResetPasswordConfirm}
                     onClose={() => setShowResetPasswordConfirm(false)}
                     onConfirm={handleResetPassword}
-                    title="Reset password?"
-                    description="This will reset the account password to default (password). This action is irreversible."
-                    confirmLabel="Yes, reset"
+                    title="Đặt lại mật khẩu?"
+                    description="Hành động này sẽ đặt lại mật khẩu tài khoản về mặc định (password)."
+                    confirmLabel="Đặt lại mật khẩu"
                     variant="danger"
                     isLoading={isSubmitting}
                 />
@@ -374,9 +372,9 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
                     isOpen={showActiveToggleConfirm}
                     onClose={() => setShowActiveToggleConfirm(false)}
                     onConfirm={handleToggleUserStatus}
-                    title="Change account status?"
-                    description="This will deactivate the account. This action is irreversible."
-                    confirmLabel="Yes, change"
+                    title="Thay đổi trạng thái tài khoản?"
+                    description="Hành động này sẽ thay đổi trạng thái hoạt động của tài khoản."
+                    confirmLabel="Xác nhận thay đổi"
                     variant="danger"
                     isLoading={isSubmitting}
                 />

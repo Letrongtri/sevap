@@ -32,12 +32,12 @@ const DirectoryTableFilters = () => {
     const { data: jobTitlesData } = useSimpleJobTitles()
 
     const departmentOptions = [
-        { value: null, label: 'All Departments' },
+        { value: null, label: 'Tất cả phòng ban' },
         ...(departmentsData || []).map((d) => ({ value: d.id, label: d.name })),
     ]
 
     const jobTitleOptions = [
-        { value: null, label: 'All Job Titles' },
+        { value: null, label: 'Tất cả chức danh' },
         ...(jobTitlesData || []).map((j) => ({
             value: j.id,
             label: j.title_name,
@@ -47,13 +47,13 @@ const DirectoryTableFilters = () => {
     const getPlaceholder = () => {
         switch (activeTab) {
             case DirectoryTab.Users:
-                return 'Search users by name, employee code, email...'
+                return 'Tìm kiếm tài khoản theo tên, mã nhân viên, email...'
             case DirectoryTab.Departments:
-                return 'Search departments by name or code...'
+                return 'Tìm kiếm phòng ban theo tên hoặc mã...'
             case DirectoryTab.JobTitles:
-                return 'Search job titles by title name or code...'
+                return 'Tìm kiếm chức danh theo tên hoặc mã...'
             default:
-                return 'Search...'
+                return 'Tìm kiếm...'
         }
     }
 
@@ -81,7 +81,7 @@ const DirectoryTableFilters = () => {
                                     setDepartmentId(val)
                                     setPage(1)
                                 }}
-                                placeholder="All Departments"
+                                placeholder="Tất cả phòng ban"
                             />
                         </div>
                         <div className="w-full sm:w-48">
@@ -92,7 +92,7 @@ const DirectoryTableFilters = () => {
                                     setJobTitleId(val)
                                     setPage(1)
                                 }}
-                                placeholder="All Job Titles"
+                                placeholder="Tất cả chức danh"
                             />
                         </div>
                     </div>

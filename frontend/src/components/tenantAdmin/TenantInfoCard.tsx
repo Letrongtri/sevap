@@ -54,11 +54,11 @@ export default function TenantInfoCard() {
 
         await updateTenantMutation.mutateAsync(payload, {
             onSuccess: () => {
-                toast.success('Tenant updated successfully!')
+                toast.success('Cập nhật thông tin công ty thành công!')
             },
             onError: (err: any) => {
                 toast.error(
-                    err.response?.data?.detail ?? 'Failed to update tenant'
+                    err.response?.data?.detail ?? 'Cập nhật thông tin công ty thất bại'
                 )
             },
         })
@@ -74,7 +74,7 @@ export default function TenantInfoCard() {
             <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3">
                 <LoadingSpinner />
                 <p className="text-sm text-text-placeholder">
-                    Loading company information...
+                    Đang tải thông tin công ty...
                 </p>
             </div>
         )
@@ -85,13 +85,13 @@ export default function TenantInfoCard() {
             <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-6 space-y-2">
                 <AlertCircle className="w-10 h-10 text-error" />
                 <h3 className="text-lg font-semibold text-text-primary">
-                    Failed to load company information
+                    Tải thông tin công ty thất bại
                 </h3>
                 <p className="text-sm text-text-placeholder max-w-sm">
-                    {'An error occurred while loading company information'}
+                    Đã xảy ra lỗi khi tải thông tin công ty
                 </p>
                 <Button variant="secondary" size="sm" onClick={() => refetch()}>
-                    Retry
+                    Thử lại
                 </Button>
             </div>
         )
@@ -110,10 +110,10 @@ export default function TenantInfoCard() {
 
                 <div className="flex flex-col flex-1 items-start justify-start gap-1">
                     <p className="font-bold text-primary uppercase tracking-wider">
-                        Company Information
+                        Thông tin công ty
                     </p>
                     <p className="text-xs text-text-muted bg-bg px-2 py-0.5 rounded-md border border-border/60">
-                        Company ID: {data?.id}
+                        Mã công ty: {data?.id}
                     </p>
                 </div>
 
@@ -124,7 +124,7 @@ export default function TenantInfoCard() {
                         leftIcon={<Edit3 className="w-3.5 h-3.5" />}
                         onClick={handleOpenEditTenant}
                     >
-                        Edit
+                        Chỉnh sửa
                     </Button>
                 ) : (
                     <div className="flex gap-2">
@@ -133,10 +133,10 @@ export default function TenantInfoCard() {
                             size="sm"
                             onClick={handleCancel}
                         >
-                            Cancel
+                            Hủy
                         </Button>
                         <Button variant="danger" size="sm" onClick={handleSave}>
-                            Save
+                            Lưu
                         </Button>
                     </div>
                 )}
@@ -146,7 +146,7 @@ export default function TenantInfoCard() {
             <div className="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-x-8 gap-y-4">
                 {/* Company Name */}
                 <div className="lg:col-span-4">
-                    <InfoRow label="COMPANY NAME">
+                    <InfoRow label="TÊN CÔNG TY">
                         {!isEditingTenant ? (
                             <span className="font-bold text-text-primary text-sm">
                                 {data?.company_name}
@@ -164,7 +164,7 @@ export default function TenantInfoCard() {
 
                 {/* Email */}
                 <div className="lg:col-span-2">
-                    <InfoRow label="COMPANY EMAIL">
+                    <InfoRow label="EMAIL CÔNG TY">
                         {!isEditingTenant ? (
                             <span className="text-sm text-text-secondary">
                                 {data?.company_email}
@@ -184,7 +184,7 @@ export default function TenantInfoCard() {
 
                 {/* Phone */}
                 <div className="lg:col-span-2">
-                    <InfoRow label="COMPANY PHONE">
+                    <InfoRow label="SỐ ĐIỆN THOẠI">
                         {!isEditingTenant ? (
                             <span className="text-sm font-semibold text-text-secondary">
                                 {data?.company_phone}
@@ -204,7 +204,7 @@ export default function TenantInfoCard() {
 
                 {/* Address */}
                 <div className="lg:col-span-4">
-                    <InfoRow label="COMPANY ADDRESS">
+                    <InfoRow label="ĐỊA CHỈ">
                         {!isEditingTenant ? (
                             <span className="text-sm text-text-secondary">
                                 {data?.company_address}
@@ -224,7 +224,7 @@ export default function TenantInfoCard() {
 
                 {/* Domain */}
                 <div className="lg:col-span-2">
-                    <InfoRow label="COMPANY DOMAIN">
+                    <InfoRow label="TÊN MIỀN CÔNG TY">
                         {!isEditingTenant ? (
                             <span className="text-sm font-semibold text-primary">
                                 {data?.tenant_domain}
@@ -245,16 +245,16 @@ export default function TenantInfoCard() {
 
                 {/* Lifecycle */}
                 <div className="lg:col-span-2">
-                    <InfoRow label="METADATA LIFECYCLE">
+                    <InfoRow label="VÒNG ĐỜI THÔNG TIN">
                         <div className="text-xs text-text-muted space-y-0.5">
                             <div>
-                                Created:{' '}
+                                Ngày tạo:{' '}
                                 {formatDateTimeToDDMMYYYY(
                                     data?.created_at ?? ''
                                 )}
                             </div>
                             <div>
-                                Updated:{' '}
+                                Cập nhật:{' '}
                                 {formatDateTimeToDDMMYYYY(
                                     data?.updated_at ?? ''
                                 )}
@@ -267,7 +267,7 @@ export default function TenantInfoCard() {
             {/* Description */}
             <div className="px-5 pb-5">
                 <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-1.5">
-                    Company Description
+                    Mô tả công ty
                 </div>
                 {!isEditingTenant ? (
                     data?.company_description && (

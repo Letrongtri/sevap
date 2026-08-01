@@ -138,13 +138,13 @@ export default function AuditLogTable() {
             <div className="flex items-start justify-between mb-4">
                 <div>
                     <h3 className="text-sm font-bold text-text-primary">
-                        Tenant Activity Audit Logs
+                        Nhật ký hoạt động hệ thống
                     </h3>
                     <p className="text-[11px] text-text-muted mt-0.5">
-                        Strictly isolated auditing trails for active tenant
+                        Nhật ký kiểm toán thời gian thực của công ty
                         {totalItems > 0 && (
                             <span className="ml-1 text-text-placeholder">
-                                · {totalItems.toLocaleString()} records
+                                · {totalItems.toLocaleString()} bản ghi
                             </span>
                         )}
                     </p>
@@ -166,12 +166,12 @@ export default function AuditLogTable() {
                     <thead>
                         <tr className="border-b border-border/60">
                             {[
-                                'Action',
-                                'Resource',
-                                'Actor',
-                                'Level',
-                                'IP Address',
-                                'Timestamp',
+                                'Hành động',
+                                'Tài nguyên',
+                                'Người thực hiện',
+                                'Cấp độ',
+                                'Địa chỉ IP',
+                                'Thời gian',
                             ].map((col) => (
                                 <th
                                     key={col}
@@ -192,8 +192,8 @@ export default function AuditLogTable() {
                                     className="py-10 text-center text-text-muted text-xs"
                                 >
                                     {status === 'CLOSED'
-                                        ? 'WebSocket disconnected. Waiting for connection…'
-                                        : 'No audit logs found.'}
+                                        ? 'Đã ngắt kết nối WebSocket. Đang chờ kết nối lại…'
+                                        : 'Không tìm thấy nhật ký kiểm toán nào.'}
                                 </td>
                             </tr>
                         ) : (

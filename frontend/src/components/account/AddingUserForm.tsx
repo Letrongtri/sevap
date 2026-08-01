@@ -62,7 +62,7 @@ const AddingUserForm = () => {
             !newPassword.trim()
         ) {
             toast.error(
-                'Please fill in employee code, full name, and password.'
+                'Vui lòng nhập mã nhân viên, họ tên và mật khẩu.'
             )
             return
         }
@@ -89,14 +89,14 @@ const AddingUserForm = () => {
             },
             {
                 onSuccess: (created) => {
-                    toast.success('User account created successfully!')
+                    toast.success('Tạo tài khoản người dùng thành công!')
                     setActiveUserId(created.id)
                     setIsAddingUser(false)
                 },
                 onError: (err: any) => {
                     toast.error(
                         err.response?.data?.detail ??
-                            'Failed to create user account.'
+                            'Tạo tài khoản người dùng thất bại.'
                     )
                 },
             }
@@ -105,8 +105,8 @@ const AddingUserForm = () => {
     return (
         <form onSubmit={handleCreateUser} className="space-y-4">
             <Input
-                label="Employee Code *"
-                placeholder="e.g. EMP-0105"
+                label="Mã nhân viên *"
+                placeholder="ví dụ: NV-0105"
                 value={newEmployeeCode}
                 onChange={(e) => setNewEmployeeCode(e.target.value)}
                 leftIcon={<UserIcon className="w-4 h-4" />}
@@ -114,8 +114,8 @@ const AddingUserForm = () => {
             />
 
             <Input
-                label="Full Name *"
-                placeholder="e.g. Nguyen Van A"
+                label="Họ và tên *"
+                placeholder="ví dụ: Nguyễn Văn A"
                 value={newFullName}
                 onChange={(e) => setNewFullName(e.target.value)}
                 leftIcon={<UserIcon className="w-4 h-4" />}
@@ -123,9 +123,9 @@ const AddingUserForm = () => {
             />
 
             <Input
-                label="Email Address"
+                label="Địa chỉ Email"
                 type="email"
-                placeholder="e.g. user@company.local"
+                placeholder="ví dụ: user@company.local"
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
                 leftIcon={<Mail className="w-4 h-4" />}
@@ -138,8 +138,8 @@ const AddingUserForm = () => {
                     onChange={(val) => {
                         setDepartmentId(val)
                     }}
-                    placeholder="Select Department"
-                    label="Department"
+                    placeholder="Chọn phòng ban"
+                    label="Phòng ban"
                 />
                 <SearchableSelect
                     options={jobTitleOptions}
@@ -147,8 +147,8 @@ const AddingUserForm = () => {
                     onChange={(val) => {
                         setJobTitleId(val)
                     }}
-                    placeholder="Select Job Title"
-                    label="Job Title"
+                    placeholder="Chọn chức danh"
+                    label="Chức danh"
                 />
             </div>
 
@@ -158,23 +158,22 @@ const AddingUserForm = () => {
                 onChange={(val) => {
                     setRoleIds(val)
                 }}
-                placeholder="Select Roles"
-                label="Roles"
+                placeholder="Chọn vai trò"
+                label="Vai trò"
             />
 
             <div className="space-y-1.5">
                 <Input
-                    label="Password *"
+                    label="Mật khẩu *"
                     type="password"
-                    placeholder="Min 8 characters, mix of A-Z, a-z, 0-9, symbol"
+                    placeholder="Tối thiểu 8 ký tự, gồm chữ hoa, chữ thường, số, ký tự đặc biệt"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     leftIcon={<Lock className="w-4 h-4" />}
                     required
                 />
                 <p className="text-[10px] text-text-placeholder leading-normal">
-                    Must be 8+ chars, contain an uppercase letter, lowercase
-                    letter, number, and special character.
+                    Phải có từ 8 ký tự trở lên, bao gồm chữ hoa, chữ thường, chữ số và ký tự đặc biệt.
                 </p>
             </div>
 
@@ -184,9 +183,9 @@ const AddingUserForm = () => {
                     variant="primary"
                     fullWidth
                     isLoading={createUserMutation.isPending}
-                    loadingText="Registering..."
+                    loadingText="Đang đăng ký..."
                 >
-                    Create Account
+                    Tạo tài khoản
                 </Button>
                 <Button
                     type="button"
@@ -197,7 +196,7 @@ const AddingUserForm = () => {
                     }}
                     disabled={createUserMutation.isPending}
                 >
-                    Cancel
+                    Hủy
                 </Button>
             </div>
         </form>

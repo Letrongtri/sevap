@@ -49,7 +49,7 @@ const ChatHistory = ({ collapsed }: { collapsed: boolean }) => {
         >
             {!collapsed && (
                 <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-text-disabled select-none">
-                    Recent chats
+                    Gần đây
                 </p>
             )}
 
@@ -62,7 +62,7 @@ const ChatHistory = ({ collapsed }: { collapsed: boolean }) => {
                         type="search"
                         value={searchKeyword}
                         onChange={(e) => setSearchKeyword(e.target.value)}
-                        placeholder="Search chats..."
+                        placeholder="Tìm cuộc trò chuyện..."
                         className="w-full pl-9 pr-4 py-2 bg-bg border border-transparent rounded-xl text-sm text-text-primary placeholder:text-text-placeholder focus:outline-none focus:bg-surface focus:border-border transition-all duration-200"
                     />
                 </div>
@@ -70,7 +70,7 @@ const ChatHistory = ({ collapsed }: { collapsed: boolean }) => {
 
             {collapsed ? (
                 /* Collapsed: show single history icon */
-                <Tooltip content="Recent chats" position="right">
+                <Tooltip content="Gần đây" position="right">
                     <button className="flex items-center justify-center w-full px-3 py-2 rounded-xl text-text-placeholder hover:text-text-secondary hover:bg-bg transition-all duration-150">
                         <Clock className="w-5 h-5" />
                     </button>

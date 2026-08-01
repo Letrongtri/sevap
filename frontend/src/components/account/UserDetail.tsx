@@ -27,7 +27,7 @@ const UserDetail = () => {
                 {/* Nút đóng X */}
                 <button
                     onClick={handleCloseCard}
-                    title="Close detail panel"
+                    title="Đóng bảng chi tiết"
                     className="absolute top-3 right-3 p-1.5 rounded-lg text-text-placeholder hover:text-text-primary hover:bg-bg transition-all duration-150 z-20 cursor-pointer"
                 >
                     <X className="w-5 h-5" />
@@ -36,9 +36,9 @@ const UserDetail = () => {
                 {/* Tiêu đề động tự đổi chữ tùy thuộc vào state đang Add hay View Detail */}
                 <h2 className="text-lg font-bold text-text-primary">
                     {isAddingUser
-                        ? 'Add New Account'
+                        ? 'Thêm tài khoản mới'
                         : selectedUser
-                          ? 'User Information'
+                          ? 'Thông tin người dùng'
                           : ''}
                 </h2>
             </div>

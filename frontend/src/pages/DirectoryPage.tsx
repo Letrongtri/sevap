@@ -18,10 +18,10 @@ const TabItem = ({
 }: {
     label: string
     icon: LucideIcon
-    value: string
+    value: DirectoryTab
     count: number
-    activeTab: string
-    setActiveTab: (value: string) => void
+    activeTab: DirectoryTab
+    setActiveTab: (value: DirectoryTab) => void
 }) => {
     return (
         <div
@@ -49,9 +49,9 @@ const AccessDenied = () => (
         <div className="w-16 h-16 rounded-2xl bg-error/10 flex items-center justify-center">
             <ShieldOff className="w-8 h-8 text-error" />
         </div>
-        <h3 className="text-lg font-semibold text-text-primary">Access Denied</h3>
+        <h3 className="text-lg font-semibold text-text-primary">Truy cập bị từ chối</h3>
         <p className="text-sm text-text-placeholder max-w-sm">
-            You don't have permission to view the Company Directory. Please contact your administrator.
+            Bạn không có quyền xem Danh bạ công ty. Vui lòng liên hệ quản trị viên.
         </p>
     </div>
 )
@@ -81,21 +81,21 @@ export default function DirectoryPage() {
             <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3">
                 <LoadingSpinner />
                 <p className="text-sm text-text-placeholder">
-                    Loading directory...
+                    Đang tải danh bạ...
                 </p>
             </div>
         )
     }
 
     if (error) {
-        return <div>Error: {error.message}</div>
+        return <div>Lỗi: {error.message}</div>
     }
 
     if (!hasAnyAccess) {
         return (
             <div className="h-full flex flex-col gap-4 overflow-hidden">
                 <div className="flex-shrink-0">
-                    <Header title="Company Directory" />
+                    <Header title="Danh bạ công ty" />
                 </div>
                 <AccessDenied />
             </div>
@@ -106,14 +106,14 @@ export default function DirectoryPage() {
         <div className="h-full flex flex-col gap-4 overflow-hidden">
             {/* Header section */}
             <div className="flex-shrink-0">
-                <Header title="Company Directory" />
+                <Header title="Danh bạ công ty" />
             </div>
 
             {/* Stats — only show tabs user has permission to view */}
             <div className="grid grid-cols-3 gap-4">
                 {canViewUsers && (
                     <TabItem
-                        label="Users"
+                        label="Tài khoản"
                         icon={Users}
                         value={DirectoryTab.Users}
                         count={directoryOverview?.users_count || 0}
@@ -123,7 +123,7 @@ export default function DirectoryPage() {
                 )}
                 {canViewDepartments && (
                     <TabItem
-                        label="Departments"
+                        label="Phòng ban"
                         icon={Building2}
                         value={DirectoryTab.Departments}
                         count={directoryOverview?.departments_count || 0}
@@ -133,7 +133,7 @@ export default function DirectoryPage() {
                 )}
                 {canViewJobTitles && (
                     <TabItem
-                        label="Job Titles"
+                        label="Chức danh"
                         icon={Briefcase}
                         value={DirectoryTab.JobTitles}
                         count={directoryOverview?.job_titles_count || 0}

@@ -56,15 +56,15 @@ export function PasswordSection() {
     const validate = (): boolean => {
         const next: PasswordErrors = {}
         if (!form.oldPassword.trim())
-            next.oldPassword = 'Current password is required.'
+            next.oldPassword = 'Mật khẩu hiện tại không được để trống.'
         if (!form.newPassword.trim())
-            next.newPassword = 'New password is required.'
+            next.newPassword = 'Mật khẩu mới không được để trống.'
         else if (!validatePassword(form.newPassword))
             next.newPassword =
-                'Password must be at least 8 characters, contain at least one uppercase letter, one lowercase letter, and one number.'
+                'Mật khẩu phải có ít nhất 8 ký tự, bao gồm ít nhất một chữ hoa, một chữ thường và một chữ số.'
         else if (form.newPassword === form.oldPassword)
             next.newPassword =
-                'New password must be different from current password.'
+                'Mật khẩu mới phải khác mật khẩu hiện tại.'
         setErrors(next)
         return Object.keys(next).length === 0
     }
@@ -86,9 +86,9 @@ export function PasswordSection() {
                 onSuccess: () => {
                     setShowConfirm(false)
                     handleCancel()
-                    toast.success('Password changed', {
+                    toast.success('Đã đổi mật khẩu', {
                         description:
-                            'Your password has been updated successfully.',
+                            'Mật khẩu của bạn đã được cập nhật thành công.',
                     })
                 },
                 onError: (err: unknown) => {
@@ -99,8 +99,8 @@ export function PasswordSection() {
                                 response?: { data?: { detail?: string } }
                             }
                         )?.response?.data?.detail ??
-                        'Failed to change password. Please try again.'
-                    toast.error('Password change failed', { description: msg })
+                        'Đổi mật khẩu thất bại. Vui lòng thử lại.'
+                    toast.error('Đổi mật khẩu thất bại', { description: msg })
                 },
             }
         )
@@ -118,7 +118,7 @@ export function PasswordSection() {
                             <KeyRound className="w-4 h-4" />
                         </SecurityIcon>
                         <p className="text-sm font-semibold text-text-primary">
-                            Password
+                            Mật khẩu
                         </p>
                     </div>
 
@@ -132,7 +132,7 @@ export function PasswordSection() {
                                 onClick={handleCancel}
                                 disabled={isPending}
                             >
-                                Cancel
+                                Hủy
                             </Button>
                             <Button
                                 id="password-save-btn"
@@ -142,7 +142,7 @@ export function PasswordSection() {
                                 onClick={handleSaveClick}
                                 disabled={isPending}
                             >
-                                Save
+                                Lưu
                             </Button>
                         </div>
                     ) : (
@@ -151,7 +151,7 @@ export function PasswordSection() {
                             onClick={() => setIsEditing(true)}
                             className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-text-secondary border border-border bg-surface hover:bg-bg transition-all duration-150"
                         >
-                            Change Password
+                            Đổi mật khẩu
                         </button>
                     )}
                 </div>
@@ -161,7 +161,7 @@ export function PasswordSection() {
                     <div className="px-6 pb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <Input
                             id="password-old-input"
-                            label="Current Password"
+                            label="Mật khẩu hiện tại"
                             type={showOld ? 'text' : 'password'}
                             value={form.oldPassword}
                             onChange={(e) =>
@@ -187,14 +187,14 @@ export function PasswordSection() {
                         />
                         <Input
                             id="password-new-input"
-                            label="New Password"
+                            label="Mật khẩu mới"
                             type={showNew ? 'text' : 'password'}
                             value={form.newPassword}
                             onChange={(e) =>
                                 setField('newPassword', e.target.value)
                             }
                             errorText={errors.newPassword}
-                            helperText="Minimum 8 characters"
+                            helperText="Tối thiểu 8 ký tự"
                             required
                             leftIcon={<KeyRound className="w-4 h-4" />}
                             rightElement={
@@ -221,9 +221,9 @@ export function PasswordSection() {
                 isOpen={showConfirm}
                 onClose={() => setShowConfirm(false)}
                 onConfirm={handleConfirm}
-                title="Change your password?"
-                description="This will update your login credentials immediately. You will remain logged in on this device."
-                confirmLabel="Yes, change it"
+                title="Xác nhận đổi mật khẩu?"
+                description="Mật khẩu mới sẽ có hiệu lực ngay lập tức. Bạn vẫn sẽ duy trì đăng nhập trên thiết bị này."
+                confirmLabel="Đổi mật khẩu"
                 variant="danger"
                 isLoading={isPending}
             />

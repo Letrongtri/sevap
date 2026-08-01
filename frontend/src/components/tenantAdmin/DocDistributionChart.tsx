@@ -22,7 +22,7 @@ export default function DocDistributionChart() {
             <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3">
                 <LoadingSpinner />
                 <p className="text-sm text-text-placeholder">
-                    Loading document distribution...
+                    Đang tải phân bố tài liệu...
                 </p>
             </div>
         )
@@ -33,13 +33,13 @@ export default function DocDistributionChart() {
             <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-6 space-y-2">
                 <AlertCircle className="w-10 h-10 text-error" />
                 <h3 className="text-lg font-semibold text-text-primary">
-                    Failed to load document distribution
+                    Tải phân bố tài liệu thất bại
                 </h3>
                 <p className="text-sm text-text-placeholder max-w-sm">
-                    An error occurred while loading document distribution
+                    Đã xảy ra lỗi khi tải dữ liệu phân bố tài liệu
                 </p>
                 <Button variant="secondary" size="sm" onClick={() => refetch()}>
-                    Retry
+                    Thử lại
                 </Button>
             </div>
         )
@@ -52,19 +52,19 @@ export default function DocDistributionChart() {
 
     const rawData = [
         {
-            label: 'Public',
+            label: 'Công khai',
             value: publicDocuments,
             color: '#10b981',
             pct: Math.round((publicDocuments / (total || 1)) * 100),
         },
         {
-            label: 'Private',
+            label: 'Riêng tư',
             value: privateDocuments,
             color: '#f59e0b',
             pct: Math.round((privateDocuments / (total || 1)) * 100),
         },
         {
-            label: 'Managerial',
+            label: 'Quản lý',
             value: managerialDocuments,
             color: '#0350ff',
             pct: Math.round((managerialDocuments / (total || 1)) * 100),
@@ -115,10 +115,10 @@ export default function DocDistributionChart() {
             {/* Header */}
             <div>
                 <h3 className="text-sm font-bold text-text-primary">
-                    PAR Gate Document Distribution
+                    Phân bố tài liệu theo quyền truy cập
                 </h3>
                 <p className="text-xs text-text-muted mt-0.5">
-                    Classification by access levels under PAR context
+                    Phân loại tài liệu theo từng cấp độ truy cập (PAR)
                 </p>
             </div>
 
@@ -132,7 +132,7 @@ export default function DocDistributionChart() {
                             {total}
                         </span>
                         <span className="text-xs font-semibold text-text-muted uppercase">
-                            Total
+                            Tổng số
                         </span>
                     </div>
                     <Doughnut data={chartData} options={options} />

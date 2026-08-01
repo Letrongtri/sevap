@@ -30,10 +30,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     const validate = (): boolean => {
         const errs: Partial<Record<keyof LoginCredentials, string>> = {}
         if (!values.tenantDomain.trim())
-            errs.tenantDomain = 'Tenant domain is required.'
+            errs.tenantDomain = 'Vui lòng nhập tên miền doanh nghiệp.'
         if (!values.employeeCode.trim())
-            errs.employeeCode = 'Employee code is required.'
-        if (!values.password) errs.password = 'Password is required.'
+            errs.employeeCode = 'Vui lòng nhập mã nhân viên.'
+        if (!values.password) errs.password = 'Vui lòng nhập mật khẩu.'
         setFieldErrors(errs as Partial<LoginCredentials>)
         return Object.keys(errs).length === 0
     }
@@ -67,10 +67,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                 />
                 <div className="flex flex-col items-center mt-1">
                     <h2 className="text-2xl font-bold text-text-primary tracking-tight">
-                        Welcome back
+                        Chào mừng trở lại
                     </h2>
                     <p className="text-sm text-text-muted mt-1">
-                        Sign in to access your workspace
+                        Đăng nhập để truy cập không gian làm việc của bạn
                     </p>
                 </div>
             </div>
@@ -98,7 +98,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                 <DomainInput
                     id="tenantDomain"
                     name="tenantDomain"
-                    label="Tenant Domain"
+                    label="Tên miền doanh nghiệp"
                     placeholder="company"
                     value={values.tenantDomain}
                     onChange={handleChange}
@@ -112,8 +112,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                     id="employeeCode"
                     name="employeeCode"
                     type="text"
-                    label="Employee Code"
-                    placeholder="Enter your employee code"
+                    label="Mã nhân viên"
+                    placeholder="Nhập mã nhân viên của bạn"
                     autoComplete="employeeCode"
                     value={values.employeeCode}
                     onChange={handleChange}
@@ -128,13 +128,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                         htmlFor="password"
                         className="block text-sm font-semibold text-text-secondary"
                     >
-                        Password
+                        Mật khẩu
                     </label>
                     <Input
                         id="password"
                         name="password"
                         type={showPassword ? 'text' : 'password'}
-                        placeholder="Enter your password"
+                        placeholder="Nhập mật khẩu của bạn"
                         autoComplete="current-password"
                         value={values.password}
                         onChange={handleChange}
@@ -145,8 +145,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                                 onClick={() => setShowPassword((p) => !p)}
                                 aria-label={
                                     showPassword
-                                        ? 'Hide password'
-                                        : 'Show password'
+                                        ? 'Ẩn mật khẩu'
+                                        : 'Hiện mật khẩu'
                                 }
                                 className="text-text-placeholder hover:text-text-muted transition-colors duration-150 p-0.5"
                             >
@@ -170,20 +170,20 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                     size="lg"
                     fullWidth
                     isLoading={isLoading}
-                    loadingText="Authenticating..."
+                    loadingText="Đang xác thực..."
                 >
-                    Sign in to Platform
+                    Đăng nhập vào Hệ thống
                 </Button>
 
                 {/* Link to Registration */}
                 <div className="text-center pt-2">
                     <p className="text-sm text-text-muted">
-                        Don't have an organization?{' '}
+                        Chưa có tổ chức/doanh nghiệp?{' '}
                         <Link
                             to="/register"
                             className="font-semibold text-primary hover:text-primary-hover transition-colors duration-150"
                         >
-                            Register now
+                            Đăng ký ngay
                         </Link>
                     </p>
                 </div>
