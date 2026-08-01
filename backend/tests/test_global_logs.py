@@ -10,14 +10,14 @@ import uuid_utils
 @pytest.fixture
 async def regular_user_headers(db_session: AsyncSession):
     # Create or fetch a regular tenant
-    res_tenant = await db_session.execute(select(Tenants).filter_by(tenant_domain="system.hrnexus.com"))
+    res_tenant = await db_session.execute(select(Tenants).filter_by(tenant_domain="system.sevap.com"))
     tenant = res_tenant.scalars().first()
     
     # Create a regular user
     user = User(
         id=str(uuid_utils.uuid7()),
         tenant_id=tenant.id,
-        email="employee@system.hrnexus.com",
+        email="employee@system.sevap.com",
         full_name="Regular Employee",
         employee_code="emp_123",
         password="hashed_password"
@@ -74,7 +74,7 @@ async def test_tenant_log_privacy_redaction(
     headers = await global_admin_headers()
     
     # Fetch default tenant
-    res_tenant = await db_session.execute(select(Tenants).filter_by(tenant_domain="system.hrnexus.com"))
+    res_tenant = await db_session.execute(select(Tenants).filter_by(tenant_domain="system.sevap.com"))
     tenant = res_tenant.scalars().first()
 
     # Create one sensitive conversation log and one regular user log under this tenant

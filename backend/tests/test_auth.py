@@ -8,9 +8,9 @@ from app.utils.auth import create_refresh_token
 
 @pytest.mark.asyncio
 async def test_login_success(async_client: AsyncClient, db_session: AsyncSession):
-    # System default data contains tenant system.hrnexus.com, employee_code admin, password Admin@1234
+    # System default data contains tenant system.sevap.com, employee_code admin, password Admin@1234
     login_data = {
-        "tenant_domain": "system.hrnexus.com",
+        "tenant_domain": "system.sevap.com",
         "employee_code": "admin",
         "password": "Admin@1234"
     }
@@ -22,12 +22,12 @@ async def test_login_success(async_client: AsyncClient, db_session: AsyncSession
     assert "refresh_token" in data
     assert data["token_type"] == "bearer"
     assert data["user"]["employee_code"] == "admin"
-    assert data["user"]["tenant_domain"] == "system.hrnexus.com"
+    assert data["user"]["tenant_domain"] == "system.sevap.com"
 
 @pytest.mark.asyncio
 async def test_login_invalid_password(async_client: AsyncClient, db_session: AsyncSession):
     login_data = {
-        "tenant_domain": "system.hrnexus.com",
+        "tenant_domain": "system.sevap.com",
         "employee_code": "admin",
         "password": "WrongPassword@123"
     }
@@ -65,7 +65,7 @@ async def test_login_validation_error(async_client: AsyncClient, db_session: Asy
     # Password must satisfy complexity strength validator
     # E.g. "short" doesn't satisfy strength validation
     login_data = {
-        "tenant_domain": "system.hrnexus.com",
+        "tenant_domain": "system.sevap.com",
         "employee_code": "admin",
         "password": "123"
     }
@@ -93,7 +93,7 @@ async def test_refresh_token_success(async_client: AsyncClient, db_session: Asyn
     await db_session.commit()
     
     refresh_data = {
-        "tenant_domain": "system.hrnexus.com",
+        "tenant_domain": "system.sevap.com",
         "refresh_token": refresh_token.token
     }
     response = await async_client.post("/api/v1/auth/refresh", json=refresh_data)
@@ -106,7 +106,7 @@ async def test_refresh_token_success(async_client: AsyncClient, db_session: Asyn
 @pytest.mark.asyncio
 async def test_refresh_token_invalid(async_client: AsyncClient, db_session: AsyncSession):
     refresh_data = {
-        "tenant_domain": "system.hrnexus.com",
+        "tenant_domain": "system.sevap.com",
         "refresh_token": "invalid.refresh.token"
     }
     response = await async_client.post("/api/v1/auth/refresh", json=refresh_data)
@@ -133,7 +133,7 @@ async def test_logout_success(async_client: AsyncClient, db_session: AsyncSessio
     
     headers = await admin_headers()
     logout_data = {
-        "tenant_domain": "system.hrnexus.com",
+        "tenant_domain": "system.sevap.com",
         "refresh_token": refresh_token.token
     }
     response = await async_client.post("/api/v1/auth/logout", json=logout_data, headers=headers)

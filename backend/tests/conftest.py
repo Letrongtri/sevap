@@ -115,7 +115,7 @@ async def clean_db_setup(event_loop):
     async with AsyncSessionLocal() as db:
         await add_system_default_data(db)
         
-        # Seed default test tenant 'system.hrnexus.com'
+        # Seed default test tenant 'system.sevap.com'
         from app.repositories import TenantRepository, PermissionRepository
         from app.services import TenantService
         from app.schemas import TenantCreate
@@ -125,10 +125,10 @@ async def clean_db_setup(event_loop):
         tenant_service = TenantService(tenant_repo, perm_repo)
         
         tenant_data = TenantCreate(
-            tenant_domain="system.hrnexus.com",
+            tenant_domain="system.sevap.com",
             company_name="System Default Co",
             company_description="Default System Tenant",
-            company_email="info@system.hrnexus.com",
+            company_email="info@system.sevap.com",
             company_phone="0912345678",
             company_address="123 System St",
             admin_employee_code="admin",
@@ -168,11 +168,11 @@ def admin_headers(db_session) -> dict:
         from sqlalchemy.future import select
         from sqlalchemy.orm import selectinload
         
-        # 1. Fetch tenant system.hrnexus.com
-        res_tenant = await db_session.execute(select(Tenants).filter_by(tenant_domain="system.hrnexus.com"))
+        # 1. Fetch tenant system.sevap.com
+        res_tenant = await db_session.execute(select(Tenants).filter_by(tenant_domain="system.sevap.com"))
         tenant = res_tenant.scalars().first()
         if not tenant:
-            raise ValueError("Default tenant system.hrnexus.com not found")
+            raise ValueError("Default tenant system.sevap.com not found")
             
         # 2. Fetch admin user of this tenant
         stmt = select(User).filter_by(
@@ -256,11 +256,11 @@ def employee_headers(db_session) -> dict:
         from sqlalchemy.future import select
         from app.utils.auth import create_access_token
         
-        # 1. Fetch tenant system.hrnexus.com
-        res_tenant = await db_session.execute(select(Tenants).filter_by(tenant_domain="system.hrnexus.com"))
+        # 1. Fetch tenant system.sevap.com
+        res_tenant = await db_session.execute(select(Tenants).filter_by(tenant_domain="system.sevap.com"))
         tenant = res_tenant.scalars().first()
         if not tenant:
-            raise ValueError("Default tenant system.hrnexus.com not found")
+            raise ValueError("Default tenant system.sevap.com not found")
             
         token = create_access_token(
             user_id="employee-test-id",

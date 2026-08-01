@@ -7,18 +7,22 @@ import { useAuth } from '../hooks/useAuth'
 /* ============================================================
    GlobalAdminLoginPage — Zone 4 entry point
    Separate login for system-level global admins.
-   No tenant domain required (uses system.hrnexus.com internally).
+   No tenant domain required (uses system.sevap.com internally).
    ============================================================ */
 
 export default function GlobalAdminLoginPage() {
     const { loginGlobalAdmin, isLoading, error } = useAuth()
     const [values, setValues] = useState({ employeeCode: '', password: '' })
     const [showPassword, setShowPassword] = useState(false)
-    const [fieldErrors, setFieldErrors] = useState<{ employeeCode?: string; password?: string }>({})
+    const [fieldErrors, setFieldErrors] = useState<{
+        employeeCode?: string
+        password?: string
+    }>({})
 
     const validate = (): boolean => {
         const errs: typeof fieldErrors = {}
-        if (!values.employeeCode.trim()) errs.employeeCode = 'Vui lòng nhập mã nhân viên.'
+        if (!values.employeeCode.trim())
+            errs.employeeCode = 'Vui lòng nhập mã nhân viên.'
         if (!values.password) errs.password = 'Vui lòng nhập mật khẩu.'
         setFieldErrors(errs)
         return Object.keys(errs).length === 0
@@ -35,7 +39,10 @@ export default function GlobalAdminLoginPage() {
     const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault()
         if (!validate()) return
-        loginGlobalAdmin({ employeeCode: values.employeeCode, password: values.password })
+        loginGlobalAdmin({
+            employeeCode: values.employeeCode,
+            password: values.password,
+        })
     }
 
     return (
@@ -58,7 +65,11 @@ export default function GlobalAdminLoginPage() {
                     </div>
 
                     {/* Form */}
-                    <form onSubmit={handleSubmit} noValidate className="px-8 py-7 space-y-5">
+                    <form
+                        onSubmit={handleSubmit}
+                        noValidate
+                        className="px-8 py-7 space-y-5"
+                    >
                         {/* API error */}
                         {error && (
                             <div
@@ -66,7 +77,9 @@ export default function GlobalAdminLoginPage() {
                                 className="flex items-start gap-3 bg-error-bg border border-error-border rounded-xl px-4 py-3"
                             >
                                 <AlertCircle className="w-4 h-4 text-error mt-0.5 flex-shrink-0" />
-                                <p className="text-sm text-error-text font-medium">{error}</p>
+                                <p className="text-sm text-error-text font-medium">
+                                    {error}
+                                </p>
                             </div>
                         )}
 
@@ -105,8 +118,14 @@ export default function GlobalAdminLoginPage() {
                                 rightElement={
                                     <button
                                         type="button"
-                                        onClick={() => setShowPassword((p) => !p)}
-                                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                        onClick={() =>
+                                            setShowPassword((p) => !p)
+                                        }
+                                        aria-label={
+                                            showPassword
+                                                ? 'Hide password'
+                                                : 'Show password'
+                                        }
                                         className="text-text-placeholder hover:text-text-muted transition-colors duration-150 p-0.5"
                                     >
                                         {showPassword ? (

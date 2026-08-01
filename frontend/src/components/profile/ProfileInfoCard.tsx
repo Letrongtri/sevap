@@ -103,7 +103,6 @@ export default function ProfileInfoCard({
                     setIsUpdatingProfile(false)
                     onSaveSuccess()
                 },
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 onError: (err: any) => {
                     const msg: string =
                         err?.response?.data?.detail ??
@@ -167,7 +166,7 @@ export default function ProfileInfoCard({
                   {
                       icon: <IdCard className="w-4 h-4" />,
                       label: 'Domain',
-                      value: `${user.tenant.tenant_domain}.hrnexus.com`,
+                      value: `${user.tenant.tenant_domain}`,
                   },
               ]
             : []),

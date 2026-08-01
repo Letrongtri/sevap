@@ -81,7 +81,7 @@ export default function InputBox({ onSend, isSending, disabled = false }: InputB
                 </button>
             </div>
             <p className="input-box__hint">
-                HR Assistant có thể mắc lỗi. Vui lòng kiểm tra thông tin quan trọng.
+                SEVAP có thể mắc lỗi. Vui lòng kiểm tra thông tin quan trọng.
             </p>
         </div>
     )

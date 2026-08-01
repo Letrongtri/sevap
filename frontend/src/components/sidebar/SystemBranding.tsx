@@ -15,7 +15,7 @@ const SystemBranding = ({ collapsed }: { collapsed: boolean }) => {
             {!collapsed && (
                 <div className="overflow-hidden">
                     <p className="text-sm font-bold text-text-primary leading-none whitespace-nowrap">
-                        HR Assistant
+                        SEVAP
                     </p>
                 </div>
             )}

@@ -70,7 +70,7 @@ export const AdminInfoSection: React.FC<AdminInfoSectionProps> = ({
                 name="admin_email"
                 type="email"
                 label="Login Email"
-                placeholder="admin@company.hrnexus.com"
+                placeholder="admin@company.sevap.com"
                 value={values.admin_email || ''}
                 onChange={onChange}
                 leftIcon={<Mail className="w-4 h-4" />}

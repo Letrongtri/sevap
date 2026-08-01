@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react'
@@ -143,7 +142,7 @@ export const RegisterForm = () => {
                         Your Workspace Link
                     </p>
                     <p className="text-sm font-semibold text-text-primary break-all">
-                        {registeredDomain}.hrnexus.com
+                        {registeredDomain}
                     </p>
                 </div>
 

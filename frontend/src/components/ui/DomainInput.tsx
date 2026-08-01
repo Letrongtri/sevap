@@ -19,7 +19,7 @@ export const DomainInput = React.forwardRef<HTMLInputElement, DomainInputProps>(
             onChange,
             label,
             errorText,
-            suffix = '.hrnexus.com',
+            suffix = '.sevap.com',
             id,
             disabled,
             required,

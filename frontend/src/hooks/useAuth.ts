@@ -25,9 +25,9 @@ export function useAuth() {
         try {
             const tenantDomain = credentials.tenantDomain
                 .trim()
-                .endsWith('.hrnexus.com')
+                .endsWith('.sevap.com')
                 ? credentials.tenantDomain.trim()
-                : `${credentials.tenantDomain.trim()}.hrnexus.com`
+                : `${credentials.tenantDomain.trim()}.sevap.com`
 
             const formData = new FormData()
             formData.append('tenant_domain', tenantDomain)
@@ -65,7 +65,7 @@ export function useAuth() {
     }
 
     /**
-     * Login for Global Admin (system.hrnexus.com domain).
+     * Login for Global Admin (system.sevap.com domain).
      * No tenant domain input required — uses system domain automatically.
      */
     const loginGlobalAdmin = async ({

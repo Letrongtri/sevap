@@ -10,7 +10,7 @@ export const RegisterPage = () => {
                     <div className="flex-shrink-0">
                         <img
                             src="/app-logo.svg"
-                            alt="HR Nexus Logo"
+                            alt="SEVAP Logo"
                             className="w-16 h-16 rounded-2xl shadow-sm"
                         />
                     </div>
@@ -18,14 +18,15 @@ export const RegisterPage = () => {
                     {/* Brand Name */}
                     <div className="space-y-4">
                         <h1 className="text-3xl font-extrabold text-text-primary tracking-tight">
-                            HR Nexus
+                            SEVAP
                         </h1>
                         <div className="text-4xl lg:text-5xl font-black text-text-primary tracking-tight leading-[1.15] whitespace-pre-line">
                             Expand Limits
                         </div>
                         <p className="text-sm lg:text-base text-text-muted leading-relaxed mt-4 max-w-sm">
-                            Multi-Agent HR Assistant platform. Set up a secure,
-                            smart, and automated workspace for your enterprise.
+                            Secure Enterprise Virtual Assistant platform. Set up
+                            a secure, smart, and automated workspace for your
+                            enterprise.
                         </p>
                     </div>
                 </div>

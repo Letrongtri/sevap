@@ -8,9 +8,9 @@ import axiosClient from './axios'
 export const registerTenant = async (
     payload: AddTenantPayload
 ): Promise<Tenant> => {
-    const tenantDomain = payload.tenant_domain.trim().endsWith('.hrnexus.com')
+    const tenantDomain = payload.tenant_domain.trim().endsWith('.sevap.com')
         ? payload.tenant_domain.trim()
-        : `${payload.tenant_domain.trim()}.hrnexus.com`
+        : `${payload.tenant_domain.trim()}.sevap.com`
 
     const res = await axiosClient.post('/tenants/register', {
         ...payload,
@@ -30,9 +30,9 @@ export const updateTenant = async (
     payload: UpdateTenantPayload
 ): Promise<Tenant> => {
     const tenantDomain = payload.tenant_domain
-        ? payload.tenant_domain.trim().endsWith('.hrnexus.com')
+        ? payload.tenant_domain.trim().endsWith('.sevap.com')
             ? payload.tenant_domain.trim()
-            : `${payload.tenant_domain.trim()}.hrnexus.com`
+            : `${payload.tenant_domain.trim()}.sevap.com`
         : undefined
 
     const res = await axiosClient.put(`/tenants`, {
