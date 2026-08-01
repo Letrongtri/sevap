@@ -52,6 +52,8 @@ const DirectoryTableFilters = () => {
                 return 'Tìm kiếm phòng ban theo tên hoặc mã...'
             case DirectoryTab.JobTitles:
                 return 'Tìm kiếm chức danh theo tên hoặc mã...'
+            case DirectoryTab.Documents:
+                return 'Tìm kiếm tài liệu theo tên, loại tệp, mô tả...'
             default:
                 return 'Tìm kiếm...'
         }

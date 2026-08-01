@@ -24,19 +24,32 @@ export function useDirectoryPermissions() {
         [permissions]
     )
 
+    const canViewDocuments = useMemo(
+        () => permissions.includes('documents:read'),
+        [permissions]
+    )
+
+    const canDownloadDocuments = useMemo(
+        () => permissions.includes('documents:download'),
+        [permissions]
+    )
+
     /** Danh sách các tab mà user có quyền xem, theo thứ tự ưu tiên */
     const allowedTabs = useMemo(() => {
         const tabs: DirectoryTab[] = []
         if (canViewUsers) tabs.push(DirectoryTab.Users)
         if (canViewDepartments) tabs.push(DirectoryTab.Departments)
         if (canViewJobTitles) tabs.push(DirectoryTab.JobTitles)
+        if (canViewDocuments) tabs.push(DirectoryTab.Documents)
         return tabs
-    }, [canViewUsers, canViewDepartments, canViewJobTitles])
+    }, [canViewUsers, canViewDepartments, canViewJobTitles, canViewDocuments])
 
     return {
         canViewUsers,
         canViewDepartments,
         canViewJobTitles,
+        canViewDocuments,
+        canDownloadDocuments,
         allowedTabs,
         hasAnyAccess: allowedTabs.length > 0,
     }

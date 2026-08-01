@@ -3,6 +3,7 @@ import {
     Building2,
     Users,
     Briefcase,
+    FileText,
     ShieldOff,
     type LucideIcon,
 } from 'lucide-react'
@@ -76,6 +77,7 @@ export default function DirectoryPage() {
         canViewUsers,
         canViewDepartments,
         canViewJobTitles,
+        canViewDocuments,
         allowedTabs,
         hasAnyAccess,
     } = useDirectoryPermissions()
@@ -121,7 +123,7 @@ export default function DirectoryPage() {
             </div>
 
             {/* Stats — only show tabs user has permission to view */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {canViewUsers && (
                     <TabItem
                         label="Tài khoản"
@@ -148,6 +150,16 @@ export default function DirectoryPage() {
                         icon={Briefcase}
                         value={DirectoryTab.JobTitles}
                         count={directoryOverview?.job_titles_count || 0}
+                        activeTab={activeTab}
+                        setActiveTab={setActiveTab}
+                    />
+                )}
+                {canViewDocuments && (
+                    <TabItem
+                        label="Tài liệu"
+                        icon={FileText}
+                        value={DirectoryTab.Documents}
+                        count={directoryOverview?.documents_count || 0}
                         activeTab={activeTab}
                         setActiveTab={setActiveTab}
                     />

@@ -2,12 +2,14 @@ export const DirectoryTab = {
     Users: 'users',
     Departments: 'departments',
     JobTitles: 'job_titles',
+    Documents: 'documents',
 } as const
 
 export type DirectoryTab = (typeof DirectoryTab)[keyof typeof DirectoryTab]
 
 export interface DirectoryOverview {
     users_count: number
+    documents_count: number
     departments_count: number
     job_titles_count: number
 }

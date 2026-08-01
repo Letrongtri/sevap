@@ -3,6 +3,7 @@ import DirectoryTableFilters from './DirectoryTableFilters'
 import UserDirectoryTable from './UserDirectoryTable'
 import DepartmentDirectoryTable from './DepartmentDirectoryTable'
 import JobTitleDirectoryTable from './JobTitleDirectoryTable'
+import DocumentDirectoryTable from './DocumentDirectoryTable'
 import { DirectoryTab } from '../../types/directory'
 
 const DirectoryTable = () => {
@@ -16,6 +17,8 @@ const DirectoryTable = () => {
                 return <DepartmentDirectoryTable />
             case DirectoryTab.JobTitles:
                 return <JobTitleDirectoryTable />
+            case DirectoryTab.Documents:
+                return <DocumentDirectoryTable />
             default:
                 return null
         }

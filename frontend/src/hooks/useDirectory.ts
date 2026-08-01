@@ -3,6 +3,7 @@ import { fetchDirectoryOverview } from '../api/directory'
 import { fetchUserOptions } from '../api/user'
 import { fetchDepartments } from '../api/department'
 import { fetchJobTitles } from '../api/jobTitle'
+import { fetchDocuments } from '../api/document'
 import { useDirectoryStore } from '../store/directoryStore'
 import type { DirectoryOverview } from '../types/directory'
 
@@ -59,6 +60,18 @@ export function useDirectoryJobTitles(options?: { enabled?: boolean }) {
     return useQuery({
         queryKey: ['directory-job-titles', { query, page, limit }],
         queryFn: () => fetchJobTitles({ query, page, limit }),
+        enabled: options?.enabled,
+    })
+}
+
+export function useDirectoryDocuments(options?: { enabled?: boolean }) {
+    const query = useDirectoryStore((s) => s.query)
+    const page = useDirectoryStore((s) => s.page) || 1
+    const limit = useDirectoryStore((s) => s.limit) || 10
+
+    return useQuery({
+        queryKey: ['directory-documents', { query, page, limit }],
+        queryFn: () => fetchDocuments({ query, page, limit }),
         enabled: options?.enabled,
     })
 }
