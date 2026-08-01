@@ -3,9 +3,12 @@ import RoleTable from '../components/role/RoleTable'
 import Header from '../components/ui/Header'
 import { useRoleStore } from '../store/roleStore'
 import { usePageTitle } from '../hooks/usePageTitle'
+import { usePermission } from '../hooks/usePermission'
+import { PERMISSIONS } from '../lib/permissions'
 
 export default function RolesPage() {
     usePageTitle('Quản lý phân quyền')
+    const canCreate = usePermission(PERMISSIONS.ROLES_CREATE)
     const activeRoleId = useRoleStore((s) => s.activeRoleId)
     const isAddingRole = useRoleStore((s) => s.isAddingRole)
     const showDetail = activeRoleId !== null || isAddingRole
@@ -24,7 +27,7 @@ export default function RolesPage() {
                 <Header
                     title="Quản lý phân quyền"
                     isAdding={isAddingRole}
-                    onAdd={handleStartAddRole}
+                    onAdd={canCreate ? handleStartAddRole : undefined}
                     btnTitle="Thêm vai trò"
                 />
             </div>

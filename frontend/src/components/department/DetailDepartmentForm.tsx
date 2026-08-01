@@ -15,6 +15,8 @@ import {
 import DepartmentInfoFields from './DepartmentInfoFields'
 import ConfirmDialog from '../ui/ConfirmDialog'
 import { toast } from 'sonner'
+import { usePermission } from '../../hooks/usePermission'
+import { PERMISSIONS } from '../../lib/permissions'
 
 interface DetailDepartmentFormProps {
     selectedDepartment: Department | null
@@ -50,6 +52,11 @@ const DetailDepartmentForm = ({
     const setActiveDepartmentId = useDepartmentStore(
         (s) => s.setActiveDepartmentId
     )
+
+    const canCreate = usePermission(PERMISSIONS.DEPARTMENTS_CREATE)
+    const canUpdate = usePermission(PERMISSIONS.DEPARTMENTS_UPDATE)
+    const canDelete = usePermission(PERMISSIONS.DEPARTMENTS_DELETE)
+    const canSave   = isAddingDepartment ? canCreate : canUpdate
 
     // Mutation hooks
     const createDepartmentMutation = useCreateDepartment()
@@ -174,23 +181,25 @@ const DetailDepartmentForm = ({
                         >
                             Hủy
                         </Button>
-                        <Button
-                            type="submit"
-                            variant="primary"
-                            fullWidth
-                            isLoading={isSubmitting}
-                            loadingText={
-                                isAddingDepartment ? 'Đang tạo...' : 'Đang lưu...'
-                            }
-                        >
-                            {isAddingDepartment
-                                ? 'Tạo phòng ban'
-                                : 'Lưu thay đổi'}
-                        </Button>
+                        {canSave && (
+                            <Button
+                                type="submit"
+                                variant="primary"
+                                fullWidth
+                                isLoading={isSubmitting}
+                                loadingText={
+                                    isAddingDepartment ? 'Đang tạo...' : 'Đang lưu...'
+                                }
+                            >
+                                {isAddingDepartment
+                                    ? 'Tạo phòng ban'
+                                    : 'Lưu thay đổi'}
+                            </Button>
+                        )}
                     </div>
 
-                    {/* Delete Account button */}
-                    {!isAddingDepartment && !showDeleteConfirm && (
+                    {/* Delete Department button — requires departments:delete */}
+                    {!isAddingDepartment && !showDeleteConfirm && canDelete && (
                         <div className="flex items-center justify-between gap-4 py-3 hover:bg-error-bg/10 rounded-xl transition-all">
                             <div>
                                 <p className="text-xs font-semibold text-error-text">

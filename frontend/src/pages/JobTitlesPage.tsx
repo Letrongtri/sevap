@@ -3,9 +3,12 @@ import JobTitleTable from '../components/jobTitle/JobTitleTable'
 import Header from '../components/ui/Header'
 import { useJobTitleStore } from '../store/jobTitleStore'
 import { usePageTitle } from '../hooks/usePageTitle'
+import { usePermission } from '../hooks/usePermission'
+import { PERMISSIONS } from '../lib/permissions'
 
 export default function JobTitlesPage() {
     usePageTitle('Quản lý chức danh')
+    const canCreate = usePermission(PERMISSIONS.JOB_TITLES_CREATE)
     const activeJobTitleId = useJobTitleStore((s) => s.activeJobTitleId)
     const isAddingJobTitle = useJobTitleStore((s) => s.isAddingJobTitle)
     const showDetail = activeJobTitleId !== null || isAddingJobTitle
@@ -24,7 +27,7 @@ export default function JobTitlesPage() {
                 <Header
                     title="Quản lý chức danh"
                     isAdding={isAddingJobTitle}
-                    onAdd={handleStartAddDepartment}
+                    onAdd={canCreate ? handleStartAddDepartment : undefined}
                     btnTitle="Thêm chức danh"
                 />
             </div>

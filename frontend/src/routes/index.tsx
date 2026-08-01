@@ -14,9 +14,10 @@ import {
     directoryRoute,
     forbiddenRoute,
     profileRoute,
+    documentLayoutRoute,
+    documentsRoute,
 } from './tenantRoutes'
 import { privateLayoutRoute } from './privateLayoutRoute'
-import { documentLayoutRoute, documentsRoute } from './documentRoutes'
 import {
     tenantAdminLayoutRoute,
     tenantAdminDashboardRoute,
@@ -43,7 +44,7 @@ const routeTree = rootRoute.addChildren([
 
     // Private routes (auth required)
     privateLayoutRoute.addChildren([
-        // Zone 1 & 4 — Rendered inside AppShell
+        // Zone 1 & document routes — Rendered inside AppShell
         tenantLayoutRoute.addChildren([
             // Zone 1 — Basic user
             homeRoute,
@@ -52,10 +53,10 @@ const routeTree = rootRoute.addChildren([
             directoryRoute,
             forbiddenRoute,
             profileRoute,
-        ]),
 
-        // Zone 2 — Document Management (hr_manager + admin) (renders DocumentShell directly)
-        documentLayoutRoute.addChildren([documentsRoute]),
+            // Documents — shares AppShell sidebar (permission-guarded)
+            documentLayoutRoute.addChildren([documentsRoute]),
+        ]),
 
         // Zone 3 — Admin Panel (admin only) (renders AdminShell directly)
         tenantAdminLayoutRoute.addChildren([

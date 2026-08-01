@@ -18,6 +18,8 @@ import { formatDateTimeToDDMMYYYY } from '../../../utils/formater'
 import { getShortFileType } from '../../../utils/formater'
 import { formatBytes } from '../../../utils/formater'
 import type { Document } from '../../types/document'
+import { usePermission } from '../../hooks/usePermission'
+import { PERMISSIONS } from '../../lib/permissions'
 
 interface DocumentDetailViewProps {
     document: Document
@@ -40,6 +42,9 @@ const DocumentDetailView: React.FC<DocumentDetailViewProps> = ({
     handleDownload,
     isDownloading,
 }) => {
+    const canDownload = usePermission(PERMISSIONS.DOCUMENTS_DOWNLOAD)
+    const canUpdate   = usePermission(PERMISSIONS.DOCUMENTS_UPDATE)
+    const canDelete   = usePermission(PERMISSIONS.DOCUMENTS_DELETE)
     const getStatusBadge = (status: string | null) => {
         switch (status) {
             case 'done':
@@ -284,37 +289,45 @@ const DocumentDetailView: React.FC<DocumentDetailViewProps> = ({
             {/* Action Buttons */}
             {!showDeleteConfirm ? (
                 <div className="space-y-2.5 pt-2">
-                    <Button
-                        variant="primary"
-                        fullWidth
-                        leftIcon={<Download className="w-4 h-4" />}
-                        onClick={handleDownload}
-                        isLoading={isDownloading}
-                        loadingText="Đang tải về..."
-                    >
-                        Xem / Tải về tài liệu
-                    </Button>
-                    <div className="flex gap-2.5">
+                    {canDownload && (
                         <Button
-                            variant="secondary"
+                            variant="primary"
                             fullWidth
-                            leftIcon={<Edit className="w-4 h-4" />}
-                            onClick={() => setIsEditing(true)}
-                            disabled={
-                                document.status === 'processing' ||
-                                document.status === 'pending'
-                            }
+                            leftIcon={<Download className="w-4 h-4" />}
+                            onClick={handleDownload}
+                            isLoading={isDownloading}
+                            loadingText="Đang tải về..."
                         >
-                            Sửa
+                            Xem / Tải về tài liệu
                         </Button>
-                        <Button
-                            variant="danger"
-                            leftIcon={<Trash2 className="w-4 h-4" />}
-                            onClick={() => setShowDeleteConfirm(true)}
-                        >
-                            Xóa
-                        </Button>
-                    </div>
+                    )}
+                    {(canUpdate || canDelete) && (
+                        <div className="flex gap-2.5">
+                            {canUpdate && (
+                                <Button
+                                    variant="secondary"
+                                    fullWidth
+                                    leftIcon={<Edit className="w-4 h-4" />}
+                                    onClick={() => setIsEditing(true)}
+                                    disabled={
+                                        document.status === 'processing' ||
+                                        document.status === 'pending'
+                                    }
+                                >
+                                    Sửa
+                                </Button>
+                            )}
+                            {canDelete && (
+                                <Button
+                                    variant="danger"
+                                    leftIcon={<Trash2 className="w-4 h-4" />}
+                                    onClick={() => setShowDeleteConfirm(true)}
+                                >
+                                    Xóa
+                                </Button>
+                            )}
+                        </div>
+                    )}
                 </div>
             ) : (
                 /* Delete Confirmation */

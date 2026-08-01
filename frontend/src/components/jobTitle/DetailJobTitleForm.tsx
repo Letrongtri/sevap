@@ -15,6 +15,8 @@ import {
 import JobTitleInfoFields from './JobTitleInfoFields'
 import ConfirmDialog from '../ui/ConfirmDialog'
 import { toast } from 'sonner'
+import { usePermission } from '../../hooks/usePermission'
+import { PERMISSIONS } from '../../lib/permissions'
 
 interface DetailJobTitleFormProps {
     selectedJobTitle: JobTitle | null
@@ -50,6 +52,11 @@ const DetailJobTitleForm = ({
     const setActiveJobTitleId = useJobTitleStore(
         (s) => s.setActiveJobTitleId
     )
+
+    const canCreate = usePermission(PERMISSIONS.JOB_TITLES_CREATE)
+    const canUpdate = usePermission(PERMISSIONS.JOB_TITLES_UPDATE)
+    const canDelete = usePermission(PERMISSIONS.JOB_TITLES_DELETE)
+    const canSave   = isAddingJobTitle ? canCreate : canUpdate
 
     // Mutation hooks
     const createJobTitleMutation = useCreateJobTitle()
@@ -174,23 +181,25 @@ const DetailJobTitleForm = ({
                         >
                             Hủy
                         </Button>
-                        <Button
-                            type="submit"
-                            variant="primary"
-                            fullWidth
-                            isLoading={isSubmitting}
-                            loadingText={
-                                isAddingJobTitle ? 'Đang tạo...' : 'Đang lưu...'
-                            }
-                        >
-                            {isAddingJobTitle
-                                ? 'Tạo chức danh'
-                                : 'Lưu thay đổi'}
-                        </Button>
+                        {canSave && (
+                            <Button
+                                type="submit"
+                                variant="primary"
+                                fullWidth
+                                isLoading={isSubmitting}
+                                loadingText={
+                                    isAddingJobTitle ? 'Đang tạo...' : 'Đang lưu...'
+                                }
+                            >
+                                {isAddingJobTitle
+                                    ? 'Tạo chức danh'
+                                    : 'Lưu thay đổi'}
+                            </Button>
+                        )}
                     </div>
 
-                    {/* Delete Job Title button */}
-                    {!isAddingJobTitle && !showDeleteConfirm && (
+                    {/* Delete Job Title button — requires job_titles:delete */}
+                    {!isAddingJobTitle && !showDeleteConfirm && canDelete && (
                         <div className="flex items-center justify-between gap-4 py-3 hover:bg-error-bg/10 rounded-xl transition-all">
                             <div>
                                 <p className="text-xs font-semibold text-error-text">

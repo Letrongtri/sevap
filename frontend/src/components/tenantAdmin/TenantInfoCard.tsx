@@ -58,7 +58,8 @@ export default function TenantInfoCard() {
             },
             onError: (err: any) => {
                 toast.error(
-                    err.response?.data?.detail ?? 'Cập nhật thông tin công ty thất bại'
+                    err.response?.data?.detail ??
+                        'Cập nhật thông tin công ty thất bại'
                 )
             },
         })
@@ -245,7 +246,7 @@ export default function TenantInfoCard() {
 
                 {/* Lifecycle */}
                 <div className="lg:col-span-2">
-                    <InfoRow label="VÒNG ĐỜI THÔNG TIN">
+                    <InfoRow label="THỜI GIAN">
                         <div className="text-xs text-text-muted space-y-0.5">
                             <div>
                                 Ngày tạo:{' '}

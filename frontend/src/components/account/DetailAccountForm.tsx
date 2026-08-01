@@ -21,9 +21,14 @@ import {
 import { toast } from 'sonner'
 import { useUserStore } from '../../store/usersStore'
 import ConfirmDialog from '../ui/ConfirmDialog'
+import { usePermission } from '../../hooks/usePermission'
+import { PERMISSIONS } from '../../lib/permissions'
 
 const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
     const setActiveUserId = useUserStore((s) => s.setActiveUserId)
+    const canUpdate  = usePermission(PERMISSIONS.USERS_UPDATE)
+    const canSuspend = usePermission(PERMISSIONS.USERS_SUSPEND)
+    const canDelete  = usePermission(PERMISSIONS.USERS_DELETE)
 
     const [editFullName, setEditFullName] = useState(
         selectedUser?.full_name || ''
@@ -246,15 +251,17 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
                 />
 
                 {/* Save details button */}
-                <Button
-                    type="submit"
-                    variant="primary"
-                    fullWidth
-                    isLoading={isSubmitting}
-                    loadingText="Đang lưu..."
-                >
-                    Lưu thay đổi
-                </Button>
+                {canUpdate && (
+                    <Button
+                        type="submit"
+                        variant="primary"
+                        fullWidth
+                        isLoading={isSubmitting}
+                        loadingText="Đang lưu..."
+                    >
+                        Lưu thay đổi
+                    </Button>
+                )}
             </form>
 
             {/* Section: Admin Quick Settings */}
@@ -275,76 +282,82 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
                     </p>
                 </div>
 
-                {/* Status toggle slider */}
-                <div className="flex items-center justify-between p-3 bg-surface-raised border border-border rounded-xl">
-                    <div>
-                        <p className="text-sm font-semibold text-text-secondary">
-                            Trạng thái tài khoản
-                        </p>
-                        <p className="text-[10px] text-text-placeholder mt-0.5">
-                            Bật/tắt trạng thái hoạt động
-                        </p>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={() => setShowActiveToggleConfirm(true)}
-                        className={[
-                            'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none',
-                            editIsActive ? 'bg-success' : 'bg-[#D4D7DE]',
-                        ].join(' ')}
-                    >
-                        <span
+                {/* Status toggle slider — requires users:suspend */}
+                {canSuspend && (
+                    <div className="flex items-center justify-between p-3 bg-surface-raised border border-border rounded-xl">
+                        <div>
+                            <p className="text-sm font-semibold text-text-secondary">
+                                Trạng thái tài khoản
+                            </p>
+                            <p className="text-[10px] text-text-placeholder mt-0.5">
+                                Bật/tắt trạng thái hoạt động
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setShowActiveToggleConfirm(true)}
                             className={[
-                                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
-                                editIsActive
-                                    ? 'translate-x-5'
-                                    : 'translate-x-0',
+                                'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none',
+                                editIsActive ? 'bg-success' : 'bg-[#D4D7DE]',
                             ].join(' ')}
-                        />
-                    </button>
-                </div>
-
-                {/* Password Reset button */}
-                <div className="flex items-center justify-between gap-4 p-3 hover:bg-bg/20 rounded-xl transition-all">
-                    <div>
-                        <p className="text-sm font-semibold text-text-secondary">
-                            Đặt lại mật khẩu
-                        </p>
-                        <p className="text-[10px] text-text-placeholder leading-normal mt-0.5">
-                            Đặt lại mật khẩu về mặc định
-                        </p>
+                        >
+                            <span
+                                className={[
+                                    'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                                    editIsActive
+                                        ? 'translate-x-5'
+                                        : 'translate-x-0',
+                                ].join(' ')}
+                            />
+                        </button>
                     </div>
-                    <Button
-                        variant="secondary"
-                        size="sm"
-                        leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
-                        onClick={() => setShowResetPasswordConfirm(true)}
-                        disabled={isSubmitting}
-                    >
-                        Đặt lại
-                    </Button>
-                </div>
+                )}
 
-                {/* Delete Account button */}
-                <div className="flex items-center justify-between gap-4 p-3 bg-error-bg/30 border border-error-border/60 rounded-xl">
-                    <div>
-                        <p className="text-sm font-semibold text-error-text">
-                            Xóa tài khoản
-                        </p>
-                        <p className="text-[10px] text-text-placeholder leading-normal mt-0.5">
-                            Xóa vĩnh viễn hồ sơ và nhật ký người dùng
-                        </p>
+                {/* Password Reset button — requires users:update */}
+                {canUpdate && (
+                    <div className="flex items-center justify-between gap-4 p-3 hover:bg-bg/20 rounded-xl transition-all">
+                        <div>
+                            <p className="text-sm font-semibold text-text-secondary">
+                                Đặt lại mật khẩu
+                            </p>
+                            <p className="text-[10px] text-text-placeholder leading-normal mt-0.5">
+                                Đặt lại mật khẩu về mặc định
+                            </p>
+                        </div>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
+                            onClick={() => setShowResetPasswordConfirm(true)}
+                            disabled={isSubmitting}
+                        >
+                            Đặt lại
+                        </Button>
                     </div>
-                    <Button
-                        variant="danger"
-                        size="sm"
-                        leftIcon={<Trash2 className="w-3.5 h-3.5" />}
-                        onClick={() => setShowDeleteConfirm(true)}
-                        disabled={isSubmitting}
-                    >
-                        Xóa
-                    </Button>
-                </div>
+                )}
+
+                {/* Delete Account button — requires users:delete */}
+                {canDelete && (
+                    <div className="flex items-center justify-between gap-4 p-3 bg-error-bg/30 border border-error-border/60 rounded-xl">
+                        <div>
+                            <p className="text-sm font-semibold text-error-text">
+                                Xóa tài khoản
+                            </p>
+                            <p className="text-[10px] text-text-placeholder leading-normal mt-0.5">
+                                Xóa vĩnh viễn hồ sơ và nhật ký người dùng
+                            </p>
+                        </div>
+                        <Button
+                            variant="danger"
+                            size="sm"
+                            leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+                            onClick={() => setShowDeleteConfirm(true)}
+                            disabled={isSubmitting}
+                        >
+                            Xóa
+                        </Button>
+                    </div>
+                )}
 
                 <ConfirmDialog
                     isOpen={showDeleteConfirm}

@@ -3,16 +3,19 @@ import DocumentTable from '../components/documents/DocumentTable'
 import DocumentDetail from '../components/documents/DocumentDetail'
 import { useDocumentStore } from '../store/documentStore'
 import { usePageTitle } from '../hooks/usePageTitle'
+import { usePermission } from '../hooks/usePermission'
+import { PERMISSIONS } from '../lib/permissions'
 
 export default function DocumentsPage() {
     usePageTitle('Quản lý tài liệu')
+    const canUpload = usePermission(PERMISSIONS.DOCUMENTS_UPLOAD)
     const activeDocumentId = useDocumentStore((d) => d.activeDocumentId)
     const isAddingDocument = useDocumentStore((d) => d.isAddingDocument)
     const showDetail = activeDocumentId !== null || isAddingDocument
     const setIsAddingDocument = useDocumentStore((d) => d.setIsAddingDocument)
     const setActiveDocumentId = useDocumentStore((d) => d.setActiveDocumentId)
 
-    const handleStartAddUser = () => {
+    const handleStartAddDocument = () => {
         setActiveDocumentId(null)
         setIsAddingDocument(true)
     }
@@ -24,7 +27,7 @@ export default function DocumentsPage() {
                 <Header
                     title="Quản lý tài liệu"
                     isAdding={isAddingDocument}
-                    onAdd={handleStartAddUser}
+                    onAdd={canUpload ? handleStartAddDocument : undefined}
                     btnTitle="Thêm tài liệu"
                 />
             </div>

@@ -94,13 +94,7 @@ async def soft_delete_tenant(
         logger.error("tenant_delete_failed", tenant_id=tenant_id, error=str(e), exc_info=True)
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Failed to delete tenant")
 
-@router.get(
-    "/info", 
-    response_model=TenantResponse,
-    dependencies=[Depends(check_permission(
-        PermissionResource.TENANTS, PermissionAction.READ
-    ))]
-)
+@router.get("/info", response_model=TenantResponse)
 async def get_tenant_info(
     tenant_service: TenantService = Depends(get_tenant_service),
     current_user=Depends(get_current_user)

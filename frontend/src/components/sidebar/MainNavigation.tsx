@@ -1,53 +1,60 @@
-import { SquarePen, Users, FileText, Settings2 } from 'lucide-react'
+import { SquarePen, Users, FileText } from 'lucide-react'
 import { PRIVATE_ROUTES } from '../../routes/paths'
+import { PERMISSIONS } from '../../lib/permissions'
 import { NavItem } from './NavItem'
-import {
-    canAccessDocumentZone,
-    canAccessTenantAdminZone,
-} from '../../lib/permissions'
-import type { AuthUser } from '../../types/auth'
-import { SwitchButton } from './SwitchButton'
+import { usePermission } from '../../hooks/usePermission'
 
 /* ============================================================
-   MainNavigation — Zone 1 Sidebar Navigation
-   Shows chat navigation + optional switch buttons to Zone 2/3.
-   ============================================================ */
+   MainNavigation — Permission & Role-based sidebar nav
 
-const tenantZoneNav = [
-    { label: 'Đoạn chat mới', icon: SquarePen, to: PRIVATE_ROUTES.HOME },
-    { label: 'Danh bạ', icon: Users, to: PRIVATE_ROUTES.DIRECTORY },
-] as const
+   Ma trận quyền (từ default_roles.py):
+   ┌──────────────────┬───────┬────────────┬──────────┐
+   │ Feature          │ Admin │ HR Manager │ Employee │
+   ├──────────────────┼───────┼────────────┼──────────┤
+   │ Chat & Danh bạ   │  ✅   │     ✅     │    ✅   │
+   │ Tài liệu (nav)   │  ✅   │     ✅     │    ❌   │
+   └──────────────────┴───────┴────────────┴──────────┘
+
+   - Admin    = Xác định dựa trên vai trò (role 'admin')
+   - HRMgr   = documents:upload (NOT users:create)
+   - Employee = conversations:send (documents:read nhưng KHÔNG có upload)
+
+   Employee có documents:read nhưng KHÔNG xem nav documents.
+   ============================================================ */
 
 const MainNavigation = ({
     collapsed,
-    user,
     currentPath,
 }: {
     collapsed: boolean
-    user: AuthUser | null
     currentPath: string
 }) => {
-    const showDocManager = canAccessDocumentZone(user)
-    const showAdminPanel = canAccessTenantAdminZone(user)
+    // ── Documents: upload (HR Manager + Admin) ────────────────
+    // Employee chỉ có documents:read, KHÔNG có documents:upload
+    const canUploadDocs = usePermission(PERMISSIONS.DOCUMENTS_UPLOAD)
 
     return (
         <div className="flex-shrink-0 px-2 pt-4 pb-2 border-b border-border/40">
-            {/* Zone 1 navigation */}
+            {/* ── Core navigation (always shown) ─────────────── */}
             <div className="space-y-0.5">
-                {tenantZoneNav.map(({ label, icon, to }) => (
-                    <NavItem
-                        key={to}
-                        label={label}
-                        icon={icon}
-                        to={to}
-                        collapsed={collapsed}
-                        currentPath={currentPath}
-                    />
-                ))}
+                <NavItem
+                    label="Đoạn chat mới"
+                    icon={SquarePen}
+                    to={PRIVATE_ROUTES.HOME}
+                    collapsed={collapsed}
+                    currentPath={currentPath}
+                />
+                <NavItem
+                    label="Danh bạ"
+                    icon={Users}
+                    to={PRIVATE_ROUTES.DIRECTORY}
+                    collapsed={collapsed}
+                    currentPath={currentPath}
+                />
             </div>
 
-            {/* Switch buttons to Zone 2 / Zone 3 */}
-            {(showDocManager || showAdminPanel) && (
+            {/* ── Document nav: chỉ Admin + HR Manager thấy ── */}
+            {canUploadDocs && (
                 <div
                     className={[
                         'space-y-0.5',
@@ -57,25 +64,16 @@ const MainNavigation = ({
                 >
                     {!collapsed && (
                         <p className="text-[10px] font-semibold uppercase tracking-widest text-text-placeholder px-3 pb-1">
-                            Chuyển đến
+                            Tài liệu
                         </p>
                     )}
-                    {showDocManager && (
-                        <SwitchButton
-                            label="Quản lý tài liệu"
-                            icon={FileText}
-                            to={PRIVATE_ROUTES.DOCUMENTS}
-                            collapsed={collapsed}
-                        />
-                    )}
-                    {showAdminPanel && (
-                        <SwitchButton
-                            label="Trang quản trị"
-                            icon={Settings2}
-                            to={PRIVATE_ROUTES.TENANT_ADMIN_DASHBOARD}
-                            collapsed={collapsed}
-                        />
-                    )}
+                    <NavItem
+                        label="Quản lý tài liệu"
+                        icon={FileText}
+                        to={PRIVATE_ROUTES.DOCUMENTS}
+                        collapsed={collapsed}
+                        currentPath={currentPath}
+                    />
                 </div>
             )}
         </div>

@@ -1,6 +1,6 @@
 import { createRoute } from '@tanstack/react-router'
 import { PRIVATE_ROUTES } from './paths'
-import { requireTenantUserGuard } from './guards'
+import { requireTenantUserGuard, requirePermissionGuard } from './guards'
 import { lazyPage } from './helpers'
 import { privateLayoutRoute } from './privateLayoutRoute'
 import { AppShell } from '../components/layout/AppShell'
@@ -18,12 +18,13 @@ export const tenantLayoutRoute = createRoute({
     component: AppShell,
 })
 
-// Zone 1 page imports
+// Page imports
 const HomePage = lazyPage(() => import('../pages/HomePage'))
 const ChatPage = lazyPage(() => import('../pages/ChatPage'))
 const DirectoryPage = lazyPage(() => import('../pages/DirectoryPage'))
 const ForbiddenPage = lazyPage(() => import('../pages/ForbiddenPage'))
 const MyProfilePage = lazyPage(() => import('../pages/MyProfilePage'))
+const DocumentsPage = lazyPage(() => import('../pages/DocumentsPage'))
 
 // ── Zone 1 leaf routes ────────────────────────────────────────
 
@@ -68,4 +69,23 @@ export const profileRoute = createRoute({
     path: PRIVATE_ROUTES.PROFILE,
     beforeLoad: requireTenantUserGuard,
     component: MyProfilePage,
+})
+
+/* ============================================================
+   Document Management Routes
+   Accessible to: any user with documents:read OR documents:upload.
+   Shares AppShell (tenantLayoutRoute) — no separate sidebar needed.
+   ============================================================ */
+
+/** Permission guard layout route for documents */
+export const documentLayoutRoute = createRoute({
+    getParentRoute: () => tenantLayoutRoute,
+    id: 'documents-layout',
+    beforeLoad: requirePermissionGuard('documents:upload'),
+})
+
+export const documentsRoute = createRoute({
+    getParentRoute: () => documentLayoutRoute,
+    path: PRIVATE_ROUTES.DOCUMENTS,
+    component: DocumentsPage,
 })

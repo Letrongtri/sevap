@@ -13,6 +13,8 @@ import RoleInfoFields from './RoleInfoFields'
 import PermissionsMatrix from './PermissionsMatrix'
 import { toast } from 'sonner'
 import ConfirmDialog from '../ui/ConfirmDialog'
+import { usePermission } from '../../hooks/usePermission'
+import { PERMISSIONS } from '../../lib/permissions'
 
 const DetailRoleForm = ({
     selectedRole,
@@ -62,6 +64,11 @@ const DetailRoleForm = ({
     const isAddingRole = useRoleStore((s) => s.isAddingRole)
     const setIsAddingRole = useRoleStore((s) => s.setIsAddingRole)
     const setActiveRoleId = useRoleStore((s) => s.setActiveRoleId)
+
+    const canCreate = usePermission(PERMISSIONS.ROLES_CREATE)
+    const canUpdate = usePermission(PERMISSIONS.ROLES_UPDATE)
+    const canDelete = usePermission(PERMISSIONS.ROLES_DELETE)
+    const canSave   = isAddingRole ? canCreate : canUpdate
 
     // Mutation hooks
     const createRoleMutation = useCreateRole()
@@ -196,20 +203,22 @@ const DetailRoleForm = ({
                     >
                         Hủy
                     </Button>
-                    <Button
-                        type="submit"
-                        variant="primary"
-                        fullWidth
-                        isLoading={isSubmitting}
-                        loadingText={isAddingRole ? 'Đang tạo...' : 'Đang lưu...'}
-                    >
-                        {isAddingRole ? 'Tạo vai trò' : 'Lưu thay đổi'}
-                    </Button>
+                    {canSave && (
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            fullWidth
+                            isLoading={isSubmitting}
+                            loadingText={isAddingRole ? 'Đang tạo...' : 'Đang lưu...'}
+                        >
+                            {isAddingRole ? 'Tạo vai trò' : 'Lưu thay đổi'}
+                        </Button>
+                    )}
                 </div>
             </form>
 
-            {/* Delete Account button */}
-            {!isAddingRole && !showDeleteConfirm && (
+            {/* Delete Role button — requires roles:delete */}
+            {!isAddingRole && !showDeleteConfirm && canDelete && (
                 <div className="flex items-center justify-between gap-4 p-3 hover:bg-error-bg/10 rounded-xl transition-all">
                     <div>
                         <p className="text-xs font-semibold text-error-text">

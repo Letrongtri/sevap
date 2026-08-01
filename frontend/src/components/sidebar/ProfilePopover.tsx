@@ -1,10 +1,20 @@
 import { useEffect, useRef, type CSSProperties } from 'react'
-import { User, LogOut, ChevronRight, Building2, Shield } from 'lucide-react'
+import {
+    User,
+    LogOut,
+    ChevronRight,
+    Building2,
+    Shield,
+    Settings2,
+} from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
 import { Avatar } from '../ui/Avatar'
 import type { AuthUser } from '../../types/auth'
 import { stringToLabel } from '../../../utils/utils'
 import Badge from '../ui/Badge'
+import { SwitchButton } from './SwitchButton'
+import { PRIVATE_ROUTES } from '../../routes/paths'
+import { isAdminRole } from '../../lib/permissions'
 
 /* ============================================================
    ProfilePopover — Floating card shown on avatar click
@@ -137,6 +147,15 @@ export const ProfilePopover = ({
                     </span>
                     <ChevronRight className="w-3.5 h-3.5 text-text-placeholder opacity-0 group-hover:opacity-100 transition-opacity" />
                 </button>
+
+                {isAdminRole(user) && (
+                    <SwitchButton
+                        label="Trang quản trị"
+                        icon={Settings2}
+                        to={PRIVATE_ROUTES.TENANT_ADMIN_DASHBOARD}
+                        collapsed={false}
+                    />
+                )}
             </div>
 
             {/* Divider + Sign out */}

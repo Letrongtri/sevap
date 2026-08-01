@@ -3,9 +3,12 @@ import DepartmentTable from '../components/department/DepartmentTable'
 import Header from '../components/ui/Header'
 import { useDepartmentStore } from '../store/departmentStore'
 import { usePageTitle } from '../hooks/usePageTitle'
+import { usePermission } from '../hooks/usePermission'
+import { PERMISSIONS } from '../lib/permissions'
 
 export default function DepartmentsPage() {
     usePageTitle('Quản lý phòng ban')
+    const canCreate = usePermission(PERMISSIONS.DEPARTMENTS_CREATE)
     const activeDepartmentId = useDepartmentStore((s) => s.activeDepartmentId)
     const isAddingDepartment = useDepartmentStore((s) => s.isAddingDepartment)
     const showDetail = activeDepartmentId !== null || isAddingDepartment
@@ -28,7 +31,7 @@ export default function DepartmentsPage() {
                 <Header
                     title="Quản lý phòng ban"
                     isAdding={isAddingDepartment}
-                    onAdd={handleStartAddDepartment}
+                    onAdd={canCreate ? handleStartAddDepartment : undefined}
                     btnTitle="Thêm phòng ban"
                 />
             </div>

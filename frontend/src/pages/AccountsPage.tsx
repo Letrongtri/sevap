@@ -3,9 +3,12 @@ import UserTable from '../components/account/UserTable'
 import UserDetail from '../components/account/UserDetail'
 import { useUserStore } from '../store/usersStore'
 import { usePageTitle } from '../hooks/usePageTitle'
+import { usePermission } from '../hooks/usePermission'
+import { PERMISSIONS } from '../lib/permissions'
 
 export default function AccountsPage() {
     usePageTitle('Quản lý tài khoản')
+    const canCreate = usePermission(PERMISSIONS.USERS_CREATE)
     const activeUserId = useUserStore((s) => s.activeUserId)
     const isAddingUser = useUserStore((s) => s.isAddingUser)
     const showDetail = activeUserId !== null || isAddingUser
@@ -24,7 +27,7 @@ export default function AccountsPage() {
                 <Header
                     title="Quản lý tài khoản"
                     isAdding={isAddingUser}
-                    onAdd={handleStartAddUser}
+                    onAdd={canCreate ? handleStartAddUser : undefined}
                     btnTitle="Thêm tài khoản"
                 />
             </div>
