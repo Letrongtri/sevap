@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 from datetime import datetime
 
 from app.utils.sanitization import validate_password_strength
@@ -58,6 +58,29 @@ class UserSimple(BaseModel):
     department: str | None = None
     job_title: str | None = None
     roles: list[str] | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def extract_from_orm(cls, data):
+        if not hasattr(data, "_sa_instance_state"):
+            return data
+
+        from sqlalchemy import inspect as sa_inspect
+        unloaded = sa_inspect(data).unloaded
+
+        dept = data.department if "department" not in unloaded else None
+        jt = data.job_title if "job_title" not in unloaded else None
+        role_assocs = data.role_associations if "role_associations" not in unloaded else None
+
+        return {
+            "id": data.id,
+            "employee_code": data.employee_code,
+            "full_name": data.full_name,
+            "email": data.email,
+            "department": dept.name if dept is not None else None,
+            "job_title": jt.title_name if jt is not None else None,
+            "roles": [ra.role.name for ra in role_assocs if ra.role] if role_assocs is not None else None,
+        }
 
     model_config = ConfigDict(from_attributes=True)
 

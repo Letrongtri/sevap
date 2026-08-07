@@ -8,7 +8,7 @@ from sqlalchemy.orm import selectinload
 from app.core.enum import DocumentStatus
 from app.models import (
     Document, DocumentChunk, DocumentUserAccess, 
-    DocumentRoleAccess, DocumentDepartmentAccess
+    DocumentRoleAccess, DocumentDepartmentAccess, User
 )
 
 class DocumentRepository:
@@ -72,6 +72,12 @@ class DocumentRepository:
             options.append(
                 selectinload(Document.user_accesses)
                 .selectinload(DocumentUserAccess.user)
+                .selectinload(User.department)
+            )
+            options.append(
+                selectinload(Document.user_accesses)
+                .selectinload(DocumentUserAccess.user)
+                .selectinload(User.job_title)
             )
         if get_departments:
             options.append(
@@ -234,7 +240,13 @@ class DocumentRepository:
             (
                 selectinload(Document.user_accesses)
                 .selectinload(DocumentUserAccess.user)
-            )
+                .selectinload(User.department)
+            ),
+            (
+                selectinload(Document.user_accesses)
+                .selectinload(DocumentUserAccess.user)
+                .selectinload(User.job_title)
+            ),
         )
         
 

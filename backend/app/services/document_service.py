@@ -111,7 +111,14 @@ class DocumentService:
                     os.remove(temp_file_path)
 
                 roles = [await self.role_repo.get_role_by_id(r_id) for r_id in (role_access or [])]
-                target_users = [await self.user_repo.get_user_by_id(u_id) for u_id in (target_user_ids or [])]
+                target_users = [
+                    await self.user_repo.get_user_by_id(
+                        u_id,
+                        get_user_department=True,
+                        get_user_job_title=True
+                    )
+                    for u_id in (target_user_ids or [])
+                ]
                 departments = [await self.repo.db.get(Department, d_id) for d_id in (department_ids or [])]
 
                 existing.access_level = access_level
@@ -213,7 +220,11 @@ class DocumentService:
         target_users = []
         if target_user_ids is not None:
             for user_id in target_user_ids:
-                existing_user = await self.user_repo.get_user_by_id(user_id)
+                existing_user = await self.user_repo.get_user_by_id(
+                    user_id,
+                    get_user_department=True,
+                    get_user_job_title=True
+                )
                 if existing_user is None:
                     if saved_document is None and uploaded_file_path.exists():
                         os.remove(uploaded_file_path)
@@ -383,7 +394,11 @@ class DocumentService:
         if target_user_ids is not None:
             users = []
             for user_id in target_user_ids:
-                existing_user = await self.user_repo.get_user_by_id(user_id)
+                existing_user = await self.user_repo.get_user_by_id(
+                    user_id,
+                    get_user_department=True,
+                    get_user_job_title=True
+                )
                 if existing_user is None or existing_user.tenant_id != tenant_id:
                     raise NotFoundError()
                 

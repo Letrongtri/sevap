@@ -67,11 +67,7 @@ class RetrievalService:
                 meta_data=meta_data,
                 ip_address=None
             )
-            try:
-                self.repo.db.add(log)
-                await self.repo.db.commit()
-            except Exception:
-                await self.repo.db.rollback()
+            await self.repo.log_activity(log)
 
         if not allowed_ids:
             return []  # Chặn sớm — không tốn tài nguyên embedding
