@@ -115,7 +115,7 @@ class UserSessionRepository:
             return [], 0
 
         # 3. Luồng SQL Core: Kết hợp JOIN 4 tầng phẳng và Gom nhóm chuỗi văn bản (Aggregation)
-        # string_agg biến danh sách Roles của User từ dạng nhiều dòng thành chuỗi "admin, hr_manager"
+        # string_agg biến danh sách Roles của User từ dạng nhiều dòng thành chuỗi "admin, knowledge_manager"
         roles_agg = func.string_agg(Role.name, literal(", ")).label("roles_list")
 
         # Xác định trạng thái logic của phiên (Computed Status)

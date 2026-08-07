@@ -1,3 +1,4 @@
+from typing import Annotated
 from fastapi import APIRouter, HTTPException, Depends, Request, BackgroundTasks
 
 from app.services import PromptTemplateService, NotFoundError
@@ -22,8 +23,8 @@ router = APIRouter()
 # @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_prompt_templates(
     request: Request,
-    query: PromptTemplateQuery,
-    pagination: PaginationQuery,
+    query: Annotated[PromptTemplateQuery, Depends()],
+    pagination: Annotated[PaginationQuery, Depends()],
     prompt_template_service: PromptTemplateService = Depends(get_prompt_template_service),
 ):
     try:
@@ -60,7 +61,8 @@ async def create_prompt_template(
 ):
     try:
         tenant_id = request.state.tenant_id
-        return await prompt_template_service.create_prompt_template(tenant_id, data)
+        user_id = request.state.user["id"]
+        return await prompt_template_service.create_prompt_template(tenant_id, user_id, data)
     except Exception:
         logger.error(
             "create_prompt_template_failed", 

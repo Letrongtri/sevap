@@ -86,9 +86,9 @@ DEFAULT_ROLES = {
             ],
         }
     },
-    DefaultRole.HR_MANAGER: {
-        "name": DefaultRole.HR_MANAGER.value,
-        "description": "Quản lý Nhân sự",
+    DefaultRole.KNOWLEDGE_MANAGER: {
+        "name": DefaultRole.KNOWLEDGE_MANAGER.value,
+        "description": "Quản lý tài liệu và tri thức",
         "access_level": AccessLevel.MANAGERIAL,
         "permissions": {
             PermissionResource.USERS: [PermissionAction.READ],

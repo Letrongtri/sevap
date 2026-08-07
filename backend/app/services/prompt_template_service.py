@@ -45,10 +45,11 @@ class PromptTemplateService:
         )
 
     async def create_prompt_template(
-        self, tenant_id: str, data: PromptTemplateCreate
+        self, tenant_id: str, user_id: str, data: PromptTemplateCreate
     ) -> PromptTemplateResponse:
         prompt_template = PromptTemplate(
             tenant_id=tenant_id,
+            user_id=user_id,
             name=data.name,
             type=data.type,
             content=data.content,

@@ -18,7 +18,7 @@ Luồng sử dụng:
 # ─────────────────────────────────────────────────────────────────────────────
 
 CONTEXT_AWARE_REWRITE_SYSTEM_PROMPT = """\
-You are a Multi-hop Query Rewriter for an Enterprise HR Knowledge Base.
+You are a Multi-hop Query Rewriter for an Enterprise Knowledge Base.
 
 Your role is to support a sequential retrieval pipeline. In this pipeline, some \
 search queries DEPEND on the results of prior queries. When a dependency query \

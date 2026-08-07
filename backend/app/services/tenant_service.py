@@ -73,7 +73,7 @@ class TenantService:
 
             roles_by_name: Dict[str, Role] = {}
     
-            for r_key in [DefaultRole.ADMIN, DefaultRole.HR_MANAGER, DefaultRole.EMPLOYEE]:
+            for r_key in [DefaultRole.ADMIN, DefaultRole.KNOWLEDGE_MANAGER, DefaultRole.EMPLOYEE]:
                 r_cfg = DEFAULT_ROLES[r_key]
                 
                 role_obj = Role(

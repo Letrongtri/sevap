@@ -123,10 +123,10 @@ class Settings:
         self.ENVIRONMENT = get_environment()
 
         # Application Settings
-        self.PROJECT_NAME = os.getenv("PROJECT_NAME", "HR Assistant API")
+        self.PROJECT_NAME = os.getenv("PROJECT_NAME", "SEVAP - Secure Enterprise Virtual Assistant API")
         self.VERSION = os.getenv("VERSION", "1.0.0")
         self.DESCRIPTION = os.getenv(
-            "DESCRIPTION", "An AI Assistant system specialized for Human Resources (HR) operations within enterprises. The system is not only capable of Question & Answering (Q&A) from static documents, but can also query personalized dynamic data and execute actionable tasks, while comprehensively addressing data security and multi-platform integration challenges."
+            "DESCRIPTION", "A Platform supporting developing Virtual Assistant for Enterprises."
         )
         self.API_V1_STR = os.getenv("API_V1_STR", "/api/v1")
         self.DEBUG = os.getenv("DEBUG", "false").lower() in ("true", "1", "t", "yes")

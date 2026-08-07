@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 
 from app.models import PromptTemplate
 
@@ -17,7 +18,7 @@ class PromptTemplateRepository:
         skip: int = 0,
         limit: int = 20
     ) -> tuple[list[PromptTemplate], int]:
-        stmt = select(PromptTemplate).where(
+        stmt = select(PromptTemplate).options(joinedload(PromptTemplate.user)).where(
             PromptTemplate.tenant_id == tenant_id
         )
 
@@ -33,23 +34,33 @@ class PromptTemplateRepository:
         if is_active is not None:
             stmt = stmt.where(PromptTemplate.is_active == is_active)
 
-        total_stmt = stmt.with_only_columns(func.count(PromptTemplate.id))
+        total_stmt = select(func.count(PromptTemplate.id)).where(PromptTemplate.tenant_id == tenant_id)
+        if query:
+            total_stmt = total_stmt.where(
+                PromptTemplate.name.ilike(f"%{query}%") |
+                PromptTemplate.description.ilike(f"%{query}%")
+            )
+        if type is not None:
+            total_stmt = total_stmt.where(PromptTemplate.type == type)
+        if is_active is not None:
+            total_stmt = total_stmt.where(PromptTemplate.is_active == is_active)
+
         total_result = await self.db.execute(total_stmt)
         total = total_result.scalar_one()
 
         stmt = stmt.offset(skip).limit(limit)
         result = await self.db.execute(stmt)
-        items = result.scalars().all()
+        items = result.scalars().unique().all()
 
         return items, total
 
     async def get_prompt_template_by_id(self, prompt_template_id: str):
-        stmt = select(PromptTemplate).where(
+        stmt = select(PromptTemplate).options(joinedload(PromptTemplate.user)).where(
             PromptTemplate.id == prompt_template_id
         )
 
         result = await self.db.execute(stmt)
-        return result.scalar_one_or_none()
+        return result.scalars().first()
     
     async def get_all_active_by_tenant(self, tenant_id: str) -> list["PromptTemplate"]:
         """Lấy tất cả prompt templates đang active của tenant — 1 query duy nhất."""

@@ -34,7 +34,7 @@ class AccessLevel(str, Enum):
 class DefaultRole(str, Enum):
     GLOBAL_ADMIN = "global_admin"
     ADMIN = "admin"
-    HR_MANAGER = "hr_manager"
+    KNOWLEDGE_MANAGER = "knowledge_manager"
     EMPLOYEE = "employee"
 
 class PermissionResource(str, Enum):

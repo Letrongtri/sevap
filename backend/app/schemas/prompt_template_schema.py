@@ -44,6 +44,9 @@ class PromptTemplateQuery(BaseModel):
 class PromptTemplateResponse(BaseModel):
     id: str
     tenant_id: str
+    user_id: str | None = None
+    user_name: str | None = None
+    user_employee_code: str | None = None
     name: str
     description: str | None
     type: PromptType
@@ -51,6 +54,29 @@ class PromptTemplateResponse(BaseModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime
+
+    @model_validator(mode="before")
+    @classmethod
+    def extract_user_info(cls, data):
+        if hasattr(data, "_sa_instance_state"):
+            from sqlalchemy import inspect
+            state = inspect(data)
+            if "user" not in state.unloaded:
+                user = getattr(data, "user", None)
+                if user is not None:
+                    if not getattr(data, "user_name", None):
+                        setattr(data, "user_name", getattr(user, "full_name", None))
+                    if not getattr(data, "user_employee_code", None):
+                        setattr(data, "user_employee_code", getattr(user, "employee_code", None))
+        elif isinstance(data, dict):
+            user = data.get("user")
+            if isinstance(user, dict):
+                data.setdefault("user_name", user.get("full_name"))
+                data.setdefault("user_employee_code", user.get("employee_code"))
+            elif user is not None:
+                data.setdefault("user_name", getattr(user, "full_name", None))
+                data.setdefault("user_employee_code", getattr(user, "employee_code", None))
+        return data
 
     model_config = ConfigDict(from_attributes=True)
 
