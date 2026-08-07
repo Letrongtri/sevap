@@ -11,3 +11,4 @@ from .tenant_repository import TenantRepository
 from .global_admin_repository import GlobalAdminRepository
 from .activity_log_repository import ActivityLogRepository
 from .directory_repository import DirectoryRepository
+from .prompt_template_repository import PromptTemplateRepository

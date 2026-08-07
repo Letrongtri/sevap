@@ -12,10 +12,9 @@ class PromptTemplate(Base):
     tenant_id = Column(String(36), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
     
     name = Column(String(128), nullable=False)
-    agent_type = Column(String(64), nullable=False)
-    system_prompt = Column(Text)
-    user_prompt = Column(Text)
-    variables = Column(Text)
+    type = Column(String(64), nullable=False)
+    content = Column(Text)
+    description = Column(Text)
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
@@ -24,6 +23,6 @@ class PromptTemplate(Base):
     user = relationship("User", back_populates="prompt_templates")
 
     __table_args__ = (
-        Index("idx_prompt_templates_tenant_agent_active", "tenant_id", "agent_type", "is_active"),
+        Index("idx_prompt_templates_tenant_type_active", "tenant_id", "type", "is_active"),
         Index("idx_prompt_templates_user", "user_id"),
     )

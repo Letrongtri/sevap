@@ -1,6 +1,8 @@
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
+from app.ai_brain.prompts.prompt_resolver import get_prompt
 from app.ai_brain.state import AgentState
+from app.core.enum import PromptType
 from app.core.logging import logger
 
 
@@ -26,10 +28,8 @@ async def security_kill_switch_node(state: AgentState, config: RunnableConfig) -
         tenant_id,
     )
 
-    answer = (
-        "Yêu cầu của bạn không thể được xử lý do vi phạm chính sách bảo mật hệ thống. "
-        "Nếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ quản trị viên."
-    )
+    # Lấy nội dung response từ state (custom tenant) hoặc default
+    answer = get_prompt(state, PromptType.SECURITY_KILL_SWITCH_RESPONSE)
 
     return {
         "final_answer": answer,

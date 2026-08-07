@@ -6,6 +6,7 @@ from app.ai_brain.retrieval import PARRepository, RetrievalService
 from app.dependencies.db import get_db
 from app.dependencies.graph import get_compiled_graph
 from app.repositories import ConversationRepository, MessageRepository
+from app.repositories import PromptTemplateRepository
 from app.services import MessageService
 
 
@@ -17,10 +18,12 @@ def get_message_service(
     conv_repo = ConversationRepository(db)
     par_repo = PARRepository(db)
     retrieval_service = RetrievalService(repo=par_repo)
+    prompt_template_repo = PromptTemplateRepository(db)
     return MessageService(
         msg_repo=msg_repo,
         conv_repo=conv_repo,
         par_repo=par_repo,
         retrieval_service=retrieval_service,
         compiled_graph=compiled_graph,
+        prompt_template_repo=prompt_template_repo,
     )

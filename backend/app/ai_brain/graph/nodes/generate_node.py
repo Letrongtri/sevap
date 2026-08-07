@@ -26,8 +26,9 @@ from app.ai_brain.prompts import (
     GENERATE_RESPONSE_SYSTEM_PROMPT,
     GENERATE_RESPONSE_USER_PROMPT,
 )
+from app.ai_brain.prompts.prompt_resolver import get_prompt
 from app.ai_brain.state import AgentState
-from app.core.enum import GraphNodeID
+from app.core.enum import GraphNodeID, PromptType
 from app.core.logging import logger
 
 
@@ -113,8 +114,15 @@ async def generate_final_response_node(state: AgentState, config: RunnableConfig
         mode, len(sub_query_chunks), sorted(failed_ids),
     )
 
+    # Lấy prompt values từ state (custom tenant) hoặc fallback về default
+    system_prompt = GENERATE_RESPONSE_SYSTEM_PROMPT.format(
+        assistant_name=get_prompt(state, PromptType.ASSISTANT_NAME),
+        language=get_prompt(state, PromptType.LANGUAGE),
+        response_citation=get_prompt(state, PromptType.RESPONSE_CITATION),
+    )
+
     messages = [
-        SystemMessage(content=GENERATE_RESPONSE_SYSTEM_PROMPT),
+        SystemMessage(content=system_prompt),
         HumanMessage(content=GENERATE_RESPONSE_USER_PROMPT.format(
             history=history_context,
             context=context_text,

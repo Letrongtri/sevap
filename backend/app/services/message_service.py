@@ -5,6 +5,7 @@ from langchain_core.messages import HumanMessage
 from langgraph.graph.state import CompiledStateGraph
 
 from app.repositories import MessageRepository, ConversationRepository
+from app.repositories import PromptTemplateRepository
 from app.models import Message, Conversation
 from app.schemas.message_schema import MessageResponse
 from app.services.exceptions import NotFoundError, InternalError
@@ -23,12 +24,14 @@ class MessageService:
         par_repo: PARRepository,
         retrieval_service: RetrievalService,
         compiled_graph: CompiledStateGraph,
+        prompt_template_repo: PromptTemplateRepository | None = None,
     ):
         self.msg_repo = msg_repo
         self.conv_repo = conv_repo
         self.par_repo = par_repo
         self.retrieval_service = retrieval_service
         self.compiled_graph = compiled_graph
+        self.prompt_template_repo = prompt_template_repo
 
     async def get_messages_by_conversation_id(
         self, tenant_id: str,
@@ -137,7 +140,24 @@ class MessageService:
             }) + "\n\n"
             return
 
-        # ── 6. Invoke LangGraph và stream kết quả ─────────────────────────
+        # ── 6. Load active prompt templates của tenant ─────────────────────
+        prompt_templates: dict[str, str] = {}
+        if self.prompt_template_repo is not None:
+            try:
+                active_templates = await self.prompt_template_repo.get_all_active_by_tenant(tenant_id)
+                prompt_templates = {
+                    t.type.value if hasattr(t.type, "value") else str(t.type): t.content
+                    for t in active_templates
+                    if t.content  # bỏ qua template có content rỗng/None
+                }
+            except Exception:
+                logger.warning(
+                    "load_prompt_templates_failed — dùng default prompts",
+                    tenant_id=tenant_id,
+                    exc_info=True,
+                )
+
+        # ── 7. Invoke LangGraph và stream kết quả ─────────────────────────
         full_answer = ""
         sources: list = []
         agent_type: str | None = None
@@ -165,6 +185,7 @@ class MessageService:
                 "confidence_score": 0.0,
                 "final_answer": "",
                 "sources": [],
+                "prompt_templates": prompt_templates,
                 "_next": None,
             }
 

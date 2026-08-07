@@ -85,3 +85,14 @@ class LogLevel(str, Enum):
 class SortOrder(str, Enum):
     ASC = "asc"
     DESC = "desc"
+
+class PromptType(str, Enum):
+    ASSISTANT_NAME = "assistant_name"
+    ASSISTANT_CAPABILITIES = "assistant_capabilities"
+    RESPONSE_BEHAVIORAL = "response_behavioral"
+    LANGUAGE = "language"
+    RESPONSE_TONE = "response_tone"
+    RESPONSE_FORMATTING = "response_formatting"
+    RESPONSE_CITATION = "response_citation"
+    FALLBACK_RESPONSE = "fallback_response"
+    SECURITY_KILL_SWITCH_RESPONSE = "security_kill_switch_response"

@@ -50,6 +50,12 @@ class AgentState(TypedDict):
     # IDs của sub-query đã pass threshold (dùng để skip retrieval khi partial retry)
     passed_sub_query_ids: list[int]
 
+    # ── Prompt Templates ──────────────────────────────────────────────────
+    # Active prompt templates của tenant — load 1 lần khi invoke graph.
+    # Key: PromptType.value (str), Value: content (str).
+    # Nếu key không tồn tại → node fallback về default_prompts.prompt_map.
+    prompt_templates: dict[str, str]
+
     # ── Cache ─────────────────────────────────────────────────────────────
     cache_hit: bool
     cache_response: str | None
