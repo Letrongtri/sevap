@@ -19,7 +19,7 @@ import { useIsAdmin, usePermission } from '../../hooks/usePermission'
 
    Ma trận quyền (từ default_roles.py):
    ┌──────────────────────┬───────┬────────────┬──────────┐
-   │ Feature              │ Admin │ HR Manager │ Employee │
+   │ Feature              │ Admin │ knowledge_manager │ Employee │
    ├──────────────────────┼───────┼────────────┼──────────┤
    │ Chat & Danh bạ       │  ✅   │     ✅     │    ✅   │
    │ Tài liệu (nav)       │  ✅   │     ✅     │    ❌   │
@@ -32,7 +32,7 @@ import { useIsAdmin, usePermission } from '../../hooks/usePermission'
    └──────────────────────┴───────┴────────────┴──────────┘
 
    Mỗi nav item kiểm tra permission tương ứng từ store — không
-   hard-code role. HR Manager có thể được cấp thêm quyền một cách
+   hard-code role. knowledge_manager có thể được cấp thêm quyền một cách
    linh hoạt mà không cần sửa code.
    ============================================================ */
 
@@ -88,7 +88,7 @@ const MainNavigation = ({
                 />
             </div>
 
-            {/* ── Document nav: chỉ Admin + HR Manager thấy ── */}
+            {/* ── Document nav: chỉ Admin + knowledge_manager thấy ── */}
             {canUploadDocs && (
                 <div
                     className={[

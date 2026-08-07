@@ -32,7 +32,7 @@ export interface SelectOption<T = string> {
 
 export type LoadingState = 'idle' | 'loading' | 'success' | 'error'
 
-export type UserRole = 'Admin' | 'HR Manager' | 'Employee'
+export type UserRole = 'Admin' | 'Knowledge Manager' | 'Employee'
 
 export const ACCESS_LEVELS = ['Public', 'Private', 'Managerial'] as const
 

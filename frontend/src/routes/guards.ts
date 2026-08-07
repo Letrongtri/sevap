@@ -1,7 +1,10 @@
 import { redirect } from '@tanstack/react-router'
 import { useAuthStore, checkAuthOrRefresh } from '../store/authStore'
 import { PRIVATE_ROUTES, PUBLIC_ROUTES } from './paths'
-import { hasPermission, isGlobalAdmin as checkIsGlobalAdmin } from '../lib/permissions'
+import {
+    hasPermission,
+    isGlobalAdmin as checkIsGlobalAdmin,
+} from '../lib/permissions'
 
 /* ============================================================
    Route Guards
@@ -88,7 +91,8 @@ export function requireTenantManagerGuard() {
         throw redirect({ to: PRIVATE_ROUTES.GLOBAL_DASHBOARD })
     }
     const isManager =
-        user?.roles?.includes('admin') || user?.roles?.includes('hr_manager')
+        user?.roles?.includes('admin') ||
+        user?.roles?.includes('knowledge_manager')
     if (!isManager) {
         throw redirect({ to: PRIVATE_ROUTES.FORBIDDEN })
     }

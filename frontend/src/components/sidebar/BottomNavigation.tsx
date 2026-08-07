@@ -97,8 +97,8 @@ const BottomNavigation = ({
                             <p className="text-[10px] text-text-placeholder mt-0.5 truncate">
                                 {user?.roles?.includes('admin')
                                     ? 'Quản trị viên'
-                                    : user?.roles?.includes('hr_manager')
-                                      ? 'Quản lý HR'
+                                    : user?.roles?.includes('knowledge_manager')
+                                      ? 'Quản lý tài liệu và tri thức'
                                       : 'Nhân viên'}
                             </p>
                         </div>

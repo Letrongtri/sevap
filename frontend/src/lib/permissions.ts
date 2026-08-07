@@ -10,43 +10,43 @@ import type { AuthUser } from '../types/auth'
 export const PERMISSIONS = {
     // Conversations
     CONVERSATIONS_CREATE: 'conversations:create',
-    CONVERSATIONS_READ:   'conversations:read',
+    CONVERSATIONS_READ: 'conversations:read',
     CONVERSATIONS_UPDATE: 'conversations:update',
     CONVERSATIONS_DELETE: 'conversations:delete',
-    CONVERSATIONS_SEND:   'conversations:send',
+    CONVERSATIONS_SEND: 'conversations:send',
 
     // Documents
-    DOCUMENTS_CREATE:   'documents:create',
-    DOCUMENTS_READ:     'documents:read',
-    DOCUMENTS_UPDATE:   'documents:update',
-    DOCUMENTS_DELETE:   'documents:delete',
-    DOCUMENTS_UPLOAD:   'documents:upload',
+    DOCUMENTS_CREATE: 'documents:create',
+    DOCUMENTS_READ: 'documents:read',
+    DOCUMENTS_UPDATE: 'documents:update',
+    DOCUMENTS_DELETE: 'documents:delete',
+    DOCUMENTS_UPLOAD: 'documents:upload',
     DOCUMENTS_DOWNLOAD: 'documents:download',
 
     // Users
-    USERS_CREATE:  'users:create',
-    USERS_READ:    'users:read',
-    USERS_UPDATE:  'users:update',
-    USERS_DELETE:  'users:delete',
+    USERS_CREATE: 'users:create',
+    USERS_READ: 'users:read',
+    USERS_UPDATE: 'users:update',
+    USERS_DELETE: 'users:delete',
     USERS_SUSPEND: 'users:suspend',
 
     // Roles
     ROLES_CREATE: 'roles:create',
-    ROLES_READ:   'roles:read',
+    ROLES_READ: 'roles:read',
     ROLES_UPDATE: 'roles:update',
     ROLES_DELETE: 'roles:delete',
     ROLES_ASSIGN: 'roles:assign',
 
     // Departments
     DEPARTMENTS_CREATE: 'departments:create',
-    DEPARTMENTS_READ:   'departments:read',
+    DEPARTMENTS_READ: 'departments:read',
     DEPARTMENTS_UPDATE: 'departments:update',
     DEPARTMENTS_DELETE: 'departments:delete',
     DEPARTMENTS_ASSIGN: 'departments:assign',
 
     // Job Titles
     JOB_TITLES_CREATE: 'job_titles:create',
-    JOB_TITLES_READ:   'job_titles:read',
+    JOB_TITLES_READ: 'job_titles:read',
     JOB_TITLES_UPDATE: 'job_titles:update',
     JOB_TITLES_DELETE: 'job_titles:delete',
     JOB_TITLES_ASSIGN: 'job_titles:assign',
@@ -59,15 +59,15 @@ export const PERMISSIONS = {
 
     // Prompt Templates
     PROMPT_TEMPLATES_CREATE: 'prompt_templates:create',
-    PROMPT_TEMPLATES_READ:   'prompt_templates:read',
+    PROMPT_TEMPLATES_READ: 'prompt_templates:read',
     PROMPT_TEMPLATES_UPDATE: 'prompt_templates:update',
     PROMPT_TEMPLATES_DELETE: 'prompt_templates:delete',
 
     // Tenants (global admin scope)
-    TENANTS_CREATE:  'tenants:create',
-    TENANTS_READ:    'tenants:read',
-    TENANTS_UPDATE:  'tenants:update',
-    TENANTS_DELETE:  'tenants:delete',
+    TENANTS_CREATE: 'tenants:create',
+    TENANTS_READ: 'tenants:read',
+    TENANTS_UPDATE: 'tenants:update',
+    TENANTS_DELETE: 'tenants:delete',
     TENANTS_SUSPEND: 'tenants:suspend',
 } as const
 
@@ -129,15 +129,17 @@ export function isAdminRole(user: AuthUser | null | undefined): boolean {
 }
 
 /**
- * HR Manager — được xác định dựa trên vai trò (roles: includes 'hr_manager').
+ * Knowledge Manager — được xác định dựa trên vai trò (roles: includes 'knowledge_manager').
  */
-export function isHrManagerRole(user: AuthUser | null | undefined): boolean {
-    return hasRole(user, 'hr_manager')
+export function isKnowledgeManagerRole(
+    user: AuthUser | null | undefined
+): boolean {
+    return hasRole(user, 'knowledge_manager')
 }
 
 /**
  * Zone 2 — Document Management.
- * Admin và HR Manager đều có documents:upload.
+ * Admin và Knowledge Manager đều có documents:upload.
  */
 export function canAccessDocumentZone(
     user: AuthUser | null | undefined

@@ -13,8 +13,7 @@ import type { UserSessionAdmin } from '../../types/userSession'
 const ROLE_COLORS: Record<string, string> = {
     Admin: 'bg-primary/10 text-primary border-primary/20',
     admin: 'bg-primary/10 text-primary border-primary/20',
-    'HR Manager': 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    hr_manager: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    knowledge_manager: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     Employee: 'bg-bg text-text-secondary border-border',
     employee: 'bg-bg text-text-secondary border-border',
 }
@@ -162,7 +161,8 @@ export default function ActiveSessionsPanel() {
             <div className="mt-3 pt-3 border-t border-border/40 flex items-center gap-1.5 text-[10px] text-text-muted">
                 <MonitorX className="w-3 h-3" />
                 <span>
-                    Thu hồi phiên làm việc sẽ vô hiệu hóa tất cả token đang hoạt động ngay lập tức.
+                    Thu hồi phiên làm việc sẽ vô hiệu hóa tất cả token đang hoạt
+                    động ngay lập tức.
                 </span>
             </div>
         </div>
