@@ -54,6 +54,11 @@ ALL_PERMISSIONS = [
     (PermissionResource.CONVERSATIONS, PermissionAction.UPDATE, "Cập nhật thông tin cuộc trò chuyện"),
     (PermissionResource.CONVERSATIONS, PermissionAction.DELETE, "Xóa cuộc trò chuyện"),
     (PermissionResource.CONVERSATIONS, PermissionAction.SEND, "Gửi tin nhắn trong cuộc trò chuyện"),
+    # Resource: prompt_templates
+    (PermissionResource.PROMPT_TEMPLATES, PermissionAction.CREATE, "Tạo prompt template mới"),
+    (PermissionResource.PROMPT_TEMPLATES, PermissionAction.READ, "Xem danh sách prompt template"),
+    (PermissionResource.PROMPT_TEMPLATES, PermissionAction.UPDATE, "Cập nhật prompt template"),
+    (PermissionResource.PROMPT_TEMPLATES, PermissionAction.DELETE, "Xóa prompt template"),
 ]
 
 async def ensure_permissions(db: AsyncSession):

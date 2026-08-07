@@ -57,6 +57,10 @@ from .tenant_admin_schema import (
     AdminTenantChatStatisticsItem,
     AdminTenantDocumentStatisticsResponse
 )
+from .prompt_template_schema import (
+    PromptTemplateCreate, PromptTemplateUpdate, PromptTemplateResponse,
+    PromptTemplateQuery, PromptTemplatePaginatedResponse
+)
 
 UserResponse.model_rebuild()
 DepartmentResponse.model_rebuild()

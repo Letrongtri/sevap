@@ -77,7 +77,13 @@ DEFAULT_ROLES = {
                 PermissionAction.DELETE,
                 PermissionAction.SEND
             ],
-            PermissionResource.ACTIVITY_LOGS: [PermissionAction.READ]
+            PermissionResource.ACTIVITY_LOGS: [PermissionAction.READ],
+            PermissionResource.PROMPT_TEMPLATES: [
+                PermissionAction.CREATE,
+                PermissionAction.READ,
+                PermissionAction.UPDATE,
+                PermissionAction.DELETE
+            ],
         }
     },
     DefaultRole.HR_MANAGER: {

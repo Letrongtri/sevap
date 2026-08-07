@@ -47,6 +47,7 @@ class PermissionResource(str, Enum):
     DOCUMENTS = "documents"
     CONVERSATIONS = "conversations"
     ACTIVITY_LOGS = "activity_logs"
+    PROMPT_TEMPLATES = "prompt_templates"
 
 class PermissionAction(str, Enum):
     CREATE = "create"

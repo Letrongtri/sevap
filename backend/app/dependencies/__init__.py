@@ -21,4 +21,5 @@ from .user_session import get_user_session_service
 from .retrieval import get_par_repository, get_retrieval_service
 from .graph import get_compiled_graph
 from .tenant_admin import get_tenant_admin_service
+from .prompt_template import get_prompt_template_service
 

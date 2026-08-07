@@ -22,6 +22,7 @@ from app.api.v1.directory import router as directory_router
 from app.api.v1.user_session import router as user_session_router
 from app.api.v1.tenant_admin import router as tenant_admin_router
 from app.api.v1.websocket import router as websocket_router
+from app.api.v1.prompt_template import router as prompt_template_router
 
 from app.core.logging import logger
 from app.core.enum import DefaultRole
@@ -45,6 +46,7 @@ api_router.include_router(tenant_log_router, prefix="/logs", tags=["tenant-logs"
 api_router.include_router(directory_router, prefix="/directory", tags=["directory"], dependencies=[Depends(get_current_user)])
 api_router.include_router(user_session_router, prefix="/sessions", tags=["sessions"], dependencies=[Depends(get_current_user)])
 api_router.include_router(tenant_admin_router, prefix="/admin", tags=["tenant-admin"], dependencies=[Depends(get_current_user), Depends(check_role(DefaultRole.ADMIN.value))])
+api_router.include_router(prompt_template_router, prefix="/prompt-templates", tags=["prompt-templates"], dependencies=[Depends(get_current_user)])
 
 api_router.include_router(websocket_router, prefix="/ws", tags=["websocket"])
 
