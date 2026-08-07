@@ -1,4 +1,14 @@
-import { SquarePen, Users, FileText } from 'lucide-react'
+import {
+    SquarePen,
+    Users,
+    FileText,
+    ShieldCheck,
+    Building2,
+    Briefcase,
+    UserCog,
+    History,
+    BotMessageSquare,
+} from 'lucide-react'
 import { PRIVATE_ROUTES } from '../../routes/paths'
 import { PERMISSIONS } from '../../lib/permissions'
 import { NavItem } from './NavItem'
@@ -8,18 +18,21 @@ import { usePermission } from '../../hooks/usePermission'
    MainNavigation — Permission & Role-based sidebar nav
 
    Ma trận quyền (từ default_roles.py):
-   ┌──────────────────┬───────┬────────────┬──────────┐
-   │ Feature          │ Admin │ HR Manager │ Employee │
-   ├──────────────────┼───────┼────────────┼──────────┤
-   │ Chat & Danh bạ   │  ✅   │     ✅     │    ✅   │
-   │ Tài liệu (nav)   │  ✅   │     ✅     │    ❌   │
-   └──────────────────┴───────┴────────────┴──────────┘
+   ┌──────────────────────┬───────┬────────────┬──────────┐
+   │ Feature              │ Admin │ HR Manager │ Employee │
+   ├──────────────────────┼───────┼────────────┼──────────┤
+   │ Chat & Danh bạ       │  ✅   │     ✅     │    ✅   │
+   │ Tài liệu (nav)       │  ✅   │     ✅     │    ❌   │
+   │ Quản lý tài khoản    │  ✅   │     ❌     │    ❌   │
+   │ Quản lý vai trò      │  ✅   │     ❌     │    ❌   │
+   │ Quản lý phòng ban    │  ✅   │     ❌     │    ❌   │
+   │ Quản lý chức danh    │  ✅   │     ❌     │    ❌   │
+   │ Nhật ký hoạt động    │  ✅   │     ❌     │    ❌   │
+   └──────────────────────┴───────┴────────────┴──────────┘
 
-   - Admin    = Xác định dựa trên vai trò (role 'admin')
-   - HRMgr   = documents:upload (NOT users:create)
-   - Employee = conversations:send (documents:read nhưng KHÔNG có upload)
-
-   Employee có documents:read nhưng KHÔNG xem nav documents.
+   Mỗi nav item kiểm tra permission tương ứng từ store — không
+   hard-code role. HR Manager có thể được cấp thêm quyền một cách
+   linh hoạt mà không cần sửa code.
    ============================================================ */
 
 const MainNavigation = ({
@@ -29,9 +42,23 @@ const MainNavigation = ({
     collapsed: boolean
     currentPath: string
 }) => {
-    // ── Documents: upload (HR Manager + Admin) ────────────────
-    // Employee chỉ có documents:read, KHÔNG có documents:upload
+    // ── Zone 2: Management pages — sync với route guards ────
+    // Sử dụng cùng permission với beforeLoad trong tenantRoutes.tsx
+    // để đảm bảo: nếu thấy nav item thì luôn vào được trang.
     const canUploadDocs = usePermission(PERMISSIONS.DOCUMENTS_UPLOAD)
+    const canCreateUsers = usePermission(PERMISSIONS.USERS_CREATE)
+    const canCreateRoles = usePermission(PERMISSIONS.ROLES_CREATE)
+    const canCreateDepts = usePermission(PERMISSIONS.DEPARTMENTS_CREATE)
+    const canCreateJobTitles = usePermission(PERMISSIONS.JOB_TITLES_CREATE)
+    const canReadLogs = usePermission(PERMISSIONS.ACTIVITY_LOGS_READ)
+
+    // Section "Quản lý" hiện ra khi có ít nhất 1 quyền quản lý
+    const showManageSection =
+        canCreateUsers ||
+        canCreateRoles ||
+        canCreateDepts ||
+        canCreateJobTitles ||
+        canReadLogs
 
     return (
         <div className="flex-shrink-0 px-2 pt-4 pb-2 border-b border-border/40">
@@ -74,6 +101,74 @@ const MainNavigation = ({
                         collapsed={collapsed}
                         currentPath={currentPath}
                     />
+                </div>
+            )}
+
+            {/* ── Management nav: hiển thị theo từng permission ── */}
+            {showManageSection && (
+                <div
+                    className={[
+                        'space-y-0.5',
+                        collapsed ? 'mt-1 pt-1' : 'mt-3 pt-3',
+                        'border-t border-border/30',
+                    ].join(' ')}
+                >
+                    {!collapsed && (
+                        <p className="text-[10px] font-semibold uppercase tracking-widest text-text-placeholder px-3 pb-1">
+                            Quản lý
+                        </p>
+                    )}
+
+                    {canCreateUsers && (
+                        <NavItem
+                            label="Tài khoản"
+                            icon={UserCog}
+                            to={PRIVATE_ROUTES.MANAGE_ACCOUNTS}
+                            collapsed={collapsed}
+                            currentPath={currentPath}
+                        />
+                    )}
+
+                    {canCreateRoles && (
+                        <NavItem
+                            label="Vai trò & Phân quyền"
+                            icon={ShieldCheck}
+                            to={PRIVATE_ROUTES.MANAGE_ROLES}
+                            collapsed={collapsed}
+                            currentPath={currentPath}
+                        />
+                    )}
+
+                    {canCreateDepts && (
+                        <NavItem
+                            label="Phòng ban"
+                            icon={Building2}
+                            to={PRIVATE_ROUTES.MANAGE_DEPARTMENTS}
+                            collapsed={collapsed}
+                            currentPath={currentPath}
+                        />
+                    )}
+
+                    {canCreateJobTitles && (
+                        <NavItem
+                            label="Chức danh"
+                            icon={Briefcase}
+                            to={PRIVATE_ROUTES.MANAGE_JOB_TITLES}
+                            collapsed={collapsed}
+                            currentPath={currentPath}
+                        />
+                    )}
+
+
+                    {canReadLogs && (
+                        <NavItem
+                            label="Nhật ký hoạt động"
+                            icon={History}
+                            to={PRIVATE_ROUTES.MANAGE_LOGS}
+                            collapsed={collapsed}
+                            currentPath={currentPath}
+                        />
+                    )}
                 </div>
             )}
         </div>

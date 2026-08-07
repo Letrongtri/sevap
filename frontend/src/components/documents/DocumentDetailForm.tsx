@@ -4,6 +4,8 @@ import { useUploadDocument, useUpdateDocument } from '../../hooks/useDocuments'
 import { useSimpleDepartments } from '../../hooks/useSimpleDepartments'
 import { useSimpleRoles } from '../../hooks/useSimpleRoles'
 import { useDocumentStore } from '../../store/documentStore'
+import { usePermission } from '../../hooks/usePermission'
+import { PERMISSIONS } from '../../lib/permissions'
 
 import SearchableSelect from '../ui/SearchableSelect'
 import SearchableMultiSelect from '../ui/SearchableMultiSelect'
@@ -38,6 +40,12 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
     const setIsAddingDocumentStore = useDocumentStore(
         (d) => d.setIsAddingDocument
     )
+
+    // Permission guards
+    const canUpload = usePermission(PERMISSIONS.DOCUMENTS_UPLOAD)
+    const canUpdate = usePermission(PERMISSIONS.DOCUMENTS_UPDATE)
+    // canSave: true khi upload (có quyền upload) hoặc edit (có quyền update)
+    const canSave   = isAddingDocument ? canUpload : canUpdate
 
     const uploadMutation = useUploadDocument()
     const updateMutation = useUpdateDocument()
@@ -365,17 +373,19 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
                 >
                     Hủy
                 </Button>
-                <Button
-                    type="submit"
-                    variant="primary"
-                    fullWidth
-                    isLoading={isSubmitting}
-                    loadingText={
-                        isAddingDocument ? 'Đang tải lên...' : 'Đang lưu...'
-                    }
-                >
-                    {isAddingDocument ? 'Tải lên tài liệu' : 'Lưu thay đổi'}
-                </Button>
+                {canSave && (
+                    <Button
+                        type="submit"
+                        variant="primary"
+                        fullWidth
+                        isLoading={isSubmitting}
+                        loadingText={
+                            isAddingDocument ? 'Đang tải lên...' : 'Đang lưu...'
+                        }
+                    >
+                        {isAddingDocument ? 'Tải lên tài liệu' : 'Lưu thay đổi'}
+                    </Button>
+                )}
             </div>
         </form>
     )

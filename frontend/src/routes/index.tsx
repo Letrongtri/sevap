@@ -14,8 +14,19 @@ import {
     directoryRoute,
     forbiddenRoute,
     profileRoute,
+    // Zone 2 — Management routes (AppShell, permission-based)
     documentLayoutRoute,
     documentsRoute,
+    manageRolesLayoutRoute,
+    manageRolesRoute,
+    manageDepartmentsLayoutRoute,
+    manageDepartmentsRoute,
+    manageJobTitlesLayoutRoute,
+    manageJobTitlesRoute,
+    manageAccountsLayoutRoute,
+    manageAccountsRoute,
+    manageLogsLayoutRoute,
+    manageLogsRoute,
 } from './tenantRoutes'
 import { privateLayoutRoute } from './privateLayoutRoute'
 import {
@@ -30,11 +41,11 @@ import {
 import { globalAdminLayoutRoute, globalAdminRoutes } from './globalAdminRoutes'
 
 /* ============================================================
-   Route Tree Assembly — 4 Zone Architecture
-   Zone 1: Basic user  /
-   Zone 2: Docs mgmt   /documents
-   Zone 3: Admin panel /admin/*
-   Zone 4: Global admin /global-admin/*
+   Route Tree Assembly — 3 Zone Architecture
+   Zone 1: Basic user       /
+   Zone 2: Management pages /documents, /manage/*  (permission-based, AppShell)
+   Zone 3: Admin panel      /admin/*               (users:create required)
+   Zone 4: Global admin     /global-admin/*
    ============================================================ */
 
 const routeTree = rootRoute.addChildren([
@@ -54,8 +65,14 @@ const routeTree = rootRoute.addChildren([
             forbiddenRoute,
             profileRoute,
 
-            // Documents — shares AppShell sidebar (permission-guarded)
+            // Zone 2 — Management pages (permission-based, AppShell sidebar)
             documentLayoutRoute.addChildren([documentsRoute]),
+            manageRolesLayoutRoute.addChildren([manageRolesRoute]),
+            manageDepartmentsLayoutRoute.addChildren([manageDepartmentsRoute]),
+            manageJobTitlesLayoutRoute.addChildren([manageJobTitlesRoute]),
+            manageAccountsLayoutRoute.addChildren([manageAccountsRoute]),
+            manageLogsLayoutRoute.addChildren([manageLogsRoute]),
+            ]),
         ]),
 
         // Zone 3 — Admin Panel (admin only) (renders AdminShell directly)

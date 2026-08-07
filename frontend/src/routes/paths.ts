@@ -15,8 +15,13 @@ export const PRIVATE_ROUTES = {
     DIRECTORY: '/directory',
     PROFILE: '/profile',
 
-    // ── Zone 2: Document Management (hr_manager + admin) ─────
+    // ── Zone 2: Management Pages (permission-based, AppShell) ──
     DOCUMENTS: '/documents',
+    MANAGE_ROLES: '/manage/roles',
+    MANAGE_DEPARTMENTS: '/manage/departments',
+    MANAGE_JOB_TITLES: '/manage/job-titles',
+    MANAGE_ACCOUNTS: '/manage/accounts',
+    MANAGE_LOGS: '/manage/logs',
 
     // ── Zone 3: Admin Panel (admin only) ─────────────────────
     TENANT_ADMIN_DASHBOARD: '/admin/dashboard',

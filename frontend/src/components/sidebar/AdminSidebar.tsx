@@ -42,7 +42,11 @@ const adminNav = [
         icon: Briefcase,
         to: PRIVATE_ROUTES.ADMIN_JOB_TITLES,
     },
-    { label: 'Nhật ký hoạt động', icon: History, to: PRIVATE_ROUTES.TENANT_LOGS },
+    {
+        label: 'Nhật ký hoạt động',
+        icon: History,
+        to: PRIVATE_ROUTES.TENANT_LOGS,
+    },
 ] as const
 
 interface AdminSidebarProps {

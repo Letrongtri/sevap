@@ -72,9 +72,11 @@ export const profileRoute = createRoute({
 })
 
 /* ============================================================
-   Document Management Routes
-   Accessible to: any user with documents:read OR documents:upload.
-   Shares AppShell (tenantLayoutRoute) — no separate sidebar needed.
+   Zone 2 — Management Routes (permission-based, AppShell)
+   Bao gồm: documents, roles, departments, job-titles, accounts,
+   logs, prompt-templates. Mỗi route được bảo vệ bởi permission
+   riêng — không yêu cầu users:create như Zone 3.
+   Render bên trong AppShell — sidebar chính vẫn hiển thị.
    ============================================================ */
 
 /** Permission guard layout route for documents */
@@ -89,3 +91,74 @@ export const documentsRoute = createRoute({
     path: PRIVATE_ROUTES.DOCUMENTS,
     component: DocumentsPage,
 })
+
+// Lazy-loaded management pages (tái sử dụng các page đã có)
+const RolesPage = lazyPage(() => import('../pages/RolesPage'))
+const DepartmentsPage = lazyPage(() => import('../pages/DepartmentsPage'))
+const JobTitlesPage = lazyPage(() => import('../pages/JobTitlesPage'))
+const AccountsPage = lazyPage(() => import('../pages/AccountsPage'))
+const TenantLogPage = lazyPage(() => import('../pages/TenantLogPage'))
+const PromptTemplatesPage = lazyPage(
+    () => import('../pages/PromptTemplatesPage')
+)
+
+// ── roles:create ───────────────────────────────────────────────
+export const manageRolesLayoutRoute = createRoute({
+    getParentRoute: () => tenantLayoutRoute,
+    id: 'manage-roles-layout',
+    beforeLoad: requirePermissionGuard('roles:create'),
+})
+export const manageRolesRoute = createRoute({
+    getParentRoute: () => manageRolesLayoutRoute,
+    path: PRIVATE_ROUTES.MANAGE_ROLES,
+    component: RolesPage,
+})
+
+// ── departments:create ─────────────────────────────────────────
+export const manageDepartmentsLayoutRoute = createRoute({
+    getParentRoute: () => tenantLayoutRoute,
+    id: 'manage-departments-layout',
+    beforeLoad: requirePermissionGuard('departments:create'),
+})
+export const manageDepartmentsRoute = createRoute({
+    getParentRoute: () => manageDepartmentsLayoutRoute,
+    path: PRIVATE_ROUTES.MANAGE_DEPARTMENTS,
+    component: DepartmentsPage,
+})
+
+// ── job_titles:create ──────────────────────────────────────────
+export const manageJobTitlesLayoutRoute = createRoute({
+    getParentRoute: () => tenantLayoutRoute,
+    id: 'manage-job-titles-layout',
+    beforeLoad: requirePermissionGuard('job_titles:create'),
+})
+export const manageJobTitlesRoute = createRoute({
+    getParentRoute: () => manageJobTitlesLayoutRoute,
+    path: PRIVATE_ROUTES.MANAGE_JOB_TITLES,
+    component: JobTitlesPage,
+})
+
+// ── users:create ───────────────────────────────────────────────
+export const manageAccountsLayoutRoute = createRoute({
+    getParentRoute: () => tenantLayoutRoute,
+    id: 'manage-accounts-layout',
+    beforeLoad: requirePermissionGuard('users:create'),
+})
+export const manageAccountsRoute = createRoute({
+    getParentRoute: () => manageAccountsLayoutRoute,
+    path: PRIVATE_ROUTES.MANAGE_ACCOUNTS,
+    component: AccountsPage,
+})
+
+// ── activity_logs:read ───────────────────────────────────────
+export const manageLogsLayoutRoute = createRoute({
+    getParentRoute: () => tenantLayoutRoute,
+    id: 'manage-logs-layout',
+    beforeLoad: requirePermissionGuard('activity_logs:read'),
+})
+export const manageLogsRoute = createRoute({
+    getParentRoute: () => manageLogsLayoutRoute,
+    path: PRIVATE_ROUTES.MANAGE_LOGS,
+    component: TenantLogPage,
+})
+
