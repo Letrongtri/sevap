@@ -53,15 +53,17 @@ export default function GlobalAdminLoginPage() {
                 <div className="bg-surface rounded-2xl shadow-xl shadow-border/60 border border-border overflow-hidden">
                     {/* Header */}
                     <div className="px-8 pt-8 pb-6 border-b border-border flex flex-col items-center gap-2">
-                        <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                            <ShieldCheck className="w-7 h-7 text-primary" />
-                        </div>
+                        <img
+                            src="/app-logo.svg"
+                            alt="Logo"
+                            className="w-15 h-15 rounded-xl flex-shrink-0"
+                        />
                         <div className="flex flex-col items-center mt-1 text-center">
                             <h1 className="text-2xl font-bold text-text-primary tracking-tight">
-                                System Administration
+                                Quản lý hệ thống
                             </h1>
                             <p className="text-sm text-text-muted mt-1">
-                                Restricted area — Global Admin access only
+                                Khu vực dành riêng cho quản trị viên hệ thống
                             </p>
                         </div>
                     </div>
@@ -90,8 +92,8 @@ export default function GlobalAdminLoginPage() {
                             id="ga-employee-code"
                             name="employeeCode"
                             type="text"
-                            label="Employee Code"
-                            placeholder="Enter your admin code"
+                            label="Mã nhân viên"
+                            placeholder="Nhập mã nhân viên"
                             autoComplete="username"
                             value={values.employeeCode}
                             onChange={handleChange}
@@ -106,13 +108,13 @@ export default function GlobalAdminLoginPage() {
                                 htmlFor="ga-password"
                                 className="block text-sm font-semibold text-text-secondary"
                             >
-                                Password
+                                Mật khẩu
                             </label>
                             <Input
                                 id="ga-password"
                                 name="password"
                                 type={showPassword ? 'text' : 'password'}
-                                placeholder="Enter your password"
+                                placeholder="Nhập mật khẩu"
                                 autoComplete="current-password"
                                 value={values.password}
                                 onChange={handleChange}
@@ -125,8 +127,8 @@ export default function GlobalAdminLoginPage() {
                                         }
                                         aria-label={
                                             showPassword
-                                                ? 'Hide password'
-                                                : 'Show password'
+                                                ? 'Hiện mật khẩu'
+                                                : 'Ẩn mật khẩu'
                                         }
                                         className="text-text-placeholder hover:text-text-muted transition-colors duration-150 p-0.5"
                                     >
@@ -149,16 +151,17 @@ export default function GlobalAdminLoginPage() {
                             size="lg"
                             fullWidth
                             isLoading={isLoading}
-                            loadingText="Authenticating..."
+                            loadingText="Đang xác thực..."
                         >
-                            Access Admin Console
+                            Truy cập trang quản trị
                         </Button>
                     </form>
 
                     {/* Security notice */}
                     <div className="px-8 pb-6 text-center">
                         <p className="text-xs text-text-placeholder">
-                            All access attempts are logged and monitored.
+                            Tất cả các nỗ lực truy cập đều được ghi lại và giám
+                            sát.
                         </p>
                     </div>
                 </div>

@@ -35,14 +35,12 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             <SystemBranding collapsed={collapsed} />
 
             {/* SECTION 2 — Main navigation */}
-            <MainNavigation
-                collapsed={collapsed}
-                user={user}
-                currentPath={currentPath}
-            />
+            <MainNavigation collapsed={collapsed} currentPath={currentPath} />
 
             {/* SECTION 3 — Chat history (scrollable, từ API) */}
-            {!isGA && <ChatHistory collapsed={collapsed} />}
+            {!isGA && (
+                <ChatHistory collapsed={collapsed} currentPath={currentPath} />
+            )}
 
             {/* SECTION 4 — Settings, Support, Account */}
             <BottomNavigation

@@ -110,21 +110,21 @@ export const ProfilePopover = ({
                 </div>
 
                 <div className="flex flex-col gap-1 mt-3">
-                    <div className="flex items-center justify-between gap-1">
-                        <div className="flex items-center gap-1 text-xs text-text-secondary">
-                            <Building2 className="w-3 h-3" />
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1 text-xs text-text-secondary whitespace-nowrap flex-shrink-0">
+                            <Building2 className="w-3 h-3 flex-shrink-0" />
                             <span>Công ty:</span>
                         </div>
-                        <p className="text-xs text-text-secondary truncate">
+                        <p className="text-xs text-text-secondary truncate text-right min-w-0">
                             {user?.companyName ?? 'Công ty'}
                         </p>
                     </div>
-                    <div className="flex items-center justify-between gap-1">
-                        <div className="flex items-center gap-1 text-xs text-text-secondary">
-                            <Shield className="w-3 h-3" />
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1 text-xs text-text-secondary whitespace-nowrap flex-shrink-0">
+                            <Shield className="w-3 h-3 flex-shrink-0" />
                             <span>Vai trò:</span>
                         </div>
-                        <Badge size="sm" variant="primary">
+                        <Badge size="sm" variant="primary" className="truncate max-w-[140px]">
                             {user?.roles
                                 ?.map((role) => stringToLabel(role))
                                 .join(', ') || 'Nhân viên'}

@@ -2,14 +2,25 @@ import { Clock, Loader2, MessageSquare, Search, Trash2 } from 'lucide-react'
 import { useChatStore } from '../../store/chatStore'
 import { useConversations } from '../../hooks/useConversations'
 import { useDeleteConversation } from '../../hooks/useDeleteConversation'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useRouterState } from '@tanstack/react-router'
 import Tooltip from '../ui/Tooltip'
 import type { ID } from '../../types/common'
 import { formatDateTimeToDDMMYYYY } from '../../../utils/formater'
+import { PRIVATE_ROUTES } from '../../routes/paths'
 
-const ChatHistory = ({ collapsed }: { collapsed: boolean }) => {
+const ChatHistory = ({
+    collapsed,
+    currentPath,
+}: {
+    collapsed: boolean
+    currentPath?: string
+}) => {
     const { activeChatId, setActiveChat, searchKeyword, setSearchKeyword } =
         useChatStore()
+
+    const routerState = useRouterState()
+    const path = currentPath ?? routerState.location.pathname
+    const isChatRoute = path.startsWith(PRIVATE_ROUTES.CHAT)
 
     // ── Server state (TanStack Query) ──────────────────────────────────
     const {
@@ -120,47 +131,51 @@ const ChatHistory = ({ collapsed }: { collapsed: boolean }) => {
 
                     {/* Conversation list */}
                     {!isConvsLoading &&
-                        conversations.map((conv) => (
-                            <div
-                                key={conv.id}
-                                onClick={() => handleSelectChat(conv.id)}
-                                className={[
-                                    'group flex items-start gap-2 px-3 py-2 rounded-xl transition-all duration-150 cursor-pointer',
-                                    activeChatId === conv.id
-                                        ? 'bg-primary/8 text-primary'
-                                        : 'hover:bg-bg',
-                                ].join(' ')}
-                            >
-                                <div className="flex-1 min-w-0">
-                                    <p
-                                        className={[
-                                            'text-xs truncate leading-snug',
-                                            activeChatId === conv.id
-                                                ? 'text-primary font-medium'
-                                                : 'text-text-secondary',
-                                        ].join(' ')}
-                                    >
-                                        {conv.title}
-                                    </p>
-                                    <p className="text-[10px] text-text-placeholder mt-0.5">
-                                        {formatDateTimeToDDMMYYYY(
-                                            conv.updatedAt
-                                        )}
-                                    </p>
-                                </div>
-                                <button
-                                    id={`delete-conv-${conv.id}`}
-                                    aria-label="Delete chat"
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        deleteConv(conv.id)
-                                    }}
-                                    className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-text-placeholder hover:text-error transition-all duration-150 flex-shrink-0"
+                        conversations.map((conv) => {
+                            const isItemActive =
+                                isChatRoute && activeChatId === conv.id
+                            return (
+                                <div
+                                    key={conv.id}
+                                    onClick={() => handleSelectChat(conv.id)}
+                                    className={[
+                                        'group flex items-start gap-2 px-3 py-2 rounded-xl transition-all duration-150 cursor-pointer',
+                                        isItemActive
+                                            ? 'bg-primary/8 text-primary'
+                                            : 'hover:bg-bg',
+                                    ].join(' ')}
                                 >
-                                    <Trash2 className="w-3 h-3" />
-                                </button>
-                            </div>
-                        ))}
+                                    <div className="flex-1 min-w-0">
+                                        <p
+                                            className={[
+                                                'text-xs truncate leading-snug',
+                                                isItemActive
+                                                    ? 'text-primary font-medium'
+                                                    : 'text-text-secondary',
+                                            ].join(' ')}
+                                        >
+                                            {conv.title}
+                                        </p>
+                                        <p className="text-[10px] text-text-placeholder mt-0.5">
+                                            {formatDateTimeToDDMMYYYY(
+                                                conv.updatedAt
+                                            )}
+                                        </p>
+                                    </div>
+                                    <button
+                                        id={`delete-conv-${conv.id}`}
+                                        aria-label="Delete chat"
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            deleteConv(conv.id)
+                                        }}
+                                        className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-text-placeholder hover:text-error transition-all duration-150 flex-shrink-0"
+                                    >
+                                        <Trash2 className="w-3 h-3" />
+                                    </button>
+                                </div>
+                            )
+                        })}
 
                     {/* Next page loading indicator */}
                     {isFetchingNextPage && (
