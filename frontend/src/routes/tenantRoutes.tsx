@@ -162,3 +162,14 @@ export const manageLogsRoute = createRoute({
     component: TenantLogPage,
 })
 
+// ── prompt_templates:create ────────────────────────────
+export const managePromptTemplatesLayoutRoute = createRoute({
+    getParentRoute: () => tenantLayoutRoute,
+    id: 'manage-prompt-templates-layout',
+    beforeLoad: requirePermissionGuard('prompt_templates:create'),
+})
+export const managePromptTemplatesRoute = createRoute({
+    getParentRoute: () => managePromptTemplatesLayoutRoute,
+    path: PRIVATE_ROUTES.MANAGE_PROMPT_TEMPLATES,
+    component: PromptTemplatesPage,
+})

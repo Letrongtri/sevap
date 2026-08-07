@@ -57,6 +57,12 @@ export const PERMISSIONS = {
     // Activity Logs
     ACTIVITY_LOGS_READ: 'activity_logs:read',
 
+    // Prompt Templates
+    PROMPT_TEMPLATES_CREATE: 'prompt_templates:create',
+    PROMPT_TEMPLATES_READ:   'prompt_templates:read',
+    PROMPT_TEMPLATES_UPDATE: 'prompt_templates:update',
+    PROMPT_TEMPLATES_DELETE: 'prompt_templates:delete',
+
     // Tenants (global admin scope)
     TENANTS_CREATE:  'tenants:create',
     TENANTS_READ:    'tenants:read',

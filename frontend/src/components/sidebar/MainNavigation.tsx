@@ -12,7 +12,7 @@ import {
 import { PRIVATE_ROUTES } from '../../routes/paths'
 import { PERMISSIONS } from '../../lib/permissions'
 import { NavItem } from './NavItem'
-import { usePermission } from '../../hooks/usePermission'
+import { useIsAdmin, usePermission } from '../../hooks/usePermission'
 
 /* ============================================================
    MainNavigation — Permission & Role-based sidebar nav
@@ -28,6 +28,7 @@ import { usePermission } from '../../hooks/usePermission'
    │ Quản lý phòng ban    │  ✅   │     ❌     │    ❌   │
    │ Quản lý chức danh    │  ✅   │     ❌     │    ❌   │
    │ Nhật ký hoạt động    │  ✅   │     ❌     │    ❌   │
+   │ Prompt templates     │  ✅   │     ❌     │    ❌   │
    └──────────────────────┴───────┴────────────┴──────────┘
 
    Mỗi nav item kiểm tra permission tương ứng từ store — không
@@ -51,14 +52,21 @@ const MainNavigation = ({
     const canCreateDepts = usePermission(PERMISSIONS.DEPARTMENTS_CREATE)
     const canCreateJobTitles = usePermission(PERMISSIONS.JOB_TITLES_CREATE)
     const canReadLogs = usePermission(PERMISSIONS.ACTIVITY_LOGS_READ)
+    const canCreatePromptTpl = usePermission(
+        PERMISSIONS.PROMPT_TEMPLATES_CREATE
+    )
+
+    const isAdmin = useIsAdmin()
 
     // Section "Quản lý" hiện ra khi có ít nhất 1 quyền quản lý
     const showManageSection =
-        canCreateUsers ||
-        canCreateRoles ||
-        canCreateDepts ||
-        canCreateJobTitles ||
-        canReadLogs
+        !isAdmin &&
+        (canCreateUsers ||
+            canCreateRoles ||
+            canCreateDepts ||
+            canCreateJobTitles ||
+            canReadLogs ||
+            canCreatePromptTpl)
 
     return (
         <div className="flex-shrink-0 px-2 pt-4 pb-2 border-b border-border/40">
@@ -159,6 +167,15 @@ const MainNavigation = ({
                         />
                     )}
 
+                    {canCreatePromptTpl && (
+                        <NavItem
+                            label="Prompt templates"
+                            icon={BotMessageSquare}
+                            to={PRIVATE_ROUTES.MANAGE_PROMPT_TEMPLATES}
+                            collapsed={collapsed}
+                            currentPath={currentPath}
+                        />
+                    )}
 
                     {canReadLogs && (
                         <NavItem

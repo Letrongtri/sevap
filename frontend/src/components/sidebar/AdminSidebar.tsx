@@ -5,6 +5,7 @@ import {
     Briefcase,
     History,
     LayoutDashboard,
+    BotMessageSquare,
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { PRIVATE_ROUTES } from '../../routes/paths'
@@ -41,6 +42,11 @@ const adminNav = [
         label: 'Chức danh',
         icon: Briefcase,
         to: PRIVATE_ROUTES.ADMIN_JOB_TITLES,
+    },
+    {
+        label: 'Prompt Template',
+        icon: BotMessageSquare,
+        to: PRIVATE_ROUTES.ADMIN_PROMPT_TEMPLATES,
     },
     {
         label: 'Nhật ký hoạt động',

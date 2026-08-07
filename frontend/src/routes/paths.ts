@@ -17,11 +17,12 @@ export const PRIVATE_ROUTES = {
 
     // ── Zone 2: Management Pages (permission-based, AppShell) ──
     DOCUMENTS: '/documents',
-    MANAGE_ROLES: '/manage/roles',
-    MANAGE_DEPARTMENTS: '/manage/departments',
-    MANAGE_JOB_TITLES: '/manage/job-titles',
-    MANAGE_ACCOUNTS: '/manage/accounts',
-    MANAGE_LOGS: '/manage/logs',
+    MANAGE_ROLES: '/roles',
+    MANAGE_DEPARTMENTS: '/departments',
+    MANAGE_JOB_TITLES: '/job-titles',
+    MANAGE_ACCOUNTS: '/accounts',
+    MANAGE_LOGS: '/logs',
+    MANAGE_PROMPT_TEMPLATES: '/prompt-templates',
 
     // ── Zone 3: Admin Panel (admin only) ─────────────────────
     TENANT_ADMIN_DASHBOARD: '/admin/dashboard',
@@ -29,6 +30,7 @@ export const PRIVATE_ROUTES = {
     ADMIN_ROLES: '/admin/roles',
     ADMIN_DEPARTMENTS: '/admin/departments',
     ADMIN_JOB_TITLES: '/admin/job-titles',
+    ADMIN_PROMPT_TEMPLATES: '/admin/prompt-templates',
     TENANT_LOGS: '/admin/logs',
 
     // ── Zone 4: Global Admin ──────────────────────────────────

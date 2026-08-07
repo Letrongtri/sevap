@@ -27,6 +27,8 @@ import {
     manageAccountsRoute,
     manageLogsLayoutRoute,
     manageLogsRoute,
+    managePromptTemplatesLayoutRoute,
+    managePromptTemplatesRoute,
 } from './tenantRoutes'
 import { privateLayoutRoute } from './privateLayoutRoute'
 import {
@@ -37,6 +39,7 @@ import {
     adminDepartmentsRoute,
     adminJobTitlesRoute,
     tenantLogsRoute,
+    adminPromptTemplatesRoute,
 } from './tenantAdminRoutes'
 import { globalAdminLayoutRoute, globalAdminRoutes } from './globalAdminRoutes'
 
@@ -72,6 +75,8 @@ const routeTree = rootRoute.addChildren([
             manageJobTitlesLayoutRoute.addChildren([manageJobTitlesRoute]),
             manageAccountsLayoutRoute.addChildren([manageAccountsRoute]),
             manageLogsLayoutRoute.addChildren([manageLogsRoute]),
+            managePromptTemplatesLayoutRoute.addChildren([
+                managePromptTemplatesRoute,
             ]),
         ]),
 
@@ -83,6 +88,7 @@ const routeTree = rootRoute.addChildren([
             adminDepartmentsRoute,
             adminJobTitlesRoute,
             tenantLogsRoute,
+            adminPromptTemplatesRoute,
         ]),
 
         // Zone 4 — Global Admin (renders AdminShell directly)

@@ -16,6 +16,7 @@ interface SearchableSelectProps {
     disabled?: boolean
     className?: string
     size?: SelectSize
+    required?: boolean
 }
 
 const paddingMap: Record<SelectSize, string> = {
@@ -39,6 +40,7 @@ export default function SearchableSelect({
     disabled = false,
     className = '',
     size = 'md',
+    required = false,
 }: SearchableSelectProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
@@ -91,6 +93,7 @@ export default function SearchableSelect({
             {label && (
                 <label className="block text-sm font-semibold text-text-secondary mb-1">
                     {label}
+                    {required && <span className="text-error ml-1">*</span>}
                 </label>
             )}
 
