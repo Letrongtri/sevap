@@ -21,6 +21,7 @@ import type {
 } from '../../types/document'
 import { type ID, ALLOWED_DOCUMENT_FILE_TYPES } from '../../types/common'
 import PolicyGroupCard from './PolicyGroupCard'
+import { toast } from 'sonner'
 
 const emptyPolicy = (): PolicyGroupState => ({
     id: crypto.randomUUID(),
@@ -84,8 +85,6 @@ interface DocumentDetailFormProps {
     isEditing: boolean
     setIsEditing: (val: boolean) => void
     handleCloseCard: () => void
-    setFormError: (val: string | null) => void
-    setFormSuccess: (val: string | null) => void
 }
 
 const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
@@ -94,8 +93,6 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
     isEditing,
     setIsEditing,
     handleCloseCard,
-    setFormError,
-    setFormSuccess,
 }) => {
     const setActiveDocumentId = useDocumentStore((d) => d.setActiveDocumentId)
     const setIsAddingDocumentStore = useDocumentStore(
@@ -233,8 +230,6 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
 
     const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault()
-        setFormError(null)
-        setFormSuccess(null)
 
         // Validate Private: phải có ít nhất 1 policy group có điều kiện hoặc 1 target user
         if (accessLevel === 'private') {
@@ -245,8 +240,8 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
                     g.jobTitleIds.length > 0
             )
             if (!hasValidPolicy && targetUserIds.length === 0) {
-                setFormError(
-                    'Tài liệu Riêng tư phải có ít nhất một Policy Group (có điều kiện) hoặc một Tài khoản được chỉ định.'
+                toast.error(
+                    'Tài liệu Riêng tư phải có ít nhất một điều kiện truy cập hoặc một tài khoản được chỉ định.'
                 )
                 return
             }
@@ -259,7 +254,7 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
 
         if (isAddingDocument) {
             if (!selectedFile) {
-                setFormError('Vui lòng chọn tệp để tải lên.')
+                toast.error('Vui lòng chọn tệp để tải lên.')
                 return
             }
 
@@ -279,13 +274,13 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
                 },
                 {
                     onSuccess: (created) => {
-                        setFormSuccess('Tải lên tài liệu thành công!')
+                        toast.success('Tải lên tài liệu thành công!')
                         setActiveDocumentId(created.id)
                         setIsAddingDocumentStore(false)
                         setIsEditing(false)
                     },
                     onError: (err: any) => {
-                        setFormError(
+                        toast.error(
                             err.response?.data?.detail ??
                                 'Tải lên tài liệu thất bại.'
                         )
@@ -307,11 +302,11 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
                 },
                 {
                     onSuccess: () => {
-                        setFormSuccess('Cập nhật tài liệu thành công!')
+                        toast.success('Cập nhật tài liệu thành công!')
                         setIsEditing(false)
                     },
                     onError: (err: any) => {
-                        setFormError(
+                        toast.error(
                             err.response?.data?.detail ??
                                 'Cập nhật tài liệu thất bại.'
                         )
@@ -452,7 +447,7 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
                         className="w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-dashed border-primary/40 hover:border-primary rounded-xl text-xs font-semibold text-primary hover:bg-primary/5 transition-all"
                     >
                         <Plus className="w-3.5 h-3.5" />
-                        Thêm Policy Group
+                        Thêm Điều Kiện Truy Cập
                     </button>
 
                     {/* Individual users */}

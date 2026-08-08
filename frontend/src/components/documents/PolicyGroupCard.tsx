@@ -43,7 +43,7 @@ const PolicyGroupCard: React.FC<PolicyGroupCardProps> = ({
                         {index + 1}
                     </div>
                     <span className="text-xs font-semibold text-text-primary">
-                        Policy Group {index + 1}
+                        Điều kiện truy cập {index + 1}
                     </span>
                     {!hasConditions && (
                         <span className="text-[10px] text-warning font-medium bg-warning/10 px-1.5 py-0.5 rounded-md">
@@ -60,7 +60,7 @@ const PolicyGroupCard: React.FC<PolicyGroupCardProps> = ({
                                 onRemove(group.id)
                             }}
                             className="p-1 rounded-lg text-text-placeholder hover:text-error hover:bg-error-bg/30 transition-colors"
-                            title="Xóa policy group này"
+                            title="Xóa điều kiện này"
                         >
                             <Trash2 className="w-3.5 h-3.5" />
                         </button>

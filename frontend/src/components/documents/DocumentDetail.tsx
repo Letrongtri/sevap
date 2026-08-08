@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, AlertCircle, CheckCircle } from 'lucide-react'
+import { X, AlertCircle } from 'lucide-react'
 import { useDocumentStore } from '../../store/documentStore'
 import {
     useDocument,
@@ -10,6 +10,7 @@ import LoadingSpinner from '../ui/LoadingSpinner'
 
 import DocumentDetailView from './DocumentDetailView'
 import DocumentDetailForm from './DocumentDetailForm'
+import { toast } from 'sonner'
 
 const DocumentDetail = () => {
     const activeDocumentId = useDocumentStore((d) => d.activeDocumentId)
@@ -30,21 +31,16 @@ const DocumentDetail = () => {
     // UI States
     const [isEditing, setIsEditing] = useState(false)
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-    const [formError, setFormError] = useState<string | null>(null)
-    const [formSuccess, setFormSuccess] = useState<string | null>(null)
 
     const handleCloseCard = () => {
         setActiveDocumentId(null)
         setIsAddingDocument(false)
         setIsEditing(false)
         setShowDeleteConfirm(false)
-        setFormError(null)
-        setFormSuccess(null)
     }
 
     const handleDownload = () => {
         if (!document) return
-        setFormError(null)
         downloadMutation.mutate(
             {
                 id: document.id,
@@ -55,7 +51,7 @@ const DocumentDetail = () => {
             },
             {
                 onError: (err: any) => {
-                    setFormError(
+                    toast.error(
                         err.response?.data?.detail ??
                             'Tải tệp tài liệu thất bại.'
                     )
@@ -66,16 +62,13 @@ const DocumentDetail = () => {
 
     const handleDelete = () => {
         if (!document) return
-        setFormError(null)
-        setFormSuccess(null)
-
         deleteMutation.mutate(document.id, {
             onSuccess: () => {
-                setFormSuccess('Xóa tài liệu thành công.')
+                toast.success('Xóa tài liệu thành công!')
                 handleCloseCard()
             },
             onError: (err: any) => {
-                setFormError(
+                toast.error(
                     err.response?.data?.detail ?? 'Xóa tài liệu thất bại.'
                 )
             },
@@ -103,20 +96,6 @@ const DocumentDetail = () => {
                           ? 'Chỉnh sửa thông tin tài liệu'
                           : 'Thông tin tài liệu'}
                 </h2>
-
-                {/* Banner feedback */}
-                {formError && (
-                    <div className="mt-2 p-3 bg-error-bg border border-error-border text-error-text rounded-xl text-xs flex items-start gap-2 animate-fade-in-down">
-                        <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                        <span>{formError}</span>
-                    </div>
-                )}
-                {formSuccess && (
-                    <div className="mt-2 p-3 bg-success-bg border border-success-border text-success rounded-xl text-xs flex items-start gap-2 animate-fade-in-down">
-                        <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                        <span>{formSuccess}</span>
-                    </div>
-                )}
             </div>
 
             {/* Scrollable content */}
@@ -146,8 +125,6 @@ const DocumentDetail = () => {
                         isEditing={isEditing}
                         setIsEditing={setIsEditing}
                         handleCloseCard={handleCloseCard}
-                        setFormError={setFormError}
-                        setFormSuccess={setFormSuccess}
                     />
                 ) : document ? (
                     /* --- VIEW MODE --- */
