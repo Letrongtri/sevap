@@ -11,6 +11,8 @@ from app.schemas import (
 from app.dependencies import get_activity_log_service, check_permission
 from app.core.logging import logger
 from app.core.enum import PermissionAction, PermissionResource
+from app.core.config import settings
+from app.core.limiter import limiter
 
 router = APIRouter()
 
@@ -21,6 +23,7 @@ router = APIRouter()
         PermissionResource.ACTIVITY_LOGS, PermissionAction.READ
     ))]
 )
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["tenant_logs"][0])
 async def get_tenant_activity_logs(
     request: Request,
     query: Annotated[ActivityLogQuery, Depends()],
@@ -67,6 +70,7 @@ async def get_tenant_activity_logs(
         PermissionResource.ACTIVITY_LOGS, PermissionAction.READ
     ))]
 )
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["tenant_logs"][0])
 async def get_activity_log(
     request: Request,
     log_id: str,

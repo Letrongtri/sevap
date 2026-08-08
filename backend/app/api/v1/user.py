@@ -30,13 +30,15 @@ from app.dependencies import (
 from app.core.enum import PermissionResource, PermissionAction
 from app.decorators import log_activity
 from app.core.logging import logger
+from app.core.config import settings
+from app.core.limiter import limiter
 from app.utils.request import get_client_ip, get_user_agent
 
 router = APIRouter()
 
 @router.patch("", response_model=UserResponse)
 @log_activity(action="user.update_my_profile", resource="user")
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def update_my_profile(
     request: Request,
     data: MyProfileUpdate,
@@ -70,7 +72,7 @@ async def update_my_profile(
     resource="user",
     include_request_body=False,
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def change_my_password(
     request: Request,
     data: UserUpdatePassword,
@@ -164,7 +166,7 @@ async def get_user_options(
         PermissionResource.USERS, PermissionAction.READ
     ))]
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_users(
     request: Request,
     query: Annotated[UserQuery, Depends()],
@@ -209,7 +211,7 @@ async def get_all_users(
     # meta_extractor bổ sung thêm id của user vừa tạo từ response.
     meta_extractor=lambda res, *args, **kwargs: {"created_user_id": res.id},
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def create_user(
     request: Request, 
     data: UserCreate,
@@ -239,7 +241,7 @@ async def create_user(
         PermissionResource.USERS, PermissionAction.READ
     ))]
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_user(
     request: Request, 
     user_id: str,
@@ -281,7 +283,7 @@ async def get_user(
     # UserUpdate fields tự động vào meta_data, meta_extractor bổ sung target user_id.
     meta_extractor=lambda res, *args, **kwargs: {"updated_user_id": kwargs.get("user_id")},
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def update_user(
     request: Request,
     user_id: str, 
@@ -324,7 +326,7 @@ async def update_user(
         "deleted_user_id": kwargs.get("user_id")
     }
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def delete_user(
     request: Request,
     user_id: str,
@@ -368,7 +370,7 @@ async def delete_user(
         "target_user_id": kwargs.get("user_id")
     }
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def activate_user(
     request: Request,
     user_id: str,
@@ -412,7 +414,7 @@ async def activate_user(
         "target_user_id": kwargs.get("user_id")
     }
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def deactivate_user(
     request: Request,
     user_id: str,
@@ -456,7 +458,7 @@ async def deactivate_user(
         "target_user_id": kwargs.get("user_id")
     }
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def reset_user_password(
     request: Request,
     user_id: str,

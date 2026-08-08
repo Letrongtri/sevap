@@ -8,6 +8,9 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
 from app.db.session import AsyncSessionLocal
@@ -15,6 +18,7 @@ from app.db.init_db import add_system_default_data
 
 from app.core.logging import logger
 from app.core.config import settings
+from app.core.limiter import limiter
 from app.api.v1.api import api_router
 from app.services import geoip_service
 from app.ai_brain.graph.hr_graph import build_hr_graph
@@ -82,6 +86,27 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Attach rate limiter to app state and register SlowAPIMiddleware
+app.state.limiter = limiter
+app.add_middleware(SlowAPIMiddleware)
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
+    """Handle rate limit exceeded errors with custom JSON response."""
+    client_ip = get_client_ip(request)
+    logger.warning(
+        "rate_limit_exceeded",
+        client_host=client_ip,
+        path=request.url.path,
+        detail=str(exc.detail),
+    )
+    return JSONResponse(
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        content={"detail": f"Rate limit exceeded: {exc.detail}"},
+    )
+
+
 # Add validation exception handler
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -129,7 +154,7 @@ app.add_middleware(
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 @app.get("/health")
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["health"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["health"][0])
 async def health_check(request: Request) -> Dict[str, Any]:
     """Health check endpoint with environment-specific information.
 

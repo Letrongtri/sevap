@@ -11,6 +11,8 @@ from app.schemas import (
 from app.services import JobTitleService, NotFoundError, JobTitleAlreadyExistsError
 from app.decorators import log_activity
 from app.core.logging import logger
+from app.core.config import settings
+from app.core.limiter import limiter
 from app.core.enum import PermissionAction, PermissionResource
 
 
@@ -23,7 +25,7 @@ router = APIRouter()
         PermissionResource.JOB_TITLES, PermissionAction.READ
     ))]
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_job_titles(
     request: Request,
     query: Annotated[JobTitleQuery, Depends()],
@@ -55,7 +57,7 @@ async def get_all_job_titles(
         "job_title_name": res.title_name
     }
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def create_job_title(
     request: Request, 
     data: JobTitleCreate,
@@ -83,7 +85,7 @@ async def create_job_title(
         PermissionResource.JOB_TITLES, PermissionAction.READ
     ))]
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_simple_job_titles(
     request: Request,
     job_title_service: JobTitleService = Depends(get_job_title_service),
@@ -105,7 +107,7 @@ async def get_all_simple_job_titles(
         PermissionResource.JOB_TITLES, PermissionAction.READ
     ))]
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_job_title(
     request: Request, 
     job_title_id: str,
@@ -149,7 +151,7 @@ async def get_job_title(
         "job_title_name": res.title_name
     }
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def update_job_title(
     request: Request,
     job_title_id: str, 
@@ -190,7 +192,7 @@ async def update_job_title(
         "job_title_name": res.title_name
     }
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def delete_job_title(
     request: Request,
     job_title_id: str,

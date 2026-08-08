@@ -15,12 +15,14 @@ from app.services import (
 from app.schemas import LoginResponse, LoginForm, RefreshTokenRequest, UserResponse, RefreshTokenResponse
 from app.dependencies import get_auth_service, get_current_user
 from app.core.logging import logger
+from app.core.config import settings
+from app.core.limiter import limiter
 from app.utils.request import get_client_ip, get_user_agent
 
 router = APIRouter()
 
 @router.post("/login", response_model=LoginResponse)
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["login"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["login"][0])
 async def login(
     request: Request, 
     data: LoginForm,
@@ -66,6 +68,7 @@ async def login(
         raise HTTPException(status_code=422, detail=str(ve))
 
 @router.post("/refresh", response_model=RefreshTokenResponse)
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["refresh"][0])
 async def refresh_token(
     request: Request, 
     data: RefreshTokenRequest,
@@ -107,8 +110,9 @@ async def logout(
         raise HTTPException(status_code=404, detail="User not found")
 
 @router.get("/me", response_model=UserResponse)
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["login"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["me"][0])
 async def get_current_user(
+    request: Request,
     current_user=Depends(get_current_user),
     auth_service: AuthService = Depends(get_auth_service),
 ):

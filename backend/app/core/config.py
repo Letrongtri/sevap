@@ -225,8 +225,15 @@ class Settings:
             "messages": ["50 per minute"],
             "register": ["10 per hour"],
             "login": ["20 per minute"],
+            "refresh": ["30 per minute"],
+            "me": ["60 per minute"],
+            "documents": ["30 per minute"],
+            "create_user": ["10 per minute"],
             "root": ["10 per minute"],
-            "health": ["20 per minute"],
+            "health": ["60 per minute"],
+            "tenant_user_sessions": ["30 per minute"],
+            "update_tenant": ["10 per minute"],
+            "tenant_logs": ["30 per minute"],
         }
 
         # Update rate limit endpoints from environment variables

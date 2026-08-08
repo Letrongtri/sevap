@@ -81,8 +81,6 @@ class PromptTemplateService:
             existing.description = data.description
         if data.content is not None:
             existing.content = data.content
-        if data.is_active is not None:
-            existing.is_active = data.is_active
         if data.type is not None:
             existing.type = data.type
 

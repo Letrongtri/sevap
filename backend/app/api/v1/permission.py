@@ -4,6 +4,8 @@ from app.services import PermissionService
 from app.schemas import PermissionResponse
 from app.dependencies import get_permission_service, check_permission
 from app.core.logging import logger
+from app.core.config import settings
+from app.core.limiter import limiter
 from app.core.enum import PermissionAction, PermissionResource
 
 router = APIRouter()
@@ -15,7 +17,7 @@ router = APIRouter()
         PermissionResource.PERMISSIONS, PermissionAction.READ
     ))]
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_permissions(
     request: Request,
     permission_service: PermissionService = Depends(get_permission_service),

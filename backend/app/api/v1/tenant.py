@@ -6,6 +6,8 @@ from app.decorators import log_activity
 from app.core.logging import logger
 from app.core.enum import DefaultRole
 from app.dependencies import check_role
+from app.core.config import settings
+from app.core.limiter import limiter
 
 router = APIRouter()
 
@@ -19,6 +21,7 @@ router = APIRouter()
     },
     is_global=True
 )
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["register"][0])
 async def register_tenant(
     request: Request,
     data: TenantCreate,
@@ -44,6 +47,7 @@ async def register_tenant(
     resource="tenant",
     meta_extractor=lambda res, *args, **kwargs: {"tenant_name": res.company_name}
 )
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["update_tenant"][0])
 async def update_tenant(
     request: Request,
     data: TenantUpdate,
@@ -74,6 +78,7 @@ async def update_tenant(
     resource="tenant",
     meta_extractor=lambda res, *args, **kwargs: {"tenant_name": res.company_name}
 )
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["update_tenant"][0])
 async def soft_delete_tenant(
     request: Request,
     background_tasks: BackgroundTasks,
@@ -91,6 +96,7 @@ async def soft_delete_tenant(
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Failed to delete tenant")
 
 @router.get("/info", response_model=TenantResponse)
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["me"][0])
 async def get_tenant_info(
     tenant_service: TenantService = Depends(get_tenant_service),
     current_user=Depends(get_current_user)

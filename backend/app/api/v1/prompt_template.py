@@ -9,6 +9,8 @@ from app.schemas import (
 from app.dependencies import get_prompt_template_service, check_permission
 from app.decorators import log_activity
 from app.core.logging import logger
+from app.core.config import settings
+from app.core.limiter import limiter
 from app.core.enum import PermissionAction, PermissionResource
 
 router = APIRouter()
@@ -20,7 +22,7 @@ router = APIRouter()
         PermissionResource.PROMPT_TEMPLATES, PermissionAction.READ
     ))]
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_prompt_templates(
     request: Request,
     query: Annotated[PromptTemplateQuery, Depends()],
@@ -52,7 +54,7 @@ async def get_all_prompt_templates(
         "prompt_template_type": res.type
     }
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def create_prompt_template(
     request: Request, 
     data: PromptTemplateCreate,
@@ -78,7 +80,7 @@ async def create_prompt_template(
         PermissionResource.PROMPT_TEMPLATES, PermissionAction.READ
     ))]
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_prompt_template(
     request: Request, 
     prompt_template_id: str,
@@ -122,7 +124,7 @@ async def get_prompt_template(
         "prompt_template_type": res.type
     }
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def update_prompt_template(
     request: Request,
     prompt_template_id: str, 
@@ -159,7 +161,7 @@ async def update_prompt_template(
         "prompt_template_type": res.type
     }
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def toggle_prompt_template_status(
     request: Request,
     prompt_template_id: str, 
@@ -195,7 +197,7 @@ async def toggle_prompt_template_status(
         "prompt_template_type": res.type
     }
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def delete_prompt_template(
     request: Request,
     prompt_template_id: str,

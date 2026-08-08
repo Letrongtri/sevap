@@ -11,6 +11,8 @@ from app.schemas import (
 from app.services import DepartmentService, NotFoundError, DepartmentAlreadyExistsError
 from app.decorators import log_activity
 from app.core.logging import logger
+from app.core.config import settings
+from app.core.limiter import limiter
 from app.core.enum import PermissionAction, PermissionResource
 
 
@@ -23,7 +25,7 @@ router = APIRouter()
         PermissionResource.DEPARTMENTS, PermissionAction.READ
     ))]
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_departments(
     request: Request,
     pagination: Annotated[PaginationQuery, Depends()],
@@ -57,7 +59,7 @@ async def get_all_departments(
         "department_name": res.name
     }
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def create_department(
     request: Request, 
     data: DepartmentCreate,
@@ -88,7 +90,7 @@ async def create_department(
         PermissionResource.DEPARTMENTS, PermissionAction.READ
     ))]
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_simple_departments(
     request: Request,
     department_service: DepartmentService = Depends(get_department_service),
@@ -110,7 +112,7 @@ async def get_all_simple_departments(
         PermissionResource.DEPARTMENTS, PermissionAction.READ
     ))]
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_department(
     request: Request, 
     department_id: str,
@@ -156,7 +158,7 @@ async def get_department(
         "department_name": res.name
     }
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def update_department(
     request: Request,
     department_id: str, 
@@ -195,7 +197,7 @@ async def update_department(
         "department_name": res.name
     }
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def delete_department(
     request: Request,
     department_id: str,

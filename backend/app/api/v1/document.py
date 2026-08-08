@@ -28,6 +28,7 @@ from app.dependencies import get_document_service, check_permission
 from app.decorators import log_activity
 from app.core.logging import logger
 from app.core.config import settings
+from app.core.limiter import limiter
 from app.core.enum import AccessLevel, PermissionAction, PermissionResource
 
 router = APIRouter()
@@ -48,7 +49,7 @@ router = APIRouter()
         "access_level": res.access_level
     }
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["upload_document"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["documents"][0])
 async def upload_document(
     request: Request,
     background_tasks: BackgroundTasks,
@@ -121,7 +122,7 @@ async def upload_document(
         PermissionResource.DOCUMENTS, PermissionAction.READ
     ))]
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["documents"][0])
 async def get_all_documents(
     request: Request,
     query: Annotated[DocumentQuery, Depends()],
@@ -152,7 +153,7 @@ async def get_all_documents(
         PermissionResource.DOCUMENTS, PermissionAction.READ
     ))]
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["documents"][0])
 async def get_document(
     request: Request, 
     document_id: str,
@@ -249,7 +250,7 @@ async def get_document_file(
         "title": res.title
     }
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["upload_document"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["documents"][0])
 async def update_document(
     request: Request,
     document_id: str,
@@ -299,7 +300,7 @@ async def update_document(
         "title": res.title
     }
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["documents"][0])
 async def delete_document(
     request: Request,
     document_id: str,

@@ -21,12 +21,14 @@ from app.services import (
 )
 from app.decorators import log_activity
 from app.core.logging import logger
+from app.core.config import settings
+from app.core.limiter import limiter
 
 
 router = APIRouter()
 
 @router.get("", response_model=ConversationPaginatedResponse)
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["chat"][0])
 async def get_all_personal_conversations(
     request: Request,
     query: Annotated[ConversationQuery, Depends()],
@@ -71,7 +73,7 @@ async def get_all_personal_conversations(
         "prompt_length": len(kwargs.get("data").content)
     }
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["chat_stream"][0])
 async def send_message(
     request: Request,
     data: MessageSend,
@@ -109,7 +111,7 @@ async def send_message(
 
 
 @router.get("/{conversation_id}", response_model=ConversationDetailResponse)
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["chat"][0])
 async def get_conversation(
     request: Request, 
     conversation_id: str,
@@ -144,7 +146,7 @@ async def get_conversation(
         "title": kwargs.get("data").title
     }
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["chat"][0])
 async def update_conversation(
     request: Request,
     conversation_id: str, 
@@ -178,7 +180,7 @@ async def update_conversation(
         "conversation_id": kwargs.get("conversation_id")
     }
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["chat"][0])
 async def delete_conversation(
     request: Request,
     conversation_id: str,
@@ -203,7 +205,7 @@ async def delete_conversation(
         raise HTTPException(status_code=422, detail="Failed to delete conversation")
 
 @router.get("/{conversation_id}/messages", response_model=List[MessageResponse])
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["messages"][0])
 async def get_messages_by_conversation_id(
     request: Request,
     conversation_id: str,

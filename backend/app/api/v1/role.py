@@ -19,6 +19,8 @@ from app.schemas import (
 from app.dependencies import get_role_service, check_permission
 from app.decorators import log_activity
 from app.core.logging import logger
+from app.core.config import settings
+from app.core.limiter import limiter
 from app.core.enum import PermissionAction, PermissionResource
 
 router = APIRouter()
@@ -30,7 +32,7 @@ router = APIRouter()
         PermissionResource.ROLES, PermissionAction.READ
     ))]
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_roles(
     request: Request,
     query: Annotated[RoleQuery, Depends()],
@@ -75,7 +77,7 @@ async def get_all_roles(
         "role_name": res.name
     }
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def create_role(
     request: Request, 
     data: RoleCreate,
@@ -103,7 +105,7 @@ async def create_role(
         PermissionResource.ROLES, PermissionAction.READ
     ))]
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_all_simple_roles(
     request: Request,
     role_service: RoleService = Depends(get_role_service),
@@ -126,7 +128,7 @@ async def get_all_simple_roles(
         PermissionResource.ROLES, PermissionAction.READ
     ))]
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def get_role(
     request: Request, 
     role_id: str,
@@ -170,7 +172,7 @@ async def get_role(
         "role_name": res.name
     }
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def update_role(
     request: Request,
     role_id: str, 
@@ -207,7 +209,7 @@ async def update_role(
         "role_name": res.name
     }
 )
-# @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["create_user"][0])
 async def delete_role(
     request: Request,
     role_id: str,

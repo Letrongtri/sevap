@@ -6,12 +6,14 @@ from fastapi import (
 from app.core.enum import DefaultRole
 from app.services import UserSessionService, NotFoundError
 from app.schemas import (
-    UserSessionResponse, PaginationQuery, UserSessionAdminQuery,
+    PaginationQuery, UserSessionAdminQuery,
     UserSessionAdminPaginatedResponse
 )
 from app.dependencies import get_user_session_service, check_role
 from app.core.logging import logger
 from app.utils.request import get_client_ip, get_user_agent
+from app.core.config import settings
+from app.core.limiter import limiter
 
 router = APIRouter()
 
@@ -52,6 +54,7 @@ async def revoke_session(
     response_model=UserSessionAdminPaginatedResponse,
     dependencies=[Depends(check_role(DefaultRole.ADMIN))]
 )
+@limiter.limit(settings.RATE_LIMIT_ENDPOINTS["tenant_user_sessions"][0])
 async def get_tenant_user_sessions(
     request: Request,
     query: Annotated[UserSessionAdminQuery, Depends()],
