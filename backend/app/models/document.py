@@ -6,8 +6,6 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.associationproxy import association_proxy
 from app.db.base_class import Base
 from app.models.document_user_access import DocumentUserAccess
-from app.models.document_role_access import DocumentRoleAccess
-from app.models.document_department_access import DocumentDepartmentAccess
 
 class Document(Base):
     __tablename__ = "documents"
@@ -34,14 +32,11 @@ class Document(Base):
     tenant = relationship("Tenants", back_populates="documents")
     uploader = relationship("User", back_populates="documents")
     document_chunks = relationship("DocumentChunk", back_populates="document", cascade="all, delete-orphan")
-    role_accesses = relationship("DocumentRoleAccess", back_populates="document", cascade="all, delete-orphan")
     embedding_jobs = relationship("EmbeddingJob", back_populates="document", cascade="all, delete-orphan")
     user_accesses = relationship("DocumentUserAccess", back_populates="document", cascade="all, delete-orphan")
-    department_accesses = relationship("DocumentDepartmentAccess", back_populates="document", cascade="all, delete-orphan")
+    document_access_policies = relationship("DocumentAccessPolicy", back_populates="document", cascade="all, delete-orphan")
     
     target_users = association_proxy("user_accesses", "user", creator=lambda u: DocumentUserAccess(user=u))
-    roles = association_proxy("role_accesses", "role", creator=lambda r: DocumentRoleAccess(role=r))
-    departments = association_proxy("department_accesses", "department", creator=lambda d: DocumentDepartmentAccess(department=d))
 
     __table_args__ = (
         Index(

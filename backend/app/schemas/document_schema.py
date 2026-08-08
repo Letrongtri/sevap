@@ -1,16 +1,44 @@
 from pydantic import BaseModel, ConfigDict, model_validator, field_validator
 from datetime import datetime
 
-from app.core.enum import AccessLevel
+from app.core.enum import AccessLevel, DocumentAccessPolicyConditionType
 from app.schemas.department_schema import DepartmentSimple
+from app.schemas.job_title_schema import JobTitleSimple
 from app.schemas.role_schema import RoleSimple
 from app.schemas.user_schema import UserSimple
 from app.schemas.base_schema import PaginationResponse
 
 
+class AccessPolicyConditionCreate(BaseModel):
+    condition_type: DocumentAccessPolicyConditionType
+    condition_value_id: str
+
+class DocumentAccessPolicyCreate(BaseModel):
+    conditions: list[AccessPolicyConditionCreate]
+
+class AccessPolicyConditionResponse(BaseModel):
+    id: str
+    policy_id: str
+    condition_type: str
+    condition_value_id: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+class DocumentAccessPolicyResponse(BaseModel):
+    id: str
+    document_id: str
+    tenant_id: str
+    created_by: str | None = None
+    created_at: datetime
+    conditions: list[AccessPolicyConditionResponse] = []
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class DocumentQuery(BaseModel):
     query: str | None = None
     department_id: str | None = None
+    job_title_id: str | None = None
     access_level: str | None = None
     effective_date: datetime | None = None
     role_id: str | None = None
@@ -18,23 +46,21 @@ class DocumentQuery(BaseModel):
 
 class DocumentUpdate(BaseModel):
     access_level: AccessLevel | None = None
-    department_ids: list[str] | None = None
     title: str | None = None
     category: str | None = None
     effective_date: datetime | None = None
-    role_access: list[str] | None = None
     target_user_ids: list[str] | None = None
+    policies: list[DocumentAccessPolicyCreate] | None = None
 
     @model_validator(mode="after")
     def validate_at_least_one_field(self):
         values = [
             self.access_level,
-            self.department_ids,
             self.title,
             self.category,
             self.effective_date,
-            self.role_access,
-            self.target_user_ids
+            self.target_user_ids,
+            self.policies
         ]
 
         has_value = any(
@@ -87,10 +113,15 @@ class DocumentResponse(BaseModel):
     updated_at: datetime
 
     uploader: UserSimple | None = None
-    departments: list[DepartmentSimple] = []
     document_chunks: list[DocumentChunkResponse] = []
     target_users: list[UserSimple] = []
+    document_access_policies: list[DocumentAccessPolicyResponse] = []
+
+    # BUG 3 fix: khai báo rõ các field được populate bởi _to_document_response
+    # để Pydantic serialize chúng ra JSON response
     roles: list[RoleSimple] = []
+    departments: list[DepartmentSimple] = []
+    job_titles: list[JobTitleSimple] = []
 
     @model_validator(mode="before")
     @classmethod
@@ -118,15 +149,7 @@ class DocumentResponse(BaseModel):
             else:
                 loaded_data["target_users"] = []
                 
-            if "role_accesses" not in state.unloaded:
-                loaded_data["roles"] = data.roles
-            else:
-                loaded_data["roles"] = []
-
-            if "department_accesses" not in state.unloaded:
-                loaded_data["departments"] = data.departments
-            else:
-                loaded_data["departments"] = []
+            loaded_data["document_access_policies"] = getattr(data, "document_access_policies", [])
                 
             return loaded_data
         return data
@@ -136,3 +159,4 @@ class DocumentResponse(BaseModel):
 class DocumentPaginatedResponse(BaseModel):
     documents: list[DocumentResponse]
     pagination: PaginationResponse
+

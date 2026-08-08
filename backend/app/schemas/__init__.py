@@ -10,7 +10,9 @@ from .role_schema import (
 from .permission_schema import PermissionResponse
 from .document_schema import (
     DocumentQuery, DocumentUpdate, DocumentChunkResponse, 
-    DocumentResponse, DocumentPaginatedResponse
+    DocumentResponse, DocumentPaginatedResponse, 
+    DocumentAccessPolicyCreate, DocumentAccessPolicyResponse,
+    AccessPolicyConditionCreate, AccessPolicyConditionResponse
 )
 from .conversation_schema import (
     ConversationUpdate, ConversationResponse, 

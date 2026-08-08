@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from app.core.enum import AccessLevel
 
 ACCESS_LEVEL_HIERARCHY = {
@@ -32,6 +32,7 @@ class PARContext:
     role_access_level: str          # access level cao nhất trong các role của user
     role_ids: list[str]
     department_ids: list[str]
+    job_title_ids: list[str] = field(default_factory=list)
 
     def allowed_access_levels(self) -> list[str]:
         """Trả về tất cả access levels mà user này được phép đọc."""

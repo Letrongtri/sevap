@@ -1,4 +1,5 @@
-from typing import Annotated
+from typing import Annotated, List
+import json
 from fastapi import (
     APIRouter, 
     HTTPException, 
@@ -11,7 +12,6 @@ from fastapi import (
 )
 from fastapi.responses import FileResponse
 from pathlib import Path
-from typing import List
 from datetime import datetime
 
 from app.services import DocumentService, NotFoundError
@@ -21,7 +21,8 @@ from app.schemas import (
     DocumentUpdate,
     DocumentQuery,
     DocumentPaginatedResponse,
-    PaginationQuery
+    PaginationQuery,
+    DocumentAccessPolicyCreate
 )
 from app.dependencies import get_document_service, check_permission
 from app.decorators import log_activity
@@ -53,12 +54,11 @@ async def upload_document(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     access_level: AccessLevel = Form(..., description="Document's access level"),
-    department_ids: List[str] | None = Form(None, description="Document's department scopes"),
+    policies: str | None = Form(None, description="JSON string list of DocumentAccessPolicyCreate objects"),
     title: str | None = Form(None, description="Document's title"),
     category: str | None = Form(None, description="Document's category"),
     target_user_ids: List[str] | None = Form(None, description="Document's target user ids"),
     effective_date: datetime | None = Form(None, description="Document's effective date"),
-    role_access: List[str] | None = Form(None, description="User's role to access document"),
     document_service: DocumentService = Depends(get_document_service),
 ):
     file_ext = Path(file.filename).suffix.lower() if file.filename else ""
@@ -71,24 +71,31 @@ async def upload_document(
     user_id = request.state.user["id"]
     tenant_id = request.state.tenant_id
 
+    policies_obj = None
+    if policies:
+        try:
+            raw_policies = json.loads(policies)
+            policies_obj = [DocumentAccessPolicyCreate.model_validate(p) for p in raw_policies]
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Invalid policies JSON format: {str(e)}")
+
     try:
         return await document_service.upload(
             file=file,
             tenant_id=tenant_id,
             uploader_id=user_id,
             access_level=access_level,
-            department_ids=department_ids,
+            policies=policies_obj,
             title=title,
             category=category,
             target_user_ids=target_user_ids,
             effective_date=effective_date,
-            role_access=role_access,
             background_tasks=background_tasks
         )
     except MissingRequiredFieldsError:
         raise HTTPException(
             status_code=422,
-            detail="Private documents require at least one of: department_ids, role_access, or target_user_ids"
+            detail="Private documents require at least one of: policies, target_user_ids"
         )
     except OnProcessingError:
         raise HTTPException(
@@ -96,8 +103,8 @@ async def upload_document(
             detail="This document is already being processed. Please wait before uploading again."
         )
     except NotFoundError:
-        logger.error("document_access_entity_not_found", role_access=role_access, department_ids=department_ids)
-        raise HTTPException(status_code=404, detail="Role, department, or user not found")
+        logger.error("document_access_entity_not_found")
+        raise HTTPException(status_code=404, detail="Role, department, user, or job title not found")
     except Exception:
         logger.error(
             "upload_document_failed", 
@@ -258,10 +265,9 @@ async def update_document(
             user_id=user_id,
             document_id=document_id,
             access_level=data.access_level,
-            department_ids=data.department_ids,
+            policies=data.policies,
             title=data.title,
             category=data.category,
-            role_access=data.role_access,
             effective_date=data.effective_date,
             target_user_ids=data.target_user_ids
         )

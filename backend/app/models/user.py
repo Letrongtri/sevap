@@ -40,6 +40,7 @@ class User(Base):
     )
     job_title = relationship("JobTitle", back_populates="users")
     document_accesses = relationship("DocumentUserAccess", back_populates="user", cascade="all, delete-orphan")
+    created_document_access_policies = relationship("DocumentAccessPolicy", back_populates="creator", cascade="all, delete-orphan")
 
     __table_args__ = (
         Index("uq_user_tenant_employee_code_active", "tenant_id", "employee_code", unique=True, postgresql_where=text("is_deleted = false")),

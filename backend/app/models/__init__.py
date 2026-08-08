@@ -2,7 +2,6 @@ from app.models.activity_log import ActivityLog
 from app.models.conversation import Conversation
 from app.models.department import Department
 from app.models.document_chunks import DocumentChunk
-from app.models.document_role_access import DocumentRoleAccess
 from app.models.document import Document
 from app.models.embedding_job import EmbeddingJob
 from app.models.job_title import JobTitle
@@ -15,16 +14,16 @@ from app.models.user_session import UserSession
 from app.models.user import User
 from app.models.vector_embedding import VectorEmbedding
 from app.models.document_user_access import DocumentUserAccess
-from app.models.document_department_access import DocumentDepartmentAccess
 from app.models.tenants import Tenants
 from app.models.prompt_template import PromptTemplate
+from app.models.document_access_policy import DocumentAccessPolicy
+from app.models.access_policy_condition import AccessPolicyCondition
 
 __all__ = [
     "ActivityLog",
     "Conversation",
     "Department",
     "DocumentChunk",
-    "DocumentRoleAccess",
     "Document",
     "EmbeddingJob",
     "JobTitle",
@@ -37,7 +36,8 @@ __all__ = [
     "User",
     "VectorEmbedding",
     "DocumentUserAccess",
-    "DocumentDepartmentAccess",
     "Tenants",
-    "PromptTemplate"
+    "PromptTemplate",
+    "DocumentAccessPolicy",
+    "AccessPolicyCondition"
 ]

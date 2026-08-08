@@ -29,6 +29,7 @@ class Tenants(Base):
     user_sessions = relationship("UserSession", back_populates="tenant", cascade="all, delete-orphan")
     document_chunks = relationship("DocumentChunk", back_populates="tenant", cascade="all, delete-orphan")
     vector_embeddings = relationship("VectorEmbedding", back_populates="tenant", cascade="all, delete-orphan")
+    document_access_policies = relationship("DocumentAccessPolicy", back_populates="tenant", cascade="all, delete-orphan")
 
     __table_args__ = (
         Index("uq_tenant_domain_active", "tenant_domain", unique=True, postgresql_where=text("status != 'deleted'")),

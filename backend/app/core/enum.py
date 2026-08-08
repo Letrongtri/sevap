@@ -97,3 +97,8 @@ class PromptType(str, Enum):
     RESPONSE_CITATION = "response_citation"
     FALLBACK_RESPONSE = "fallback_response"
     SECURITY_KILL_SWITCH_RESPONSE = "security_kill_switch_response"
+
+class DocumentAccessPolicyConditionType(str, Enum):
+    ROLES = "roles"
+    DEPARTMENTS = "departments"
+    JOB_TITLES = "job_titles"

@@ -2,13 +2,13 @@ from datetime import datetime
 from typing import Set, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import update, or_, func, bindparam, text
+from sqlalchemy import update, or_, and_, func, bindparam, text
 from sqlalchemy.orm import selectinload
 
-from app.core.enum import DocumentStatus
+from app.core.enum import DocumentStatus, DocumentAccessPolicyConditionType
 from app.models import (
     Document, DocumentChunk, DocumentUserAccess, 
-    DocumentRoleAccess, DocumentDepartmentAccess, User
+    DocumentAccessPolicy, AccessPolicyCondition, User
 )
 
 class DocumentRepository:
@@ -19,12 +19,7 @@ class DocumentRepository:
         try:
             self.db.add(document)
             await self.db.commit()
-            return await self.get_document_by_id(
-                document.id,
-                get_roles=True,
-                get_users=True,
-                get_departments=True
-            )
+            return await self.get_document_by_id(document.id, get_users=True)
         except Exception as e:
             await self.db.rollback()
             raise e
@@ -51,11 +46,7 @@ class DocumentRepository:
             raise e
         
     async def get_document_by_id(
-        self, document_id: str, 
-        get_chunks: bool = False, 
-        get_roles: bool = False, 
-        get_users: bool = False, 
-        get_departments: bool = False
+        self, document_id: str, get_chunks: bool = False, get_users: bool = False
     ):
         stmt = select(Document).where(
             Document.id == document_id,
@@ -63,11 +54,6 @@ class DocumentRepository:
         )
 
         options = []
-        if get_roles:
-            options.append(
-                selectinload(Document.role_accesses)
-                .selectinload(DocumentRoleAccess.role)
-            )
         if get_users:
             options.append(
                 selectinload(Document.user_accesses)
@@ -79,15 +65,16 @@ class DocumentRepository:
                 .selectinload(DocumentUserAccess.user)
                 .selectinload(User.job_title)
             )
-        if get_departments:
-            options.append(
-                selectinload(Document.department_accesses)
-                .selectinload(DocumentDepartmentAccess.department)
-            )
         if get_chunks:
             options.append(selectinload(Document.document_chunks))
 
         options.append(selectinload(Document.uploader))
+        # BUG 1 fix: always eager-load access policies + conditions
+        # để tránh MissingGreenlet khi _to_document_response đọc chúng
+        options.append(
+            selectinload(Document.document_access_policies)
+            .selectinload(DocumentAccessPolicy.conditions)
+        )
 
         stmt = stmt.options(*options)
         # populate_existing=True: buộc reload từ DB ngay cả khi object đã có
@@ -105,12 +92,10 @@ class DocumentRepository:
         )
 
         options = [
-            selectinload(Document.role_accesses)
-            .selectinload(DocumentRoleAccess.role),
+            selectinload(Document.document_access_policies)
+            .selectinload(DocumentAccessPolicy.conditions),
             selectinload(Document.user_accesses)
             .selectinload(DocumentUserAccess.user),
-            selectinload(Document.department_accesses)
-            .selectinload(DocumentDepartmentAccess.department)
         ]
 
         result = await self.db.execute(stmt.options(*options))
@@ -166,11 +151,11 @@ class DocumentRepository:
     async def get_all_documents(
         self, tenant_id: str, query: str = None, 
         department_id: str = None, role_id: str = None,
-        user_id: str = None, effective_date: datetime = None, 
-        access_level: str = None, is_deleted: bool = False, 
-        limit: int = 10, skip: int = 0,
+        user_id: str = None, job_title_id: str = None,
+        effective_date: datetime = None, access_level: str = None, 
+        is_deleted: bool = False, limit: int = 10, skip: int = 0,
         allowed_ids: Optional[Set[str]] = None
-    ) -> tuple[list[Document], str]:
+    ) -> tuple[list[Document], int]:
         stmt = select(Document).where(
             Document.tenant_id == tenant_id,
             Document.is_deleted == is_deleted
@@ -194,16 +179,39 @@ class DocumentRepository:
         if department_id is not None:
             stmt = (
                 stmt.where(
-                    Document.department_accesses.any(
-                        DocumentDepartmentAccess.department_id == department_id
+                    Document.document_access_policies.any(
+                        DocumentAccessPolicy.conditions.any(
+                            and_(
+                                AccessPolicyCondition.condition_type == DocumentAccessPolicyConditionType.DEPARTMENTS.value,
+                                AccessPolicyCondition.condition_value_id == department_id
+                            )
+                        )
                     )
                 )
             )
         if role_id is not None:
             stmt = (
                 stmt.where(
-                    Document.role_accesses.any(
-                        DocumentRoleAccess.role_id == role_id
+                    Document.document_access_policies.any(
+                        DocumentAccessPolicy.conditions.any(
+                            and_(
+                                AccessPolicyCondition.condition_type == DocumentAccessPolicyConditionType.ROLES.value,
+                                AccessPolicyCondition.condition_value_id == role_id
+                            )
+                        )
+                    )
+                )
+            )
+        if job_title_id is not None:
+            stmt = (
+                stmt.where(
+                    Document.document_access_policies.any(
+                        DocumentAccessPolicy.conditions.any(
+                            and_(
+                                AccessPolicyCondition.condition_type == DocumentAccessPolicyConditionType.JOB_TITLES.value,
+                                AccessPolicyCondition.condition_value_id == job_title_id
+                            )
+                        )
                     )
                 )
             )
@@ -230,12 +238,8 @@ class DocumentRepository:
         stmt = stmt.options(
             selectinload(Document.uploader),
             (
-                selectinload(Document.department_accesses)
-                .selectinload(DocumentDepartmentAccess.department)
-            ),
-            (
-                selectinload(Document.role_accesses)
-                .selectinload(DocumentRoleAccess.role)
+                selectinload(Document.document_access_policies)
+                .selectinload(DocumentAccessPolicy.conditions)
             ),
             (
                 selectinload(Document.user_accesses)

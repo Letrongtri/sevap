@@ -1,14 +1,17 @@
 import asyncio
 import uuid_utils
 from typing import List, Set
-from sqlalchemy import and_, or_, text
+from sqlalchemy import and_, or_, text, case, func, literal
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
 from app.ai_brain.schemas import ACCESS_LEVEL_HIERARCHY, PARContext, RetrievalResult, UserSecurityContext
-from app.core.enum import AccessLevel, DocumentStatus, LogLevel
-from app.models import Document, DocumentRoleAccess, DocumentUserAccess, User, UserRole, DocumentDepartmentAccess, ActivityLog
+from app.core.enum import AccessLevel, DocumentStatus, LogLevel, DocumentAccessPolicyConditionType
+from app.models import (
+    Document, DocumentUserAccess, User, UserRole, 
+    DocumentAccessPolicy, AccessPolicyCondition, ActivityLog
+)
 
 
 def _format_vector(embedding: List[float] | list) -> str | None:
@@ -66,6 +69,7 @@ class PARRepository:
                 highest_level = AccessLevel.PUBLIC
                 role_ids: list[str] = []
                 department_ids: list[str] = []
+                job_title_ids: list[str] = []
 
                 if user.role_associations:
                     valid_roles = [r.role for r in user.role_associations if r.role]
@@ -78,6 +82,7 @@ class PARRepository:
                     role_ids = [r.role_id for r in user.role_associations]
 
                 department_ids = [user.department_id] if user.department_id else []
+                job_title_ids = [user.job_title_id] if getattr(user, "job_title_id", None) else []
 
                 return PARContext(
                     user_id=user_id,
@@ -85,6 +90,7 @@ class PARRepository:
                     role_ids=role_ids,
                     role_access_level=highest_level,
                     department_ids=department_ids,
+                    job_title_ids=job_title_ids,
                 )
             except Exception as e:
                 try:
@@ -151,66 +157,73 @@ class PARRepository:
                     res_managerial = await self.db.execute(stmt_managerial)
                     allowed_ids.update({row[0] for row in res_managerial.fetchall()})
 
-                # NHÁNH 3: TÀI LIỆU PRIVATE
-                ## Điều kiện 1: Là người upload
-                stmt_private_base = select(Document.id).where(
+                # NHÁNH 3: TÀI LIỆU PRIVATE (Hợp của 2 nguồn cấp quyền)
+                # Nguồn 1: Uploader OR explicit DocumentUserAccess
+                stmt_private_direct = select(Document.id).outerjoin(
+                    DocumentUserAccess, DocumentUserAccess.document_id == Document.id
+                ).where(
                     and_(
                         Document.tenant_id == ctx.tenant_id,
                         Document.is_deleted == False,
                         Document.status == DocumentStatus.DONE,
                         Document.access_level == AccessLevel.PRIVATE,
-                        or_(Document.uploader_id == ctx.user_id)
+                        or_(
+                            Document.uploader_id == ctx.user_id,
+                            DocumentUserAccess.user_id == ctx.user_id
+                        )
                     )
                 )
-                res_private_base = await self.db.execute(stmt_private_base)
-                allowed_ids.update({row[0] for row in res_private_base.fetchall()})
+                res_private_direct = await self.db.execute(stmt_private_direct)
+                allowed_ids.update({row[0] for row in res_private_direct.fetchall()})
 
-                ## Điều kiện 2: Gán Explicit Quyền riêng cho User qua document_user_access
-                stmt_private_user = select(DocumentUserAccess.document_id).join(
-                    Document, Document.id == DocumentUserAccess.document_id
-                ).where(
-                    and_(
-                        Document.tenant_id == ctx.tenant_id,
-                        DocumentUserAccess.user_id == ctx.user_id,
-                        Document.is_deleted == False,
-                        Document.status == DocumentStatus.DONE,
-                        Document.access_level == AccessLevel.PRIVATE
-                    )
-                )
-                res_private_user = await self.db.execute(stmt_private_user)
-                allowed_ids.update({row[0] for row in res_private_user.fetchall()})
-
-                ## Điều kiện 3: Gán Explicit Quyền riêng cho Role (Ví dụ: HR chuyên trách)
+                # Nguồn 2: Policy Groups (Policy-based AND logic inside each group)
+                match_conditions = []
                 if ctx.role_ids:
-                    stmt_private_role = select(DocumentRoleAccess.document_id).join(
-                        Document, Document.id == DocumentRoleAccess.document_id
-                    ).where(
+                    match_conditions.append(
                         and_(
-                            Document.tenant_id == ctx.tenant_id,
-                            DocumentRoleAccess.role_id.in_(ctx.role_ids),
-                            Document.is_deleted == False,
-                            Document.status == DocumentStatus.DONE,
-                            Document.access_level == AccessLevel.PRIVATE
+                            AccessPolicyCondition.condition_type == DocumentAccessPolicyConditionType.ROLES.value,
+                            AccessPolicyCondition.condition_value_id.in_(ctx.role_ids)
                         )
                     )
-                    res_private_role = await self.db.execute(stmt_private_role)
-                    allowed_ids.update({row[0] for row in res_private_role.fetchall()})
-
-                ## Điều kiện 4: Gán Explicit Quyền riêng cho Department (Ví dụ: Phòng Marketing)
                 if ctx.department_ids:
-                    stmt_private_department = select(DocumentDepartmentAccess.document_id).join(
-                        Document, Document.id == DocumentDepartmentAccess.document_id
-                    ).where(
+                    match_conditions.append(
+                        and_(
+                            AccessPolicyCondition.condition_type == DocumentAccessPolicyConditionType.DEPARTMENTS.value,
+                            AccessPolicyCondition.condition_value_id.in_(ctx.department_ids)
+                        )
+                    )
+                if ctx.job_title_ids:
+                    match_conditions.append(
+                        and_(
+                            AccessPolicyCondition.condition_type == DocumentAccessPolicyConditionType.JOB_TITLES.value,
+                            AccessPolicyCondition.condition_value_id.in_(ctx.job_title_ids)
+                        )
+                    )
+
+                if match_conditions:
+                    user_match_expr = case((or_(*match_conditions), 1), else_=None)
+                else:
+                    user_match_expr = case((literal(False), 1), else_=None)
+
+                stmt_private_policy = (
+                    select(DocumentAccessPolicy.document_id)
+                    .join(Document, Document.id == DocumentAccessPolicy.document_id)
+                    .join(AccessPolicyCondition, AccessPolicyCondition.policy_id == DocumentAccessPolicy.id)
+                    .where(
                         and_(
                             Document.tenant_id == ctx.tenant_id,
-                            DocumentDepartmentAccess.department_id.in_(ctx.department_ids),
                             Document.is_deleted == False,
                             Document.status == DocumentStatus.DONE,
                             Document.access_level == AccessLevel.PRIVATE
                         )
                     )
-                    res_private_department = await self.db.execute(stmt_private_department)
-                    allowed_ids.update({row[0] for row in res_private_department.fetchall()})
+                    .group_by(DocumentAccessPolicy.id, DocumentAccessPolicy.document_id)
+                    .having(
+                        func.count(AccessPolicyCondition.id) == func.count(user_match_expr)
+                    )
+                )
+                res_private_policy = await self.db.execute(stmt_private_policy)
+                allowed_ids.update({row[0] for row in res_private_policy.fetchall()})
 
                 return allowed_ids
             except Exception as e:

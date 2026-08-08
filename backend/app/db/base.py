@@ -4,7 +4,6 @@ from app.models import (
     Conversation, 
     Department,
     DocumentChunk, 
-    DocumentRoleAccess, 
     Document, 
     EmbeddingJob, 
     JobTitle,
@@ -17,7 +16,8 @@ from app.models import (
     User, 
     VectorEmbedding,
     DocumentUserAccess,
-    DocumentDepartmentAccess,
     Tenants,
-    PromptTemplate
+    PromptTemplate,
+    DocumentAccessPolicy,
+    AccessPolicyCondition
 )

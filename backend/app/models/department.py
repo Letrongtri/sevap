@@ -21,7 +21,6 @@ class Department(Base):
         foreign_keys="User.department_id", 
         back_populates="department"
     )
-    document_accesses = relationship("DocumentDepartmentAccess", back_populates="department", cascade="all, delete-orphan")
 
     __table_args__ = (
         Index("uq_dept_tenant_code_active", "tenant_id", "code", unique=True, postgresql_where=text("is_deleted = false")),
