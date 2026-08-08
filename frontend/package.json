@@ -15,11 +15,13 @@
         "@tanstack/react-router": "^1.170.13",
         "axios": "^1.17.0",
         "chart.js": "^4.5.1",
+        "docx-preview": "^0.4.0",
         "lucide-react": "^1.17.0",
         "react": "^19.2.6",
         "react-chartjs-2": "^5.3.1",
         "react-dom": "^19.2.6",
         "react-markdown": "^10.1.0",
+        "react-speech-recognition": "^4.0.1",
         "sonner": "^2.0.7",
         "tailwindcss": "^4.3.0",
         "zustand": "^5.0.14"

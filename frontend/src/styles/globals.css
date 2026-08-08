@@ -447,6 +447,69 @@
     cursor: not-allowed;
 }
 
+.input-box__mic-btn {
+    flex-shrink: 0;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--radius-xl);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface-raised);
+    color: var(--color-text-secondary);
+    transition: all var(--transition-fast);
+}
+
+.input-box__mic-btn:hover:not(:disabled) {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+    background-color: var(--color-surface);
+}
+
+.input-box__mic-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.input-box__mic-btn--listening {
+    background-color: #ef4444 !important;
+    color: #ffffff !important;
+    border-color: #dc2626 !important;
+    animation: mic-pulse 1.5s infinite;
+}
+
+.input-box__mic-btn--listening:hover:not(:disabled) {
+    background-color: #dc2626 !important;
+    color: #ffffff !important;
+}
+
+@keyframes mic-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+}
+
+.input-box__listening-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    margin-bottom: 0.5rem;
+    border-radius: var(--radius-lg);
+    background-color: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    font-size: var(--text-xs);
+    color: #dc2626;
+    font-weight: 500;
+}
+
 .input-box__hint {
     font-size: 0.625rem; /* 10px */
     color: var(--color-text-placeholder);
