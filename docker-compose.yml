@@ -1,0 +1,98 @@
+version: "3.8"
+
+# ============================================================
+#  SEVAP - Cấu hình Docker chuẩn hoá toàn dự án
+#  Project: sevap
+#  Chạy bằng: docker compose -p sevap up -d
+# ============================================================
+
+services:
+
+  # ── DATABASE (PostgreSQL + pgvector) ─────────────────────
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: sevap_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-sevap}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-sevap}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ── LOCAL LLM SERVER (Ollama) ─────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: sevap_ollama
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    pull_policy: always
+    tty: true
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+      - OLLAMA_HOST=0.0.0.0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # ── BACKEND (FastAPI / Uvicorn) ───────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sevap_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./backend/.env
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - RUNNING_IN_DOCKER=true
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ── FRONTEND (React + Nginx) ──────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sevap_frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+# ============================================================
+#  VOLUMES — postgres_data được giữ nguyên để bảo toàn dữ liệu
+#            Nếu đổi project name, chạy lệnh:
+#              docker volume create sevap_postgres_data
+#              (hoặc dùng external volume bên dưới)
+# ============================================================
+volumes:
+  postgres_data:
+    driver: local
+  ollama_data:
+    driver: local

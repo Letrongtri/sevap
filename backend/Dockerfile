@@ -1,5 +1,5 @@
 # Sử dụng Python image bản slim để tối ưu hóa kích thước container
-FROM python:3.11-slim as base
+FROM python:3.11-slim AS base
 
 # Cấu hình các biến môi trường cho Python
 ENV PYTHONUNBUFFERED=1 \
@@ -12,13 +12,7 @@ ENV PYTHONUNBUFFERED=1 \
 # Thiết lập thư mục làm việc trong container
 WORKDIR /app
 
-# Cài đặt các công cụ hệ thống cần thiết (để biên dịch các package nếu cần)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libpq-dev \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
+# Cài đặt các công cụ hệ thống cần thiết (gộp thành 1 lớp để tối ưu cache)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \

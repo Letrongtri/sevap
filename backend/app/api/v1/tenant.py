@@ -98,6 +98,7 @@ async def soft_delete_tenant(
 @router.get("/info", response_model=TenantResponse)
 @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["me"][0])
 async def get_tenant_info(
+    request: Request,
     tenant_service: TenantService = Depends(get_tenant_service),
     current_user=Depends(get_current_user)
 ):

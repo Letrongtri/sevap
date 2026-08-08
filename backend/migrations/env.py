@@ -35,9 +35,13 @@ from app.models import *
 target_metadata = Base.metadata
 
 # Lấy URL từ .env
+# - Trong Docker container: giữ nguyên @db (container hostname)
+# - Chạy từ máy host (venv): đổi @db → @localhost
 def get_url():
-    DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/hr_assistant")
-    DATABASE_URL = DATABASE_URL.replace("@db", "@localhost")
+    DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/sevap")
+    in_docker = os.getenv("RUNNING_IN_DOCKER", "false").lower() == "true"
+    if not in_docker:
+        DATABASE_URL = DATABASE_URL.replace("@db:", "@localhost:")
     return DATABASE_URL
 
 # Ghi đè sqlalchemy.url trong config

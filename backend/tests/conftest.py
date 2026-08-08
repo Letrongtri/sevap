@@ -16,7 +16,7 @@ def resolve_db_host(url_str: str) -> str:
                 url = url._replace(host="localhost")
     return url.render_as_string(hide_password=False)
 
-orig_url = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@db:5432/hr_assistant")
+orig_url = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@db:5432/sevap")
 resolved_url = resolve_db_host(orig_url)
 
 # Construct test database URLs
