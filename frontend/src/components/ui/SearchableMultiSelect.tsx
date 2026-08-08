@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronDown, Search, X, Check } from 'lucide-react'
 import type { SelectSize } from '../../types/common'
 
@@ -42,25 +43,69 @@ export default function SearchableMultiSelect({
 }: SearchableMultiSelectProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
+    // Vị trí dropdown (tính bằng getBoundingClientRect)
+    const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({})
     const containerRef = useRef<HTMLDivElement>(null)
     const paddingSelect = paddingMap[size]
     const fontSizeSelect = fontSizeMap[size]
 
-    // Close on click outside
+    // Tính toán vị trí dropdown khi mở
+    const updateDropdownPosition = () => {
+        if (!containerRef.current) return
+        const rect = containerRef.current.getBoundingClientRect()
+        const spaceBelow = window.innerHeight - rect.bottom
+        const dropdownHeight = 240 // max-h-60 ≈ 240px
+
+        if (spaceBelow >= dropdownHeight) {
+            // Đủ chỗ bên dưới
+            setDropdownStyle({
+                position: 'fixed',
+                top: rect.bottom + 4,
+                left: rect.left,
+                width: rect.width,
+                zIndex: 9999,
+            })
+        } else {
+            // Mở lên trên
+            setDropdownStyle({
+                position: 'fixed',
+                bottom: window.innerHeight - rect.top + 4,
+                left: rect.left,
+                width: rect.width,
+                zIndex: 9999,
+            })
+        }
+    }
+
+    // Close on click outside (cần check cả portal)
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (
-                containerRef.current &&
-                !containerRef.current.contains(event.target as Node)
-            ) {
-                setIsOpen(false)
-                setSearchQuery('')
-            }
+            const target = event.target as Node
+            // Nếu click nằm trong container trigger → bỏ qua (handleToggleOpen xử lý)
+            if (containerRef.current?.contains(target)) return
+            // Nếu click vào portal dropdown → bỏ qua
+            const portalEl = document.getElementById('searchable-multiselect-portal')
+            if (portalEl?.contains(target)) return
+            setIsOpen(false)
+            setSearchQuery('')
         }
         document.addEventListener('mousedown', handleClickOutside)
-        return () =>
-            document.removeEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
+
+    // Cập nhật vị trí khi scroll hoặc resize
+    useEffect(() => {
+        if (!isOpen) return
+        const handleScrollOrResize = () => {
+            updateDropdownPosition()
+        }
+        window.addEventListener('scroll', handleScrollOrResize, true)
+        window.addEventListener('resize', handleScrollOrResize)
+        return () => {
+            window.removeEventListener('scroll', handleScrollOrResize, true)
+            window.removeEventListener('resize', handleScrollOrResize)
+        }
+    }, [isOpen])
 
     const selectedOptions = options.filter((opt) => value.includes(opt.value))
 
@@ -89,11 +134,71 @@ export default function SearchableMultiSelect({
 
     const handleToggleOpen = () => {
         if (disabled) return
-        if (isOpen) {
+        if (!isOpen) {
+            updateDropdownPosition()
+        } else {
             setSearchQuery('')
         }
         setIsOpen(!isOpen)
     }
+
+    const dropdown = isOpen && (
+        <div
+            style={dropdownStyle}
+            className="bg-white border border-border shadow-xl rounded-xl overflow-hidden animate-fade-in flex flex-col max-h-60"
+        >
+            <div className="p-2 border-b border-border bg-bg/10 flex items-center gap-1.5">
+                <Search className="w-3.5 h-3.5 text-text-placeholder" />
+                <input
+                    type="text"
+                    placeholder="Tìm kiếm..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-transparent text-xs text-text-primary outline-none placeholder:text-text-placeholder"
+                    autoFocus
+                />
+                {searchQuery && (
+                    <button
+                        type="button"
+                        onClick={() => setSearchQuery('')}
+                        className="p-0.5 text-text-placeholder hover:text-text-secondary"
+                    >
+                        <X className="w-3 h-3" />
+                    </button>
+                )}
+            </div>
+
+            <div className="overflow-y-auto flex-1 py-1 max-h-48 divide-y divide-[#D4D7DE]/20">
+                {filteredOptions.length === 0 ? (
+                    <div className="px-3 py-2 text-xs text-text-placeholder text-center">
+                        Không tìm thấy kết quả
+                    </div>
+                ) : (
+                    filteredOptions.map((option) => {
+                        const isSelected = value.includes(option.value)
+                        return (
+                            <button
+                                key={String(option.value)}
+                                type="button"
+                                onClick={(e) => handleSelect(option.value, e)}
+                                className={[
+                                    'w-full flex items-center justify-between px-3 py-2 text-xs text-left cursor-pointer transition-colors',
+                                    isSelected
+                                        ? 'bg-primary/5 text-primary font-bold'
+                                        : 'text-text-secondary hover:bg-bg/25 hover:text-text-primary',
+                                ].join(' ')}
+                            >
+                                <span className="truncate">{option.label}</span>
+                                {isSelected && (
+                                    <Check className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                                )}
+                            </button>
+                        )
+                    })
+                )}
+            </div>
+        </div>
+    )
 
     return (
         <div className={`relative ${className}`} ref={containerRef}>
@@ -163,63 +268,11 @@ export default function SearchableMultiSelect({
                 </div>
             </div>
 
-            {isOpen && (
-                <div className="absolute z-50 mt-1 w-full bg-white border border-border shadow-lg rounded-xl overflow-hidden animate-fade-in flex flex-col max-h-60">
-                    <div className="p-2 border-b border-border bg-bg/10 flex items-center gap-1.5">
-                        <Search className="w-3.5 h-3.5 text-text-placeholder" />
-                        <input
-                            type="text"
-                            placeholder="Tìm kiếm..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-transparent text-xs text-text-primary outline-none placeholder:text-text-placeholder"
-                            autoFocus
-                        />
-                        {searchQuery && (
-                            <button
-                                type="button"
-                                onClick={() => setSearchQuery('')}
-                                className="p-0.5 text-text-placeholder hover:text-text-secondary"
-                            >
-                                <X className="w-3 h-3" />
-                            </button>
-                        )}
-                    </div>
-
-                    <div className="overflow-y-auto flex-1 py-1 max-h-48 divide-y divide-[#D4D7DE]/20">
-                        {filteredOptions.length === 0 ? (
-                            <div className="px-3 py-2 text-xs text-text-placeholder text-center">
-                                Không tìm thấy kết quả
-                            </div>
-                        ) : (
-                            filteredOptions.map((option) => {
-                                const isSelected = value.includes(option.value)
-                                return (
-                                    <button
-                                        key={String(option.value)}
-                                        type="button"
-                                        onClick={(e) =>
-                                            handleSelect(option.value, e)
-                                        }
-                                        className={[
-                                            'w-full flex items-center justify-between px-3 py-2 text-xs text-left cursor-pointer transition-colors',
-                                            isSelected
-                                                ? 'bg-primary/5 text-primary font-bold'
-                                                : 'text-text-secondary hover:bg-bg/25 hover:text-text-primary',
-                                        ].join(' ')}
-                                    >
-                                        <span className="truncate">
-                                            {option.label}
-                                        </span>
-                                        {isSelected && (
-                                            <Check className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                                        )}
-                                    </button>
-                                )
-                            })
-                        )}
-                    </div>
-                </div>
+            {/* Render dropdown qua portal để thoát khỏi mọi overflow container */}
+            {createPortal(
+                dropdown,
+                document.getElementById('searchable-multiselect-portal') ??
+                    document.body
             )}
         </div>
     )

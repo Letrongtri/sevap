@@ -19,6 +19,7 @@ export const fetchDocuments = async (
             access_level: query.access_level,
             effective_date: query.effective_date,
             role_id: query.role_id,
+            job_title_id: query.job_title_id,
             user_id: query.user_id,
             page: query.page,
             limit: query.limit,
@@ -33,18 +34,14 @@ export const fetchDocumentById = async (id: ID): Promise<Document> => {
     return res.data
 }
 
-/** Upload tài liệu mới */
+/** Upload tài liệu mới — gửi policies dưới dạng JSON string qua FormData */
 export const uploadDocument = async (
     payload: DocumentUploadPayload
 ): Promise<Document> => {
     const formData = new FormData()
     formData.append('file', payload.file)
     formData.append('access_level', payload.access_level)
-    if (payload.department_ids) {
-        payload.department_ids.forEach((id) => {
-            formData.append('department_ids', id.toString())
-        })
-    }
+
     if (payload.title) {
         formData.append('title', payload.title)
     }
@@ -54,25 +51,23 @@ export const uploadDocument = async (
     if (payload.effective_date) {
         formData.append('effective_date', payload.effective_date)
     }
-    if (payload.role_access) {
-        payload.role_access.forEach((id) => {
-            formData.append('role_access', id.toString())
-        })
+    // policies: serialize thành JSON string (backend nhận Form field `policies`)
+    if (payload.policies && payload.policies.length > 0) {
+        formData.append('policies', JSON.stringify(payload.policies))
     }
-    if (payload.target_user_ids) {
+    if (payload.target_user_ids && payload.target_user_ids.length > 0) {
         payload.target_user_ids.forEach((id) => {
             formData.append('target_user_ids', id.toString())
         })
     }
+
     const res = await axiosClient.post('/documents', formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
     })
     return res.data
 }
 
-/** Cập nhật thông tin tài liệu */
+/** Cập nhật thông tin tài liệu — gửi policies dưới dạng JSON body */
 export const updateDocument = async (
     id: ID,
     payload: DocumentUpdatePayload

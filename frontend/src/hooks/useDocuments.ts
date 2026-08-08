@@ -22,6 +22,7 @@ export const DOCUMENTS_QUERY_KEY = ['documents'] as const
 export function useDocuments() {
     const querySearch = useDocumentStore((s) => s.query)
     const departmentId = useDocumentStore((s) => s.departmentId)
+    const jobTitleId = useDocumentStore((s) => s.jobTitleId)
     const accessLevel = useDocumentStore((s) => s.accessLevel)
     const effectiveDate = useDocumentStore((s) => s.effectiveDate)
     const roleAccess = useDocumentStore((s) => s.roleAccess)
@@ -34,6 +35,7 @@ export function useDocuments() {
         {
             querySearch,
             departmentId,
+            jobTitleId,
             accessLevel,
             effectiveDate,
             roleAccess,
@@ -49,6 +51,7 @@ export function useDocuments() {
             fetchDocuments({
                 query: querySearch,
                 department_id: departmentId,
+                job_title_id: jobTitleId,
                 access_level: accessLevel,
                 effective_date: effectiveDate,
                 role_id: roleAccess,

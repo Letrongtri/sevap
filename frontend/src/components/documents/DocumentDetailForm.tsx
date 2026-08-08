@@ -1,22 +1,83 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Shield, Info, UploadCloud, FileUp } from 'lucide-react'
+import { Shield, UploadCloud, FileUp, Plus } from 'lucide-react'
 import { useUploadDocument, useUpdateDocument } from '../../hooks/useDocuments'
 import { useSimpleDepartments } from '../../hooks/useSimpleDepartments'
 import { useSimpleRoles } from '../../hooks/useSimpleRoles'
+import { useSimpleJobTitles } from '../../hooks/useSimpleJobTitles'
 import { useDocumentStore } from '../../store/documentStore'
 import { usePermission } from '../../hooks/usePermission'
 import { PERMISSIONS } from '../../lib/permissions'
 
 import SearchableSelect from '../ui/SearchableSelect'
-import SearchableMultiSelect from '../ui/SearchableMultiSelect'
 import SearchableUserMultiSelect from '../ui/SearchableUserMultiSelect'
 import DatePicker from '../ui/DatePicker'
 import Input from '../ui/Input'
 import Button from '../ui/Button'
 import { formatBytes } from '../../../utils/formater'
-import type { Document } from '../../types/document'
+import type {
+    Document,
+    DocumentAccessPolicyCreate,
+    PolicyGroupState,
+} from '../../types/document'
 import { type ID, ALLOWED_DOCUMENT_FILE_TYPES } from '../../types/common'
+import PolicyGroupCard from './PolicyGroupCard'
 
+const emptyPolicy = (): PolicyGroupState => ({
+    id: crypto.randomUUID(),
+    roleIds: [],
+    departmentIds: [],
+    jobTitleIds: [],
+    expanded: true,
+})
+
+/** Chuyển UI state sang format backend */
+function toPoliciesPayload(
+    groups: PolicyGroupState[]
+): DocumentAccessPolicyCreate[] {
+    return groups
+        .map((g) => ({
+            conditions: [
+                ...g.roleIds.map((id) => ({
+                    condition_type: 'roles' as const,
+                    condition_value_id: id,
+                })),
+                ...g.departmentIds.map((id) => ({
+                    condition_type: 'departments' as const,
+                    condition_value_id: id,
+                })),
+                ...g.jobTitleIds.map((id) => ({
+                    condition_type: 'job_titles' as const,
+                    condition_value_id: id,
+                })),
+            ],
+        }))
+        .filter((p) => p.conditions.length > 0)
+}
+
+/** Khôi phục UI state từ document đang edit */
+function fromDocument(doc: Document): PolicyGroupState[] {
+    if (!doc.document_access_policies?.length) return []
+    return doc.document_access_policies.map((p) => {
+        const g: PolicyGroupState = {
+            id: p.id,
+            roleIds: [],
+            departmentIds: [],
+            jobTitleIds: [],
+            expanded: false,
+        }
+        for (const cond of p.conditions) {
+            if (cond.condition_type === 'roles')
+                g.roleIds.push(cond.condition_value_id)
+            else if (cond.condition_type === 'departments')
+                g.departmentIds.push(cond.condition_value_id)
+            else if (cond.condition_type === 'job_titles')
+                g.jobTitleIds.push(cond.condition_value_id)
+        }
+        return g
+    })
+}
+
+// ── Main form component ───────────────────────────────────────────────────────
 interface DocumentDetailFormProps {
     document?: Document
     isAddingDocument: boolean
@@ -44,8 +105,7 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
     // Permission guards
     const canUpload = usePermission(PERMISSIONS.DOCUMENTS_UPLOAD)
     const canUpdate = usePermission(PERMISSIONS.DOCUMENTS_UPDATE)
-    // canSave: true khi upload (có quyền upload) hoặc edit (có quyền update)
-    const canSave   = isAddingDocument ? canUpload : canUpdate
+    const canSave = isAddingDocument ? canUpload : canUpdate
 
     const uploadMutation = useUploadDocument()
     const updateMutation = useUpdateDocument()
@@ -55,26 +115,26 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
     const [category, setCategory] = useState('')
     const [effectiveDate, setEffectiveDate] = useState<string | null>(null)
     const [accessLevel, setAccessLevel] = useState('public')
-    const [departmentIds, setDepartmentIds] = useState<ID[]>([])
-    const [roleAccess, setRoleAccess] = useState<ID[]>([])
     const [targetUserIds, setTargetUserIds] = useState<ID[]>([])
+    // Policy groups state
+    const [policyGroups, setPolicyGroups] = useState<PolicyGroupState[]>([])
+    const [showPolicySections, setShowPolicySections] = useState(false)
 
     const formRef = useRef<HTMLFormElement>(null)
 
     // Metadata hooks
     const { data: departmentsData } = useSimpleDepartments()
     const { data: rolesData } = useSimpleRoles()
+    const { data: jobTitlesData } = useSimpleJobTitles()
 
     const departmentOptions =
-        departmentsData?.map((d) => ({
-            value: d.id,
-            label: d.name,
-        })) ?? []
-
+        departmentsData?.map((d) => ({ value: d.id, label: d.name })) ?? []
     const roleOptions =
-        rolesData?.map((r) => ({
-            value: r.id,
-            label: r.name,
+        rolesData?.map((r) => ({ value: r.id, label: r.name })) ?? []
+    const jobTitleOptions =
+        jobTitlesData?.map((jt) => ({
+            value: jt.id,
+            label: `${jt.title_name} (${jt.code})`,
         })) ?? []
 
     const accessLevelOptions = [
@@ -86,9 +146,7 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
     // Reset scroll when state changes
     useEffect(() => {
         const scrollContainer = formRef.current?.parentElement?.parentElement
-        if (scrollContainer) {
-            scrollContainer.scrollTop = 0
-        }
+        if (scrollContainer) scrollContainer.scrollTop = 0
     }, [isEditing, isAddingDocument])
 
     const isInitialized = useRef(false)
@@ -106,9 +164,11 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
             setCategory(document.category || '')
             setEffectiveDate(document.effective_date || null)
             setAccessLevel(document.access_level || 'public')
-            setDepartmentIds(document.departments?.map((d) => d.id) || [])
-            setRoleAccess(document.roles?.map((r) => r.id) || [])
             setTargetUserIds(document.target_users?.map((u) => u.id) || [])
+
+            const restored = fromDocument(document)
+            setPolicyGroups(restored)
+            setShowPolicySections(restored.length > 0)
             isInitialized.current = true
         } else if (isAddingDocument && !isInitialized.current) {
             setSelectedFile(null)
@@ -116,9 +176,9 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
             setCategory('')
             setEffectiveDate(null)
             setAccessLevel('public')
-            setDepartmentIds([])
-            setRoleAccess([])
             setTargetUserIds([])
+            setPolicyGroups([])
+            setShowPolicySections(false)
             isInitialized.current = true
         }
     }, [document, isEditing, isAddingDocument])
@@ -136,6 +196,39 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
         }
     }
 
+    // ── Policy group handlers ──────────────────────────────────────────────
+    const handleAddPolicyGroup = () => {
+        setPolicyGroups((prev) => [...prev, emptyPolicy()])
+        setShowPolicySections(true)
+    }
+
+    const handleUpdateGroup = (
+        id: string,
+        patch: Partial<PolicyGroupState>
+    ) => {
+        setPolicyGroups((prev) =>
+            prev.map((g) => (g.id === id ? { ...g, ...patch } : g))
+        )
+    }
+
+    const handleRemoveGroup = (id: string) => {
+        setPolicyGroups((prev) => {
+            const next = prev.filter((g) => g.id !== id)
+            if (next.length === 0) setShowPolicySections(false)
+            return next
+        })
+    }
+
+    const handleAccessLevelChange = (val: string | null) => {
+        const newLevel = val || 'public'
+        setAccessLevel(newLevel)
+        if (newLevel !== 'private') {
+            setPolicyGroups([])
+            setShowPolicySections(false)
+            setTargetUserIds([])
+        }
+    }
+
     const isSubmitting = uploadMutation.isPending || updateMutation.isPending
 
     const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
@@ -143,19 +236,26 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
         setFormError(null)
         setFormSuccess(null)
 
-        // Validate Private access level restrictions
+        // Validate Private: phải có ít nhất 1 policy group có điều kiện hoặc 1 target user
         if (accessLevel === 'private') {
-            if (
-                departmentIds.length === 0 &&
-                roleAccess.length === 0 &&
-                targetUserIds.length === 0
-            ) {
+            const hasValidPolicy = policyGroups.some(
+                (g) =>
+                    g.roleIds.length > 0 ||
+                    g.departmentIds.length > 0 ||
+                    g.jobTitleIds.length > 0
+            )
+            if (!hasValidPolicy && targetUserIds.length === 0) {
                 setFormError(
-                    'Đối với tài liệu Riêng tư, bạn phải chọn ít nhất một Phòng ban, Vai trò hoặc Tài khoản.'
+                    'Tài liệu Riêng tư phải có ít nhất một Policy Group (có điều kiện) hoặc một Tài khoản được chỉ định.'
                 )
                 return
             }
         }
+
+        const policiesPayload =
+            accessLevel === 'private'
+                ? toPoliciesPayload(policyGroups)
+                : undefined
 
         if (isAddingDocument) {
             if (!selectedFile) {
@@ -170,9 +270,10 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
                     category: category.trim() || null,
                     effective_date: effectiveDate,
                     access_level: accessLevel,
-                    department_ids:
-                        departmentIds.length > 0 ? departmentIds : null,
-                    role_access: roleAccess.length > 0 ? roleAccess : null,
+                    policies:
+                        policiesPayload && policiesPayload.length > 0
+                            ? policiesPayload
+                            : null,
                     target_user_ids:
                         targetUserIds.length > 0 ? targetUserIds : null,
                 },
@@ -200,8 +301,7 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
                         category: category.trim() || null,
                         effective_date: effectiveDate,
                         access_level: accessLevel,
-                        department_ids: departmentIds,
-                        role_access: roleAccess,
+                        policies: policiesPayload ?? null,
                         target_user_ids: targetUserIds,
                     },
                 },
@@ -301,58 +401,69 @@ const DocumentDetailForm: React.FC<DocumentDetailFormProps> = ({
             <SearchableSelect
                 options={accessLevelOptions}
                 value={accessLevel}
-                onChange={(val) => {
-                    const newLevel = val || 'public'
-                    setAccessLevel(newLevel)
-                    if (newLevel !== 'private') {
-                        setDepartmentIds([])
-                        setRoleAccess([])
-                        setTargetUserIds([])
-                    }
-                }}
+                onChange={handleAccessLevelChange}
                 label="Cấp độ truy cập"
                 placeholder="Chọn cấp độ truy cập"
             />
 
-            {/* ACCESS RESTRICTIONS SECTION (Only visible when Access Level is Private) */}
+            {/* ── PRIVATE ACCESS SECTION ───────────────────────────────────── */}
             {accessLevel === 'private' && (
                 <div className="bg-bg/10 rounded-2xl p-4 border border-[#D4D7DE]/40 space-y-4 animate-fade-in">
-                    <div className="flex items-center gap-1.5 text-text-secondary font-bold text-xs uppercase tracking-wider mb-1">
+                    {/* Section header */}
+                    <div className="flex items-center gap-1.5 text-text-secondary font-bold text-xs uppercase tracking-wider">
                         <Shield className="w-3.5 h-3.5" />
                         <span>Giới hạn truy cập riêng tư</span>
                     </div>
 
-                    <SearchableMultiSelect
-                        options={departmentOptions}
-                        value={departmentIds}
-                        onChange={(val) => setDepartmentIds(val)}
-                        placeholder="Chưa chọn phòng ban"
-                        label="Phòng ban được phép"
-                    />
+                    {/* Policy Groups */}
+                    {showPolicySections && policyGroups.length > 0 && (
+                        <div className="space-y-2">
+                            {/* OR badge giữa các groups */}
+                            {policyGroups.map((group, i) => (
+                                <React.Fragment key={group.id}>
+                                    <PolicyGroupCard
+                                        group={group}
+                                        index={i}
+                                        roleOptions={roleOptions}
+                                        departmentOptions={departmentOptions}
+                                        jobTitleOptions={jobTitleOptions}
+                                        onUpdate={handleUpdateGroup}
+                                        onRemove={handleRemoveGroup}
+                                        canRemove={true}
+                                    />
+                                    {i < policyGroups.length - 1 && (
+                                        <div className="flex items-center gap-2 px-2">
+                                            <div className="flex-1 h-px bg-border/40" />
+                                            <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                                HOẶC
+                                            </span>
+                                            <div className="flex-1 h-px bg-border/40" />
+                                        </div>
+                                    )}
+                                </React.Fragment>
+                            ))}
+                        </div>
+                    )}
 
-                    <SearchableMultiSelect
-                        options={roleOptions}
-                        value={roleAccess}
-                        onChange={(val) => setRoleAccess(val)}
-                        placeholder="Chưa chọn vai trò"
-                        label="Vai trò được phép"
-                    />
+                    {/* Add Policy Group button */}
+                    <button
+                        type="button"
+                        onClick={handleAddPolicyGroup}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-dashed border-primary/40 hover:border-primary rounded-xl text-xs font-semibold text-primary hover:bg-primary/5 transition-all"
+                    >
+                        <Plus className="w-3.5 h-3.5" />
+                        Thêm Policy Group
+                    </button>
 
-                    <SearchableUserMultiSelect
-                        value={targetUserIds}
-                        onChange={(val) => setTargetUserIds(val)}
-                        initialSelectedUsers={document?.target_users ?? []}
-                        placeholder="Chưa chọn tài khoản"
-                        label="Tài khoản được phép"
-                    />
-
-                    <div className="flex items-start gap-1.5 text-[10px] text-text-placeholder bg-white p-2.5 rounded-lg border border-border">
-                        <Info className="w-3.5 h-3.5 text-primary flex-shrink-0 mt-0.5" />
-                        <p className="leading-normal">
-                            Tài liệu riêng tư yêu cầu chọn ít nhất một phòng ban,
-                            vai trò hoặc tài khoản. Chỉ những đối tượng phù hợp mới
-                            có thể xem được.
-                        </p>
+                    {/* Individual users */}
+                    <div className="pt-1 border-t border-border/30">
+                        <SearchableUserMultiSelect
+                            value={targetUserIds}
+                            onChange={(val) => setTargetUserIds(val)}
+                            initialSelectedUsers={document?.target_users ?? []}
+                            placeholder="Chưa chọn tài khoản"
+                            label="Tài khoản cụ thể được phép"
+                        />
                     </div>
                 </div>
             )}

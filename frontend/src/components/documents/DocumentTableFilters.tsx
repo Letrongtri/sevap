@@ -9,6 +9,7 @@ import { ACCESS_LEVELS } from '../../types/common'
 import SearchableSelect from '../ui/SearchableSelect'
 import DatePicker from '../ui/DatePicker'
 import SearchableUserSelect from '../ui/SearchableUserSelect'
+import { useSimpleJobTitles } from '../../hooks/useSimpleJobTitles'
 
 const DocumentTableFilters = () => {
     // Search and status state
@@ -16,6 +17,8 @@ const DocumentTableFilters = () => {
     const setQuery = useDocumentStore((d) => d.setQuery)
     const departmentId = useDocumentStore((d) => d.departmentId)
     const setDepartmentId = useDocumentStore((d) => d.setDepartmentId)
+    const jobTitleId = useDocumentStore((d) => d.jobTitleId)
+    const setJobTitleId = useDocumentStore((d) => d.setJobTitleId)
     const accessLevel = useDocumentStore((d) => d.accessLevel)
     const setAccessLevel = useDocumentStore((d) => d.setAccessLevel)
     const effectiveDate = useDocumentStore((d) => d.effectiveDate)
@@ -41,11 +44,20 @@ const DocumentTableFilters = () => {
     // Fetch metadata
     const { data: departmentsData } = useSimpleDepartments()
     const { data: rolesData } = useSimpleRoles()
+    const { data: jobTitleData } = useSimpleJobTitles()
 
     // Map metadata to select options
     const departmentOptions = [
         { value: null, label: 'Tất cả phòng ban' },
         ...(departmentsData || []).map((d) => ({ value: d.id, label: d.name })),
+    ]
+
+    const jobTitleOptions = [
+        { value: null, label: 'Tất cả chức vụ' },
+        ...(jobTitleData || []).map((d) => ({
+            value: d.id,
+            label: d.title_name,
+        })),
     ]
 
     const accessLevelLabels: Record<string, string> = {
@@ -85,6 +97,15 @@ const DocumentTableFilters = () => {
 
                 {/* effective date, users */}
                 <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+                    <SearchableSelect
+                        options={access_level_options}
+                        value={accessLevel}
+                        onChange={(val) => {
+                            setAccessLevel(val)
+                            setPage(1)
+                        }}
+                        placeholder="Tất cả cấp độ truy cập"
+                    />
                     <DatePicker
                         value={effectiveDate}
                         onChange={(val) => {
@@ -109,6 +130,15 @@ const DocumentTableFilters = () => {
             {/* Metadata filters row */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <SearchableSelect
+                    options={roleOptions}
+                    value={roleAccess}
+                    onChange={(val) => {
+                        setRoleAccess(val)
+                        setPage(1)
+                    }}
+                    placeholder="Tất cả vai trò"
+                />
+                <SearchableSelect
                     options={departmentOptions}
                     value={departmentId}
                     onChange={(val) => {
@@ -118,22 +148,13 @@ const DocumentTableFilters = () => {
                     placeholder="Tất cả phòng ban"
                 />
                 <SearchableSelect
-                    options={access_level_options}
-                    value={accessLevel}
+                    options={jobTitleOptions}
+                    value={jobTitleId}
                     onChange={(val) => {
-                        setAccessLevel(val)
+                        setJobTitleId(val)
                         setPage(1)
                     }}
-                    placeholder="Tất cả cấp độ truy cập"
-                />
-                <SearchableSelect
-                    options={roleOptions}
-                    value={roleAccess}
-                    onChange={(val) => {
-                        setRoleAccess(val)
-                        setPage(1)
-                    }}
-                    placeholder="Tất cả vai trò"
+                    placeholder="Tất cả chức vụ"
                 />
             </div>
         </div>

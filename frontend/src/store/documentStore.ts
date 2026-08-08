@@ -8,6 +8,7 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
     activeDocumentId: null,
     query: null,
     departmentId: null,
+    jobTitleId: null,
     accessLevel: null,
     effectiveDate: null,
     roleAccess: null,
@@ -28,6 +29,9 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
 
     /** Set department ID */
     setDepartmentId: (departmentId: ID | null) => set({ departmentId }),
+
+    /** Set job title ID */
+    setJobTitleId: (jobTitleId: ID | null) => set({ jobTitleId }),
 
     /** Set access level */
     setAccessLevel: (accessLevel: AccessLevel | null) => set({ accessLevel }),

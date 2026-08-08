@@ -11,6 +11,8 @@ import {
     Info,
     Loader2,
     Download,
+    Briefcase,
+    Layers,
 } from 'lucide-react'
 import Button from '../ui/Button'
 import Badge from '../ui/Badge'
@@ -190,81 +192,165 @@ const DocumentDetailView: React.FC<DocumentDetailViewProps> = ({
                         <span>Cấu hình giới hạn truy cập</span>
                     </div>
 
-                    <div className="space-y-2 text-xs">
-                        <div className="flex flex-col gap-1.5">
-                            <span className="text-text-placeholder flex items-center gap-1">
-                                <Building className="w-3.5 h-3.5" />
-                                Phòng ban được phép:
-                            </span>
-                            <div className="flex flex-wrap gap-1 pl-4.5">
-                                {document.departments &&
-                                document.departments.length > 0 ? (
-                                    document.departments.map((d) => (
-                                        <Badge
-                                            key={d.id}
-                                            variant="primary"
-                                            size="sm"
-                                        >
-                                            {d.name}
-                                        </Badge>
-                                    ))
-                                ) : (
-                                    <span className="text-text-placeholder italic">
-                                        Không giới hạn phòng ban
-                                    </span>
-                                )}
-                            </div>
-                        </div>
+                    {/* Policy Groups */}
+                    {document.document_access_policies &&
+                    document.document_access_policies.length > 0 ? (
+                        <div className="space-y-2">
+                            {document.document_access_policies.map((policy, idx) => {
+                                const roleConds = policy.conditions.filter(
+                                    (c) => c.condition_type === 'roles'
+                                )
+                                const deptConds = policy.conditions.filter(
+                                    (c) => c.condition_type === 'departments'
+                                )
+                                const jtConds = policy.conditions.filter(
+                                    (c) => c.condition_type === 'job_titles'
+                                )
+                                // Làm đầy đủ label từ flat lists
+                                const roleNames = document.roles
+                                    .filter((r) =>
+                                        roleConds.some(
+                                            (c) => c.condition_value_id === r.id
+                                        )
+                                    )
+                                    .map((r) => r.name)
+                                const deptNames = document.departments
+                                    .filter((d) =>
+                                        deptConds.some(
+                                            (c) => c.condition_value_id === d.id
+                                        )
+                                    )
+                                    .map((d) => d.name)
+                                const jtNames = document.job_titles
+                                    .filter((jt) =>
+                                        jtConds.some(
+                                            (c) => c.condition_value_id === jt.id
+                                        )
+                                    )
+                                    .map((jt) => jt.title_name)
 
-                        <div className="flex flex-col gap-1.5">
-                            <span className="text-text-placeholder flex items-center gap-1">
-                                <Shield className="w-3.5 h-3.5" />
-                                Vai trò được phép:
-                            </span>
-                            <div className="flex flex-wrap gap-1 pl-4.5">
-                                {document.roles && document.roles.length > 0 ? (
-                                    document.roles.map((r) => (
-                                        <Badge
-                                            key={r.id}
-                                            variant="primary"
-                                            size="sm"
-                                        >
-                                            {r.name}
-                                        </Badge>
-                                    ))
-                                ) : (
-                                    <span className="text-text-placeholder italic">
-                                        Không giới hạn vai trò
-                                    </span>
-                                )}
-                            </div>
-                        </div>
+                                return (
+                                    <React.Fragment key={policy.id}>
+                                        <div className="border border-border/30 rounded-xl bg-white p-3 space-y-2 text-xs">
+                                            <div className="flex items-center gap-1.5 text-text-secondary font-semibold">
+                                                <Layers className="w-3.5 h-3.5 text-primary" />
+                                                <span>Policy Group {idx + 1}</span>
+                                                <span className="text-[10px] font-normal text-text-placeholder">
+                                                    (tất cả điều kiện phải thỏa)
+                                                </span>
+                                            </div>
 
-                        <div className="flex flex-col gap-1.5">
+                                            {roleNames.length > 0 && (
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="text-text-placeholder flex items-center gap-1">
+                                                        <Shield className="w-3 h-3" />
+                                                        Vai trò:
+                                                    </span>
+                                                    <div className="flex flex-wrap gap-1 pl-4">
+                                                        {roleNames.map((name) => (
+                                                            <Badge
+                                                                key={name}
+                                                                variant="primary"
+                                                                size="sm"
+                                                            >
+                                                                {name}
+                                                            </Badge>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {deptNames.length > 0 && (
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="text-text-placeholder flex items-center gap-1">
+                                                        <Building className="w-3 h-3" />
+                                                        Phòng ban:
+                                                    </span>
+                                                    <div className="flex flex-wrap gap-1 pl-4">
+                                                        {deptNames.map((name) => (
+                                                            <Badge
+                                                                key={name}
+                                                                variant="primary"
+                                                                size="sm"
+                                                            >
+                                                                {name}
+                                                            </Badge>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {jtNames.length > 0 && (
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="text-text-placeholder flex items-center gap-1">
+                                                        <Briefcase className="w-3 h-3" />
+                                                        Chức danh:
+                                                    </span>
+                                                    <div className="flex flex-wrap gap-1 pl-4">
+                                                        {jtNames.map((name) => (
+                                                            <Badge
+                                                                key={name}
+                                                                variant="ghost"
+                                                                size="sm"
+                                                            >
+                                                                {name}
+                                                            </Badge>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {roleConds.length === 0 &&
+                                                deptConds.length === 0 &&
+                                                jtConds.length === 0 && (
+                                                    <span className="text-text-placeholder italic">
+                                                        (Không có điều kiện)
+                                                    </span>
+                                                )}
+                                        </div>
+
+                                        {idx <
+                                            document.document_access_policies
+                                                .length -
+                                                1 && (
+                                            <div className="flex items-center gap-2 px-2">
+                                                <div className="flex-1 h-px bg-border/40" />
+                                                <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                                    HOẶC
+                                                </span>
+                                                <div className="flex-1 h-px bg-border/40" />
+                                            </div>
+                                        )}
+                                    </React.Fragment>
+                                )
+                            })}
+                        </div>
+                    ) : (
+                        <p className="text-xs text-text-placeholder italic">
+                            Không có policy group nào
+                        </p>
+                    )}
+
+                    {/* Individual users */}
+                    {document.target_users && document.target_users.length > 0 && (
+                        <div className="flex flex-col gap-1.5 text-xs pt-2 border-t border-border/30">
                             <span className="text-text-placeholder flex items-center gap-1">
                                 <User className="w-3.5 h-3.5" />
-                                Tài khoản được phép:
+                                Tài khoản cụ thể được phép:
                             </span>
                             <div className="flex flex-wrap gap-1 pl-4.5">
-                                {document.target_users &&
-                                document.target_users.length > 0 ? (
-                                    document.target_users.map((u) => (
-                                        <Badge
-                                            key={u.id}
-                                            variant="ghost"
-                                            size="sm"
-                                        >
-                                            {u.full_name}
-                                        </Badge>
-                                    ))
-                                ) : (
-                                    <span className="text-text-placeholder italic">
-                                        Không giới hạn tài khoản
-                                    </span>
-                                )}
+                                {document.target_users.map((u) => (
+                                    <Badge
+                                        key={u.id}
+                                        variant="ghost"
+                                        size="sm"
+                                    >
+                                        {u.full_name}
+                                    </Badge>
+                                ))}
                             </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             )}
 
