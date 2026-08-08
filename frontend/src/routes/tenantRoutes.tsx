@@ -86,10 +86,20 @@ export const documentLayoutRoute = createRoute({
     beforeLoad: requirePermissionGuard('documents:upload'),
 })
 
+const DocumentPreviewPage = lazyPage(
+    () => import('../pages/DocumentPreviewPage')
+)
+
 export const documentsRoute = createRoute({
     getParentRoute: () => documentLayoutRoute,
     path: PRIVATE_ROUTES.DOCUMENTS,
     component: DocumentsPage,
+})
+
+export const documentPreviewRoute = createRoute({
+    getParentRoute: () => documentLayoutRoute,
+    path: PRIVATE_ROUTES.DOCUMENT_PREVIEW,
+    component: DocumentPreviewPage,
 })
 
 // Lazy-loaded management pages (tái sử dụng các page đã có)

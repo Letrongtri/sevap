@@ -17,6 +17,7 @@ import {
     // Zone 2 — Management routes (AppShell, permission-based)
     documentLayoutRoute,
     documentsRoute,
+    documentPreviewRoute,
     manageRolesLayoutRoute,
     manageRolesRoute,
     manageDepartmentsLayoutRoute,
@@ -69,7 +70,7 @@ const routeTree = rootRoute.addChildren([
             profileRoute,
 
             // Zone 2 — Management pages (permission-based, AppShell sidebar)
-            documentLayoutRoute.addChildren([documentsRoute]),
+            documentLayoutRoute.addChildren([documentsRoute, documentPreviewRoute]),
             manageRolesLayoutRoute.addChildren([manageRolesRoute]),
             manageDepartmentsLayoutRoute.addChildren([manageDepartmentsRoute]),
             manageJobTitlesLayoutRoute.addChildren([manageJobTitlesRoute]),

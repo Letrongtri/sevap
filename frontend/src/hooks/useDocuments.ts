@@ -8,6 +8,7 @@ import {
     updateDocument,
     uploadDocument,
     downloadDocumentFile,
+    fetchDocumentFileBlob,
 } from '../api/document'
 import type { ID } from '../types/common'
 
@@ -125,5 +126,15 @@ export function useDeleteDocument() {
 export function useDownloadDocument() {
     return useMutation<void, Error, { id: ID; fileName: string }>({
         mutationFn: ({ id, fileName }) => downloadDocumentFile(id, fileName),
+    })
+}
+
+/** Hook lấy file Blob của tài liệu để preview */
+export function useDocumentFileBlob(id: ID | null) {
+    return useQuery<Blob, Error>({
+        queryKey: [...DOCUMENTS_QUERY_KEY, id, 'file'],
+        queryFn: () => fetchDocumentFileBlob(id!),
+        enabled: !!id,
+        staleTime: 5 * 60 * 1000,
     })
 }

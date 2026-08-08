@@ -103,3 +103,11 @@ export const downloadDocumentFile = async (
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
 }
+
+/** Tải file blob của tài liệu để xem trước */
+export const fetchDocumentFileBlob = async (id: ID): Promise<Blob> => {
+    const res = await axiosClient.get(`/documents/${id}/file`, {
+        responseType: 'blob',
+    })
+    return res.data
+}

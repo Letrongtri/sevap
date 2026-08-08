@@ -17,6 +17,7 @@ export const PRIVATE_ROUTES = {
 
     // ── Zone 2: Management Pages (permission-based, AppShell) ──
     DOCUMENTS: '/documents',
+    DOCUMENT_PREVIEW: '/documents/preview/$documentId',
     MANAGE_ROLES: '/roles',
     MANAGE_DEPARTMENTS: '/departments',
     MANAGE_JOB_TITLES: '/job-titles',

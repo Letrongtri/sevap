@@ -1,4 +1,5 @@
 import React from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import {
     Edit,
     Trash2,
@@ -13,6 +14,7 @@ import {
     Download,
     Briefcase,
     Layers,
+    Eye,
 } from 'lucide-react'
 import Button from '../ui/Button'
 import Badge from '../ui/Badge'
@@ -93,6 +95,15 @@ const DocumentDetailView: React.FC<DocumentDetailViewProps> = ({
             default:
                 return <Badge variant="default">{level || '-'}</Badge>
         }
+    }
+
+    const navigate = useNavigate()
+
+    const handleOpenPreview = () => {
+        navigate({
+            to: '/documents/preview/$documentId',
+            params: { documentId: String(document.id) },
+        })
     }
 
     return (
@@ -401,18 +412,25 @@ const DocumentDetailView: React.FC<DocumentDetailViewProps> = ({
             {/* Action Buttons */}
             {!showDeleteConfirm ? (
                 <div className="space-y-2.5 pt-2">
-                    {canDownload && (
+                    <div className="flex gap-2">
                         <Button
                             variant="primary"
                             fullWidth
-                            leftIcon={<Download className="w-4 h-4" />}
-                            onClick={handleDownload}
-                            isLoading={isDownloading}
-                            loadingText="Đang tải về..."
+                            leftIcon={<Eye className="w-4 h-4" />}
+                            onClick={handleOpenPreview}
                         >
-                            Xem / Tải về tài liệu
+                            Xem tài liệu
                         </Button>
-                    )}
+                        {canDownload && (
+                            <Button
+                                variant="secondary"
+                                leftIcon={<Download className="w-4 h-4" />}
+                                onClick={handleDownload}
+                                isLoading={isDownloading}
+                                title="Tải tệp về máy"
+                            />
+                        )}
+                    </div>
                     {(canUpdate || canDelete) && (
                         <div className="flex gap-2.5">
                             {canUpdate && (
