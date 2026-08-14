@@ -21,6 +21,8 @@ import Button from '../ui/Button'
 import Pagination from '../ui/Pagination'
 import Modal from '../ui/Modal'
 import Badge from '../ui/Badge'
+import DocumentPreviewModal from '../preview/DocumentPreviewModal'
+import type { ID } from '../../types/common'
 import { DirectoryTab } from '../../types/directory'
 import {
     formatBytes,
@@ -46,6 +48,7 @@ const DocumentDirectoryTable = () => {
 
     // Detail Modal state
     const [selectedDoc, setSelectedDoc] = useState<Document | null>(null)
+    const [previewDocId, setPreviewDocId] = useState<ID | null>(null)
     const [downloadingId, setDownloadingId] = useState<string | null>(null)
     const [downloadError, setDownloadError] = useState<string | null>(null)
 
@@ -314,16 +317,21 @@ const DocumentDirectoryTable = () => {
                         </Button>
                         {canDownloadDocuments && selectedDoc && (
                             <Button
-                                variant="primary"
+                                variant="secondary"
                                 onClick={() => handleDownload(selectedDoc)}
-                                disabled={downloadingId === selectedDoc.id}
+                                isLoading={downloadingId === selectedDoc.id}
+                                leftIcon={<Download className="w-4 h-4" />}
                             >
-                                {downloadingId === selectedDoc.id ? (
-                                    <LoadingSpinner />
-                                ) : (
-                                    <Download className="w-4 h-4 mr-2" />
-                                )}
-                                Tải xuống tài liệu
+                                Tải xuống
+                            </Button>
+                        )}
+                        {selectedDoc && (
+                            <Button
+                                variant="primary"
+                                onClick={() => setPreviewDocId(selectedDoc.id)}
+                                leftIcon={<Eye className="w-4 h-4" />}
+                            >
+                                Xem tài liệu
                             </Button>
                         )}
                     </div>
@@ -416,6 +424,13 @@ const DocumentDirectoryTable = () => {
                     </div>
                 )}
             </Modal>
+
+            {/* Document Previewer Modal */}
+            <DocumentPreviewModal
+                documentId={previewDocId}
+                isOpen={!!previewDocId}
+                onClose={() => setPreviewDocId(null)}
+            />
         </div>
     )
 }

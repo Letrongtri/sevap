@@ -6,6 +6,7 @@ from app.repositories import RoleRepository, PermissionRepository
 from app.services.exceptions import (
     RoleAlreadyExistsError, 
     NotFoundError,
+    SelfRoleUpdateError,
 )
 from app.schemas import (
     RoleSimple, RoleQuery, PaginationQuery, RoleCreate, RoleUpdate, 
@@ -87,11 +88,18 @@ class RoleService:
             raise NotFoundError()
         return RoleResponse.model_validate(role)
 
-    async def update_role(self, tenant_id: str, role_id: str, data: RoleUpdate) -> RoleResponse:
+    async def update_role(
+        self, tenant_id: str, role_id: str, data: RoleUpdate, operator_user_id: str | None = None
+    ) -> RoleResponse:
         existing = await self.repo.get_role_by_id(role_id)
         if existing is None or existing.tenant_id != tenant_id:
             raise NotFoundError()
         
+        if operator_user_id:
+            is_in_role = await self.repo.is_user_in_role(operator_user_id, role_id)
+            if is_in_role:
+                raise SelfRoleUpdateError()
+
         if data.name is not None and not existing.is_system:
             existing.name = data.name
         if data.description is not None:
@@ -110,13 +118,20 @@ class RoleService:
         updated = await self.repo.save(role=existing)
         return RoleResponse.model_validate(updated)
     
-    async def delete_role(self, tenant_id: str, role_id: str) -> RoleResponse:
+    async def delete_role(
+        self, tenant_id: str, role_id: str, operator_user_id: str | None = None
+    ) -> RoleResponse:
         existing = await self.repo.get_role_by_id(role_id)
         if existing is None or existing.tenant_id != tenant_id:
             raise NotFoundError()
         
         if existing.is_system:
             raise Exception("Cannot delete system role")
+        
+        if operator_user_id:
+            is_in_role = await self.repo.is_user_in_role(operator_user_id, role_id)
+            if is_in_role:
+                raise SelfRoleUpdateError()
         
         response = RoleResponse.model_validate(existing)
         await self.repo.delete_role(existing)

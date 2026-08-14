@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import ConfirmDialog from '../ui/ConfirmDialog'
 import { usePermission } from '../../hooks/usePermission'
 import { PERMISSIONS } from '../../lib/permissions'
+import { useAuthStore } from '../../store/authStore'
 
 const DetailRoleForm = ({
     selectedRole,
@@ -64,11 +65,18 @@ const DetailRoleForm = ({
     const isAddingRole = useRoleStore((s) => s.isAddingRole)
     const setIsAddingRole = useRoleStore((s) => s.setIsAddingRole)
     const setActiveRoleId = useRoleStore((s) => s.setActiveRoleId)
+    const currentUser = useAuthStore((s) => s.user)
+    const isMyRole = Boolean(
+        !isAddingRole &&
+        currentUser?.roles &&
+        selectedRole?.name &&
+        currentUser.roles.includes(selectedRole.name)
+    )
 
     const canCreate = usePermission(PERMISSIONS.ROLES_CREATE)
     const canUpdate = usePermission(PERMISSIONS.ROLES_UPDATE)
     const canDelete = usePermission(PERMISSIONS.ROLES_DELETE)
-    const canSave   = isAddingRole ? canCreate : canUpdate
+    const canSave   = isAddingRole ? canCreate : (canUpdate && !isMyRole)
 
     // Mutation hooks
     const createRoleMutation = useCreateRole()
@@ -158,11 +166,13 @@ const DetailRoleForm = ({
             onSuccess: () => {
                 toast.success('Xóa vai trò thành công.')
                 setActiveRoleId(null)
+                setShowDeleteConfirm(false)
             },
             onError: (err: any) => {
                 toast.error(
                     err.response?.data?.detail ?? 'Xóa vai trò thất bại.'
                 )
+                setShowDeleteConfirm(false)
             },
         })
     }
@@ -184,6 +194,7 @@ const DetailRoleForm = ({
                     editAccessLevel={editAccessLevel}
                     setEditAccessLevel={setEditAccessLevel}
                     accessLevelOptions={accessLevelOptions}
+                    disabled={isMyRole}
                 />
 
                 {/* Permissions Matrix Grid */}
@@ -191,7 +202,14 @@ const DetailRoleForm = ({
                     permissionsData={permissionsData}
                     editPermissionIds={editPermissionIds}
                     onTogglePermission={handleTogglePermission}
+                    disabled={isMyRole}
                 />
+
+                {isMyRole && (
+                    <p className="text-[11px] text-text-placeholder font-medium">
+                        * Bạn không thể tự chỉnh sửa hoặc xóa vai trò đang được gán cho chính mình.
+                    </p>
+                )}
 
                 {/* Save / Cancel buttons */}
                 <div className="flex gap-2.5 pt-2">
@@ -218,7 +236,7 @@ const DetailRoleForm = ({
             </form>
 
             {/* Delete Role button — requires roles:delete */}
-            {!isAddingRole && !showDeleteConfirm && canDelete && (
+            {!isAddingRole && !isMyRole && !showDeleteConfirm && canDelete && (
                 <div className="flex items-center justify-between gap-4 p-3 hover:bg-error-bg/10 rounded-xl transition-all">
                     <div>
                         <p className="text-xs font-semibold text-error-text">

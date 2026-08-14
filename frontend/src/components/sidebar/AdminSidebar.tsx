@@ -44,7 +44,7 @@ const adminNav = [
         to: PRIVATE_ROUTES.ADMIN_JOB_TITLES,
     },
     {
-        label: 'Prompt Template',
+        label: 'Quản lý prompt',
         icon: BotMessageSquare,
         to: PRIVATE_ROUTES.ADMIN_PROMPT_TEMPLATES,
     },

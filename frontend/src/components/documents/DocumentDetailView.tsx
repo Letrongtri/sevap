@@ -254,11 +254,7 @@ const DocumentDetailView: React.FC<DocumentDetailViewProps> = ({
                                                 <div className="flex items-center gap-1.5 text-text-secondary font-semibold">
                                                     <Layers className="w-3.5 h-3.5 text-primary" />
                                                     <span>
-                                                        Policy Group {idx + 1}
-                                                    </span>
-                                                    <span className="text-[10px] font-normal text-text-placeholder">
-                                                        (tất cả điều kiện phải
-                                                        thỏa)
+                                                        Điều kiện {idx + 1}
                                                     </span>
                                                 </div>
 

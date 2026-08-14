@@ -39,3 +39,6 @@ class OnProcessingError(Exception):
 
 class AccessDeniedError(Exception):
     pass
+
+class SelfRoleUpdateError(Exception):
+    pass

@@ -50,7 +50,10 @@ const UserDetail = () => {
 
                 {/* --- STATE 2: Viewing/Editing selected user --- */}
                 {selectedUser && (
-                    <DetailAccountForm selectedUser={selectedUser} />
+                    <DetailAccountForm
+                        key={selectedUser.id}
+                        selectedUser={selectedUser}
+                    />
                 )}
             </div>
         </div>

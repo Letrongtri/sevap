@@ -7,6 +7,7 @@ from app.services import (
     UserAlreadyExistsError,
     InvalidPasswordError,
     NotFoundError,
+    SelfRoleUpdateError,
 )
 from app.schemas import (
     UserCreate, 
@@ -289,15 +290,20 @@ async def update_user(
     user_id: str, 
     data: UserUpdate,
     background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user),
     user_service: UserService = Depends(get_user_service),
 ):
     try:
         tenant_id = request.state.tenant_id
         client_ip = get_client_ip(request)
         user_agent = get_user_agent(request)
+        operator_user_id = current_user.get("user_id")
         return await user_service.update_user(
-            user_id, data, tenant_id, client_ip=client_ip, user_agent=user_agent
+            user_id, data, tenant_id, operator_user_id=operator_user_id, client_ip=client_ip, user_agent=user_agent
         )
+    except SelfRoleUpdateError:
+        logger.error("self_role_update_attempted", user_id=user_id, operator_user_id=current_user.get("user_id"))
+        raise HTTPException(status_code=400, detail="Bạn không thể tự chỉnh sửa vai trò của chính mình.")
     except NotFoundError:
         logger.error("update_user_not_found", user_id=user_id)
         raise HTTPException(status_code=404, detail="User not found")

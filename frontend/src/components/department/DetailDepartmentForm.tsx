@@ -136,11 +136,13 @@ const DetailDepartmentForm = ({
             onSuccess: () => {
                 toast.success('Xóa phòng ban thành công.')
                 setActiveDepartmentId(null)
+                setShowDeleteConfirm(false)
             },
             onError: (err: any) => {
                 toast.error(
                     err.response?.data?.detail ?? 'Xóa phòng ban thất bại.'
                 )
+                setShowDeleteConfirm(false)
             },
         })
     }

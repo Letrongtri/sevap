@@ -5,7 +5,8 @@ from typing import List
 from app.services import (
     RoleService,
     RoleAlreadyExistsError,
-    NotFoundError
+    NotFoundError,
+    SelfRoleUpdateError
 )
 from app.schemas import (
     RoleCreate, 
@@ -16,7 +17,7 @@ from app.schemas import (
     RolePaginatedResponse,
     PaginationQuery
 )
-from app.dependencies import get_role_service, check_permission
+from app.dependencies import get_role_service, check_permission, get_current_user
 from app.decorators import log_activity
 from app.core.logging import logger
 from app.core.config import settings
@@ -178,11 +179,16 @@ async def update_role(
     role_id: str, 
     data: RoleUpdate,
     background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user),
     role_service: RoleService = Depends(get_role_service),
 ):
     try:
         tenant_id = request.state.tenant_id
-        return await role_service.update_role(tenant_id, role_id, data)
+        operator_user_id = current_user.get("user_id")
+        return await role_service.update_role(tenant_id, role_id, data, operator_user_id=operator_user_id)
+    except SelfRoleUpdateError:
+        logger.error("self_role_update_attempted", role_id=role_id, operator_user_id=current_user.get("user_id"))
+        raise HTTPException(status_code=400, detail="Bạn không thể tự chỉnh sửa hoặc xóa vai trò đang được gán cho chính mình.")
     except NotFoundError:
         logger.error("updated_role_not_found", role_id=role_id)
         raise HTTPException(status_code=404, detail="Role not found")
@@ -214,6 +220,7 @@ async def delete_role(
     request: Request,
     role_id: str,
     background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user),
     role_service: RoleService = Depends(get_role_service),
 ):
     """Delete custom role.
@@ -227,7 +234,11 @@ async def delete_role(
     """
     try:
         tenant_id = request.state.tenant_id
-        return await role_service.delete_role(tenant_id, role_id)
+        operator_user_id = current_user.get("user_id")
+        return await role_service.delete_role(tenant_id, role_id, operator_user_id=operator_user_id)
+    except SelfRoleUpdateError:
+        logger.error("self_role_delete_attempted", role_id=role_id, operator_user_id=current_user.get("user_id"))
+        raise HTTPException(status_code=400, detail="Bạn không thể tự chỉnh sửa hoặc xóa vai trò đang được gán cho chính mình.")
     except NotFoundError:
         logger.error("deleted_role_not_found", role_id=role_id)
         raise HTTPException(status_code=404, detail="Role not found")

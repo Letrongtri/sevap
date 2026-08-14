@@ -136,11 +136,13 @@ const DetailJobTitleForm = ({
             onSuccess: () => {
                 toast.success('Xóa chức danh thành công.')
                 setActiveJobTitleId(null)
+                setShowDeleteConfirm(false)
             },
             onError: (err: any) => {
                 toast.error(
                     err.response?.data?.detail ?? 'Xóa chức danh thất bại.'
                 )
+                setShowDeleteConfirm(false)
             },
         })
     }

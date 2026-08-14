@@ -20,12 +20,18 @@ import {
 } from '../../hooks/useUsers'
 import { toast } from 'sonner'
 import { useUserStore } from '../../store/usersStore'
+import { useAuthStore } from '../../store/authStore'
 import ConfirmDialog from '../ui/ConfirmDialog'
 import { usePermission } from '../../hooks/usePermission'
 import { PERMISSIONS } from '../../lib/permissions'
 
 const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
     const setActiveUserId = useUserStore((s) => s.setActiveUserId)
+    const currentUser = useAuthStore((s) => s.user)
+    const isSelf = Boolean(
+        currentUser?.id && selectedUser?.id && currentUser.id === selectedUser.id
+    )
+
     const canUpdate  = usePermission(PERMISSIONS.USERS_UPDATE)
     const canSuspend = usePermission(PERMISSIONS.USERS_SUSPEND)
     const canDelete  = usePermission(PERMISSIONS.USERS_DELETE)
@@ -124,22 +130,17 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
 
     const handleResetPassword = () => {
         if (!selectedUser) return
-        if (
-            !window.confirm(
-                `Bạn có chắc chắn muốn đặt lại mật khẩu cho ${selectedUser.full_name} về mật khẩu mặc định?`
-            )
-        ) {
-            return
-        }
 
         resetPasswordMutation.mutate(selectedUser.id, {
             onSuccess: () => {
                 toast.success('Đặt lại mật khẩu thành công về mặc định.')
+                setShowResetPasswordConfirm(false)
             },
             onError: (err: any) => {
                 toast.error(
                     err.response?.data?.detail ?? 'Đặt lại mật khẩu thất bại.'
                 )
+                setShowResetPasswordConfirm(false)
             },
         })
     }
@@ -151,11 +152,13 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
             onSuccess: () => {
                 toast.success('Xóa tài khoản thành công.')
                 setActiveUserId(null)
+                setShowDeleteConfirm(false)
             },
             onError: (err: any) => {
                 toast.error(
                     err.response?.data?.detail ?? 'Xóa tài khoản thất bại.'
                 )
+                setShowDeleteConfirm(false)
             },
         })
     }
@@ -163,24 +166,26 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
     const handleToggleUserStatus = () => {
         if (!selectedUser) return
 
+        const newStatus = !editIsActive
         toggleStatusMutation.mutate(
-            { id: selectedUser.id, active: !editIsActive },
+            { id: selectedUser.id, active: newStatus },
             {
                 onSuccess: () => {
                     toast.success(
-                        `Đã ${!editIsActive ? 'kích hoạt' : 'vô hiệu hóa'} tài khoản thành công.`
+                        `Đã ${newStatus ? 'kích hoạt' : 'vô hiệu hóa'} tài khoản thành công.`
                     )
+                    setEditIsActive(newStatus)
+                    setShowActiveToggleConfirm(false)
                 },
                 onError: (err: any) => {
                     toast.error(
                         err.response?.data?.detail ??
                             'Thao tác trạng thái tài khoản thất bại.'
                     )
+                    setShowActiveToggleConfirm(false)
                 },
             }
         )
-
-        setEditIsActive(!editIsActive)
     }
 
     const isSubmitting =
@@ -240,15 +245,23 @@ const DetailAccountForm = ({ selectedUser }: { selectedUser: User }) => {
                     />
                 </div>
 
-                <SearchableMultiSelect
-                    options={roleOptions}
-                    value={roleIds}
-                    onChange={(val) => {
-                        setRoleIds(val)
-                    }}
-                    placeholder="Chọn vai trò"
-                    label="Vai trò"
-                />
+                <div>
+                    <SearchableMultiSelect
+                        options={roleOptions}
+                        value={roleIds}
+                        onChange={(val) => {
+                            setRoleIds(val)
+                        }}
+                        placeholder="Chọn vai trò"
+                        label="Vai trò"
+                        disabled={isSelf}
+                    />
+                    {isSelf && (
+                        <p className="text-[11px] text-text-placeholder mt-1 font-medium">
+                            * Bạn không thể tự chỉnh sửa vai trò của chính mình.
+                        </p>
+                    )}
+                </div>
 
                 {/* Save details button */}
                 {canUpdate && (

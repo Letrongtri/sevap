@@ -124,11 +124,13 @@ export default function SearchableMultiSelect({
 
     const handleRemoveOption = (e: React.MouseEvent, val: string | number) => {
         e.stopPropagation()
+        if (disabled) return
         onChange(value.filter((v) => v !== val))
     }
 
     const handleClearAll = (e: React.MouseEvent) => {
         e.stopPropagation()
+        if (disabled) return
         onChange([])
     }
 

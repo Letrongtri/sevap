@@ -20,6 +20,7 @@ interface DocumentPreviewerProps {
     fileName: string
     fileSize?: number
     fileType?: string
+    documentId?: ID
 }
 
 export const DocumentPreviewer: React.FC<DocumentPreviewerProps> = ({
@@ -27,12 +28,13 @@ export const DocumentPreviewer: React.FC<DocumentPreviewerProps> = ({
     fileName,
     fileSize,
     fileType,
+    documentId: propDocumentId,
 }) => {
-    const { documentId } = useParams({
+    const routeParams = useParams({
         strict: false,
     }) as { documentId?: ID }
 
-    const id = documentId || null
+    const id = propDocumentId || routeParams?.documentId || null
 
     const wrapperRef = useRef<HTMLDivElement>(null)
     const [zoom, setZoom] = useState<number>(100)

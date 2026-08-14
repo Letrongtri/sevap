@@ -1,8 +1,10 @@
 import axios from 'axios'
 import { useAuthStore } from '../store/authStore'
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
+
 const axiosClient = axios.create({
-    baseURL: 'http://localhost:8000/api/v1',
+    baseURL: API_BASE_URL,
     headers: { 'Content-Type': 'application/json' },
 })
 
@@ -34,7 +36,7 @@ axiosClient.interceptors.response.use(
             if (refreshToken) {
                 try {
                     // Gọi API refresh riêng biệt
-                    const res = await axios.post('http://localhost:8000/api/v1/auth/refresh', {
+                    const res = await axios.post(`${API_BASE_URL}/auth/refresh`, {
                         refresh_token: refreshToken,
                     })
                     const {

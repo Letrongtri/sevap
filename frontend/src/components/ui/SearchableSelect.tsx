@@ -78,6 +78,7 @@ export default function SearchableSelect({
 
     const handleClear = (e: React.MouseEvent) => {
         e.stopPropagation()
+        if (disabled) return
         onChange(null)
     }
 

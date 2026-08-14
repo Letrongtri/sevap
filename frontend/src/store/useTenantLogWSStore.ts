@@ -85,8 +85,10 @@ export const useTenantLogWSStore = create<TenantLogWSState>((set, get) => ({
         if (filters.start_date) params.set('start_date', filters.start_date)
         if (filters.end_date) params.set('end_date', filters.end_date)
 
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+        const wsHost = import.meta.env.VITE_WS_URL || `${wsProtocol}//${window.location.host}/api/v1`
         const ws = new WebSocket(
-            `ws://localhost:8000/api/v1/ws/tenant-logs?${params.toString()}`
+            `${wsHost}/ws/tenant-logs?${params.toString()}`
         )
 
         ws.onopen = () => set({ status: 'OPEN', socket: ws })

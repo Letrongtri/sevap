@@ -10,6 +10,7 @@ interface RoleInfoFieldsProps {
     editAccessLevel: string
     setEditAccessLevel: (val: string) => void
     accessLevelOptions: { value: string; label: string }[]
+    disabled?: boolean
 }
 
 const RoleInfoFields = ({
@@ -20,6 +21,7 @@ const RoleInfoFields = ({
     editAccessLevel,
     setEditAccessLevel,
     accessLevelOptions,
+    disabled = false,
 }: RoleInfoFieldsProps) => {
     return (
         <div className="space-y-4">
@@ -30,6 +32,7 @@ const RoleInfoFields = ({
                     value={editRoleName}
                     onChange={(e) => setEditRoleName(e.target.value)}
                     leftIcon={<Shield className="w-4 h-4" />}
+                    disabled={disabled}
                 />
 
                 <SearchableSelect
@@ -38,6 +41,7 @@ const RoleInfoFields = ({
                     onChange={setEditAccessLevel}
                     placeholder="Chọn cấp độ truy cập"
                     label="Cấp độ truy cập"
+                    disabled={disabled}
                 />
             </div>
 
@@ -46,6 +50,7 @@ const RoleInfoFields = ({
                 placeholder="Mô tả vai trò"
                 value={editDescription}
                 onChange={(e) => setEditDescription(e.target.value)}
+                disabled={disabled}
             />
         </div>
     )

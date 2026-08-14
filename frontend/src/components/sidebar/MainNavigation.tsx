@@ -169,7 +169,7 @@ const MainNavigation = ({
 
                     {canCreatePromptTpl && (
                         <NavItem
-                            label="Prompt templates"
+                            label="Quản lý prompt"
                             icon={BotMessageSquare}
                             to={PRIVATE_ROUTES.MANAGE_PROMPT_TEMPLATES}
                             collapsed={collapsed}

@@ -80,8 +80,10 @@ export const useUserSessionWSStore = create<UserSessionWSState>((set, get) => ({
         if (filters.user_id) params.set('user_id', filters.user_id)
         if (filters.status) params.set('status', filters.status)
 
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+        const wsHost = import.meta.env.VITE_WS_URL || `${wsProtocol}//${window.location.host}/api/v1`
         const ws = new WebSocket(
-            `ws://localhost:8000/api/v1/ws/user-sessions?${params.toString()}`
+            `${wsHost}/ws/user-sessions?${params.toString()}`
         )
 
         ws.onopen = () => set({ status: 'OPEN', socket: ws })

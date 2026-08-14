@@ -143,8 +143,8 @@ export default function GlobalAdminDashboard() {
         let eventSource: EventSource | null = null
 
         const connectSSE = () => {
-            // Encode token to query parameter for EventSource authorization compatibility
-            const sseUrl = `http://localhost:8000/api/v1/global-admin/dashboard/realtime?token=${accessToken}`
+            const apiBase = import.meta.env.VITE_API_BASE_URL || '/api/v1'
+            const sseUrl = `${apiBase}/global-admin/dashboard/realtime?token=${accessToken}`
             eventSource = new EventSource(sseUrl)
 
             eventSource.onopen = () => {

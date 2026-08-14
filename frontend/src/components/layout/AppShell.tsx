@@ -1,7 +1,6 @@
 import { Outlet } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Sidebar } from './Sidebar'
-import { Bell } from 'lucide-react'
 
 /* ============================================================
    AppShell — Main authenticated layout
@@ -34,7 +33,7 @@ export function AppShell() {
                 </main>
             </div>
 
-            <button
+            {/* <button
                 aria-label="Notifications"
                 className={[
                     'absolute right-3 top-3',
@@ -45,9 +44,8 @@ export function AppShell() {
                 ].join(' ')}
             >
                 <Bell style={{ width: 18, height: 18 }} />
-                {/* Unread dot */}
                 <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary" />
-            </button>
+            </button> */}
         </div>
     )
 }

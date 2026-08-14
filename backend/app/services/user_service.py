@@ -11,7 +11,8 @@ from app.schemas import (
 from app.services.exceptions import (
     UserAlreadyExistsError, 
     NotFoundError,
-    InvalidPasswordError
+    InvalidPasswordError,
+    SelfRoleUpdateError
 )
 from app.core.config import settings
 from app.utils.auth import hash_password, verify_password
@@ -239,9 +240,13 @@ class UserService:
     async def update_user(
         self, user_id: str, data: UserUpdate | MyProfileUpdate,
         tenant_id: str | None = None, update_my_profile: bool = False,
-        client_ip: str | None = None, user_agent: str | None = None
+        client_ip: str | None = None, user_agent: str | None = None,
+        operator_user_id: str | None = None
     ) -> UserResponse:
-        existing = await self.repo.get_user_by_id(user_id)
+        existing = await self.repo.get_user_by_id(
+            user_id,
+            get_user_roles=True
+        )
         if existing is None or existing.tenant_id != tenant_id:
             if update_my_profile:
                 ActivityLogService.log(
@@ -293,6 +298,14 @@ class UserService:
 
         # Update roles if provided
         if getattr(data, "role_ids", None) is not None:
+            if operator_user_id and str(operator_user_id) == str(user_id):
+                existing_role_ids = (
+                    {ra.role_id for ra in existing.role_associations if ra.role_id is not None}
+                    if existing.role_associations else set()
+                )
+                new_role_ids = set(data.role_ids)
+                if new_role_ids != existing_role_ids:
+                    raise SelfRoleUpdateError()
             await self.repo.update_user_roles(user_id, data.role_ids)
 
         await self.repo.save(user=existing)

@@ -3,11 +3,19 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy import func
 
-from app.models import Role
+from app.models import Role, UserRole
 
 class RoleRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
+    
+    async def is_user_in_role(self, user_id: str, role_id: str) -> bool:
+        stmt = select(func.count()).select_from(UserRole).where(
+            UserRole.user_id == user_id,
+            UserRole.role_id == role_id
+        )
+        result = await self.db.scalar(stmt)
+        return bool(result and result > 0)
     
     async def get_all_roles(
         self,

@@ -5,12 +5,14 @@ interface PermissionsMatrixProps {
     permissionsData?: Permission[]
     editPermissionIds: number[]
     onTogglePermission: (permissionId: number) => void
+    disabled?: boolean
 }
 
 const PermissionsMatrix = ({
     permissionsData,
     editPermissionIds,
     onTogglePermission,
+    disabled = false,
 }: PermissionsMatrixProps) => {
     // Dynamic list of unique resources, sorted alphabetically
     const resources = [
@@ -29,7 +31,12 @@ const PermissionsMatrix = ({
             <label className="block text-sm font-semibold text-text-secondary">
                 Ma trận quyền hạn
             </label>
-            <div className="overflow-x-auto rounded-xl border border-border bg-surface shadow-sm">
+            <div
+                className={[
+                    'overflow-x-auto rounded-xl border border-border bg-surface shadow-sm',
+                    disabled ? 'opacity-60 cursor-not-allowed pointer-events-none' : '',
+                ].join(' ')}
+            >
                 <table className="min-w-full table-fixed border-collapse text-xs">
                     <thead>
                         <tr className="bg-surface-raised border-b border-border">
