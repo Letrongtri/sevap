@@ -14,10 +14,8 @@ import { GlobalAdminSidebar } from '../components/sidebar/GlobalAdminSidebar'
 const GlobalAdminDashboard = lazyPage(
     () => import('../pages/GlobalAdminDashboard')
 )
-const GlobalAdminTenants = lazyPage(() =>
-    import('../pages/GlobalAdminPlaceholders').then((m) => ({
-        default: m.GlobalAdminTenants,
-    }))
+const GlobalAdminTenants = lazyPage(
+    () => import('../pages/GlobalAdminTenantsPage')
 )
 const GlobalAdminPermissions = lazyPage(() =>
     import('../pages/GlobalAdminPlaceholders').then((m) => ({
