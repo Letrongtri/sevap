@@ -234,6 +234,7 @@ async def _retrieve_single(
     retrieval_service: RetrievalService,
     context_map: Dict[int, List[RetrievalResult]],
     id_map: Dict[int, SubQuery],
+    time_range: dict | None = None,
 ) -> List[RetrievalResult]:
     """
     Thực thi hybrid search cho một sub-query.
@@ -245,14 +246,16 @@ async def _retrieve_single(
     enriched_query = await _build_enriched_query(query, context_map, id_map)
 
     logger.info(
-        "[RetrievalNode] Retrieving Q%d | enriched=%s",
+        "[RetrievalNode] Retrieving Q%d | enriched=%s | time_sensitive=%s",
         query.id,
         "yes" if enriched_query != query.query else "no",
+        time_range.get("is_time_sensitive", False) if time_range else False,
     )
 
     results = await retrieval_service.retrieve(
         query=enriched_query,
         par_context=par_context,
+        time_range=time_range,
     )
     return results
 
@@ -295,6 +298,7 @@ async def retrieval_node(state: AgentState, config: RunnableConfig) -> dict:
     )
 
     sub_queries: List[SubQuery] = state.get("sub_queries", [])
+    time_range: dict | None = state.get("time_range")
 
     # ── Fallback: single_rag không có sub_queries ────────────────────────────
     if not sub_queries:
@@ -303,6 +307,7 @@ async def retrieval_node(state: AgentState, config: RunnableConfig) -> dict:
         results = await retrieval_service.retrieve(
             query=question,
             par_context=par_ctx,
+            time_range=time_range,
         )
         best_score = max((r.score for r in results), default=0.0)
         logger.info(
@@ -374,7 +379,7 @@ async def retrieval_node(state: AgentState, config: RunnableConfig) -> dict:
             # Chạy song song tất cả query trong wave
             wave_results: List[List[RetrievalResult]] = await asyncio.gather(
                 *[
-                    _retrieve_single(query, par_ctx, retrieval_service, context_map, id_map)
+                    _retrieve_single(query, par_ctx, retrieval_service, context_map, id_map, time_range)
                     for query in wave
                 ]
             )

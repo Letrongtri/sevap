@@ -13,6 +13,22 @@ class SubQuery(BaseModel):
     )
 
 
+class TimeRangeFilter(BaseModel):
+    """Khoảng thời gian được trích xuất từ câu hỏi của người dùng."""
+    date_from: Optional[str] = Field(
+        default=None,
+        description="Ngày bắt đầu khoảng thời gian, định dạng ISO 'YYYY-MM-DD'. None nếu không giới hạn."
+    )
+    date_to: Optional[str] = Field(
+        default=None,
+        description="Ngày kết thúc khoảng thời gian, định dạng ISO 'YYYY-MM-DD'. None nếu không giới hạn."
+    )
+    is_time_sensitive: bool = Field(
+        default=False,
+        description="True nếu câu hỏi ngụ ý một khoảng thời gian cụ thể cần lọc dữ liệu."
+    )
+
+
 class RouterOutputSchema(BaseModel):
     """Output schema của IntentRouter sau khi phân tích và phân rã câu hỏi."""
     original_query: str = Field(..., description="Original query")
@@ -29,3 +45,7 @@ class RouterOutputSchema(BaseModel):
         default=[], description="List of sub-queries (Empty if 'direct')"
     )
     reasoning: str = Field(..., description="Reasoning for choosing the strategy")
+    time_range: TimeRangeFilter = Field(
+        default_factory=TimeRangeFilter,
+        description="Khoảng thời gian được trích xuất từ câu hỏi."
+    )

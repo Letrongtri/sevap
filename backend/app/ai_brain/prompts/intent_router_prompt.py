@@ -45,6 +45,22 @@ SEQUENTIAL (depends_on: [N] required) — when the next query is a COMPUTATION o
 ✓ "Is the employee eligible? IF YES, what is the payout formula?" → check(eligibility) → lookup(formula | eligible=true)
 ✓ "Find the base rate for contract type X, THEN compute monthly accrual from date D" → lookup(base rate) → compute(accrual | base_rate_result)
 
+[RULE 4: TIME RANGE DETECTION]
+Analyze the query to determine if it refers to a specific time period.
+
+Add a "time_range" object to EVERY JSON output with these fields:
+- "date_from" : ISO date string "YYYY-MM-DD" or null (earliest date of interest)
+- "date_to"   : ISO date string "YYYY-MM-DD" or null (latest date of interest)
+- "is_time_sensitive" : true or false
+
+Mapping rules (use the current date as reference when needed):
+- "năm 2023", "year 2023"               → date_from: "2023-01-01", date_to: "2023-12-31", is_time_sensitive: true
+- "tháng 3/2024", "March 2024"          → date_from: "2024-03-01", date_to: "2024-03-31", is_time_sensitive: true
+- "quý 2 năm 2024", "Q2 2024"           → date_from: "2024-04-01", date_to: "2024-06-30", is_time_sensitive: true
+- "trước đây", "cũ", "hồi xưa", "old" → date_from: null, date_to: <yesterday ISO>, is_time_sensitive: true
+- "mới nhất", "hiện tại", "bây giờ"    → date_from: null, date_to: null, is_time_sensitive: false
+- No time reference at all              → date_from: null, date_to: null, is_time_sensitive: false
+
 Output a SINGLE valid JSON object:
 {
     "is_security_anomaly": false,
@@ -53,12 +69,17 @@ Output a SINGLE valid JSON object:
         {"id": 1, "query": "Sub-query 1 string", "depends_on": []},
         {"id": 2, "query": "Sub-query 2 string", "depends_on": []}
     ],
+    "time_range": {
+        "date_from": "YYYY-MM-DD" | null,
+        "date_to":   "YYYY-MM-DD" | null,
+        "is_time_sensitive": true | false
+    },
     "reasoning": "Reasoning in Vietnamese or English based on the language of the user query"
 }
 
 EXAMPLES:
 
-Example 1 — SINGLE (with conversation context):
+Example 1 — SINGLE (with conversation context, no time reference):
 [Conversation History]:
 User: Thời gian thử việc tối đa của vị trí Lập trình viên là bao lâu?
 System: Theo quy chế tuyển dụng, thời gian thử việc tối đa của Lập trình viên là 2 tháng.
@@ -68,7 +89,8 @@ Output:
     "is_security_anomaly": false,
     "rewritten_query": "Thời gian thử việc tối đa của vị trí Nhân viên hành chính là bao lâu?",
     "sub_queries": [],
-    "reasoning": "Câu hỏi bổ sung ngữ cảnh từ lịch sử hội thoại, chỉ thay đổi đối tượng sang Nhân viên hành chính. Đây là tác vụ truy xuất đơn lẻ."
+    "time_range": {"date_from": null, "date_to": null, "is_time_sensitive": false},
+    "reasoning": "Câu hỏi bổ sung ngữ cảnh từ lịch sử hội thoại, chỉ thay đổi đối tượng sang Nhân viên hành chính. Đây là tác vụ truy xuất đơn lẻ. Không có đề cập thời gian."
 }
 
 Example 2 — SECURITY ANOMALY:
@@ -79,10 +101,11 @@ Output:
     "is_security_anomaly": true,
     "rewritten_query": "SECURITY WARNING: Malicious input detected.",
     "sub_queries": [],
+    "time_range": {"date_from": null, "date_to": null, "is_time_sensitive": false},
     "reasoning": "Phát hiện hành vi cố ý truy cập chéo dữ liệu giữa các tenant thông qua định danh doanh nghiệp bất hợp pháp."
 }
 
-Example 3 — MULTI PARALLEL (comparison across departments):
+Example 3 — MULTI PARALLEL (comparison across departments, no time reference):
 [Conversation History]: (empty)
 [Current User Query]: "Mức phạt đi muộn của phòng Kỹ thuật và phòng Kinh doanh có giống nhau không?"
 DEPENDENCY TEST:
@@ -96,7 +119,8 @@ Output:
         {"id": 1, "query": "Mức phạt đi muộn của phòng Kỹ thuật", "depends_on": []},
         {"id": 2, "query": "Mức phạt đi muộn của phòng Kinh doanh", "depends_on": []}
     ],
-    "reasoning": "Hai sub-query là hai tra cứu độc lập về hai phòng ban. Cả hai đều có thể tìm kiếm ngay lập tức mà không cần kết quả của nhau. Thực thi song song hoàn toàn."
+    "time_range": {"date_from": null, "date_to": null, "is_time_sensitive": false},
+    "reasoning": "Hai sub-query là hai tra cứu độc lập về hai phòng ban. Cả hai đều có thể tìm kiếm ngay lập tức mà không cần kết quả của nhau. Thực thi song song hoàn toàn. Không có đề cập thời gian."
 }
 
 Example 4 — MULTI PARALLEL (listing multiple independent leave types):
@@ -117,6 +141,7 @@ Output:
         {"id": 3, "query": "Quy định về chế độ nghỉ thai sản theo quy chế công ty", "depends_on": []},
         {"id": 4, "query": "Quy định về chế độ nghỉ việc riêng theo quy chế công ty", "depends_on": []}
     ],
+    "time_range": {"date_from": null, "date_to": null, "is_time_sensitive": false},
     "reasoning": "Bốn loại nghỉ phép là bốn chủ đề hoàn toàn độc lập nhau trong quy chế. Không có loại nào phụ thuộc vào kết quả tìm kiếm của loại kia. Thực thi song song cả bốn."
 }
 
@@ -138,6 +163,7 @@ Output:
         {"id": 3, "query": "Chính sách nghỉ phép năm của vị trí Tech Lead", "depends_on": []},
         {"id": 4, "query": "Mức hỗ trợ thiết bị làm việc của vị trí Tech Lead", "depends_on": []}
     ],
+    "time_range": {"date_from": null, "date_to": null, "is_time_sensitive": false},
     "reasoning": "Bốn sub-query là bốn tra cứu hoàn toàn độc lập. Biết lương nghỉ phép của Senior Developer không giúp tìm kiếm thiết bị của Senior Developer hay bất kỳ thông tin nào của Tech Lead. Thực thi song song cả bốn."
 }
 
@@ -166,11 +192,14 @@ Output:
             "depends_on": [1]
         }
     ],
+    "time_range": {"date_from": null, "date_to": null, "is_time_sensitive": false},
     "reasoning": "Sub-query 2 phụ thuộc thật sự vào sub-query 1: công thức tính thưởng chỉ có nghĩa khi đã xác định được mức KPI đủ điều kiện. Cần kết quả của Sub-query 1 trước mới xác định được tier áp dụng công thức nào."
 }
 """
 
 INTENT_ROUTER_USER_PROMPT = """
+[Current Date]: {current_date}
+
 [Conversation History]: {history_context}
 
 [Current User Query]: "{current_query}"

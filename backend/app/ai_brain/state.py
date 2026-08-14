@@ -33,6 +33,12 @@ class AgentState(TypedDict):
     sub_queries: list[SubQuery]     # chỉ có giá trị khi intent="multi_rag"
     router_reasoning: str
 
+    # ── Time-Range Filter ─────────────────────────────────────────────────
+    # Khoảng thời gian được trích xuất từ câu hỏi của người dùng.
+    # {"date_from": "YYYY-MM-DD"|None, "date_to": "YYYY-MM-DD"|None, "is_time_sensitive": bool}
+    # Dùng dict thay Pydantic model để JSON-safe với Postgres checkpointer.
+    time_range: dict | None
+
     # ── Retrieval ─────────────────────────────────────────────────────────
     retrieved_chunks: list[RetrievalResult]   # Raw output từ hybrid search
     reranked_chunks: list[RetrievalResult]    # Sau khi qua CrossEncoder reranker (flat, compat)

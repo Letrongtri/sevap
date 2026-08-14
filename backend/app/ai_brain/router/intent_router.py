@@ -1,4 +1,5 @@
 import json
+from datetime import date
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from app.core.enum import IntentType, RetrievalExecutionPlan
@@ -9,7 +10,7 @@ from app.ai_brain.prompts.intent_router_prompt import (
     INTENT_ROUTER_USER_PROMPT, INTENT_ROUTER_SYSTEM_PROMPT
 )
 from app.ai_brain.llm.llm_provider import get_llm
-from app.ai_brain.schemas import RouterOutputSchema, SubQuery
+from app.ai_brain.schemas import RouterOutputSchema, SubQuery, TimeRangeFilter
 from app.utils.json_utils import clean_and_extract_json
 
 
@@ -45,6 +46,7 @@ class IntentRouter:
             messages = [
                 SystemMessage(content=INTENT_ROUTER_SYSTEM_PROMPT),
                 HumanMessage(content=INTENT_ROUTER_USER_PROMPT.format(
+                    current_date=date.today().isoformat(),
                     history_context=history_context,
                     current_query=current_query
                 )),
@@ -67,11 +69,20 @@ class IntentRouter:
                     intent_type=IntentType.SECURITY_ANOMALY, 
                     execution_plan=RetrievalExecutionPlan.UNKNOWN,
                     sub_queries=[],
-                    reasoning="Phát hiện Prompt Injection hoặc leo thang đặc quyền."
+                    reasoning="Phát hiện Prompt Injection hoặc leo thang đặc quyền.",
+                    time_range=TimeRangeFilter(),
                 )
 
             raw_subs = response_dict.get("sub_queries", [])
             sub_queries_objs = [SubQuery(**q) for q in raw_subs]
+
+            # Parse time_range từ LLM output (fallback về default nếu thiếu)
+            raw_time_range = response_dict.get("time_range", {})
+            time_range_filter = TimeRangeFilter(
+                date_from=raw_time_range.get("date_from"),
+                date_to=raw_time_range.get("date_to"),
+                is_time_sensitive=raw_time_range.get("is_time_sensitive", False),
+            )
 
             # 2. Xử lý logic Heuristic xác định Strategy & Cấu trúc Kế hoạch thực thi bằng Python Code
             if not sub_queries_objs or len(sub_queries_objs) == 1:
@@ -87,7 +98,8 @@ class IntentRouter:
                     intent_type=IntentType.SINGLE_RAG,
                     execution_plan=RetrievalExecutionPlan.PARALLEL,
                     sub_queries=[sub_query],
-                    reasoning=response_dict.get("reasoning", "Mô hình phân tích thấy câu hỏi đơn lẻ, thực thi song song.")
+                    reasoning=response_dict.get("reasoning", "Mô hình phân tích thấy câu hỏi đơn lẻ, thực thi song song."),
+                    time_range=time_range_filter,
                 )
 
             # Trường hợp Multi RAG          
@@ -107,6 +119,7 @@ class IntentRouter:
                 execution_plan=plan_type,
                 sub_queries=sub_queries_objs,
                 reasoning=reasoning,
+                time_range=time_range_filter,
             )
         except Exception as e:
             logger.error(f"Failed to route query: {str(e)}", extra={"tenant_id": tenant_id})

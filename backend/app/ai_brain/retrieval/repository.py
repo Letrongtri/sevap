@@ -239,10 +239,15 @@ class PARRepository:
         allowed_doc_ids: Set[str],
         tenant_id: str,
         top_k: int = 5,
+        time_range: dict | None = None,
     ) -> List[RetrievalResult]:
         """
         Bước 2 — Vector Search.
         Chỉ tìm kiếm trong vùng allowed_doc_ids — không biết gì về RBAC.
+
+        time_range: nếu is_time_sensitive=True, chỉ lấy chunks của documents:
+          - không có effective_date (luôn hợp lệ), HOẶC
+          - có effective_date nằm trong [date_from, date_to].
         """
         async with self._lock:
             if not allowed_doc_ids or not query_embedding:
@@ -252,6 +257,8 @@ class PARRepository:
             if not vec_literal:
                 return []
 
+            # TODO: time_range filtering tạm thời bị vô hiệu hóa
+            # (mixed named/positional param syntax không tương thích với asyncpg)
             sql = text("""
                 SELECT
                     dc.id               AS chunk_id,
@@ -259,6 +266,7 @@ class PARRepository:
                     dc.content,
                     dc.meta_data        AS metadata,
                     d.title             AS doc_title,
+                    d.effective_date,
                     d.access_level,
                     1 - (ve.embedding <=> CAST(:qvec AS vector))  AS score
                 FROM  vector_embeddings  ve
@@ -306,16 +314,23 @@ class PARRepository:
         allowed_doc_ids: Set[str],
         tenant_id: str,
         top_k: int = 5,
+        time_range: dict | None = None,
     ) -> List[RetrievalResult]:
         """
         Bước 2b — Full-Text Search (BM25-style).
         Dùng PostgreSQL ts_rank_cd + unaccent cho tiếng Việt.
         Chỉ tìm trong vùng allowed_doc_ids — tuân thủ PAR boundary.
+
+        time_range: nếu is_time_sensitive=True, chỉ lấy chunks của documents:
+          - không có effective_date (luôn hợp lệ), HOẶC
+          - có effective_date nằm trong [date_from, date_to].
         """
         async with self._lock:
             if not allowed_doc_ids:
                 return []
 
+            # TODO: time_range filtering tạm thời bị vô hiệu hóa
+            # (mixed named/positional param syntax không tương thích với asyncpg)
             sql = text("""
                 SELECT
                     dc.id               AS chunk_id,
@@ -323,6 +338,7 @@ class PARRepository:
                     dc.content,
                     dc.meta_data        AS metadata,
                     d.title             AS doc_title,
+                    d.effective_date,
                     d.access_level,
                     ts_rank_cd(
                         dc.content_tsv,

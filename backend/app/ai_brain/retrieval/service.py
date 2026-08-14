@@ -4,6 +4,7 @@ from app.ai_brain.embeddings.embedder import document_embedder
 from app.ai_brain.retrieval.repository import PARRepository
 from app.ai_brain.schemas import RetrievalResult, PARContext
 from app.models import ActivityLog
+from app.core.enum import LogLevel
 
 
 class RetrievalService:
@@ -15,6 +16,7 @@ class RetrievalService:
         self,
         query: str,
         par_context: PARContext,
+        time_range: dict | None = None,
         top_k: int = 10,
         rrf_k: int = 60,
     ) -> list[RetrievalResult]:
@@ -24,6 +26,11 @@ class RetrievalService:
           2a. Vector Search — cosine similarity
           2b. Keyword Search — PostgreSQL FTS (BM25-style, unaccent)
           3. RRF Merge   — Reciprocal Rank Fusion kết hợp 2 kết quả
+
+        time_range: dict với các keys "date_from", "date_to", "is_time_sensitive".
+                    Khi is_time_sensitive=True, chỉ lấy chunks của documents:
+                      - không có effective_date (luôn hợp lệ), HOẶC
+                      - có effective_date nằm trong khoảng [date_from, date_to].
         """
 
         # ── Bước 1: Relational Filter ─────────────────────────────
@@ -63,7 +70,7 @@ class RetrievalService:
                 tenant_id=par_context.tenant_id,
                 action="rag.par_gate_blocked",
                 resource="document",
-                log_level="WARNING",
+                log_level=LogLevel.WARNING,
                 meta_data=meta_data,
                 ip_address=None
             )
@@ -80,12 +87,14 @@ class RetrievalService:
                 allowed_doc_ids=allowed_ids,
                 tenant_id=par_context.tenant_id,
                 top_k=fetch_k,
+                time_range=time_range,
             )
             keyword_results = await self.repo.keyword_search(
                 query=query,
                 allowed_doc_ids=allowed_ids,
                 tenant_id=par_context.tenant_id,
                 top_k=fetch_k,
+                time_range=time_range,
             )
         except Exception as e:
             try:
@@ -96,6 +105,7 @@ class RetrievalService:
 
         # ── Bước 3: Reciprocal Rank Fusion ────────────────────────
         return self._rrf_merge(vector_results, keyword_results, top_k, rrf_k)
+
 
     def _rrf_merge(
         self,

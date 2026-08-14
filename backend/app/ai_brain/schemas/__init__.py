@@ -1,6 +1,6 @@
 from app.ai_brain.schemas.par_context import PARContext, ACCESS_LEVEL_HIERARCHY
 from app.ai_brain.schemas.retrieval_result import RetrievalResult
-from app.ai_brain.schemas.router_output import RouterOutputSchema, SubQuery
+from app.ai_brain.schemas.router_output import RouterOutputSchema, SubQuery, TimeRangeFilter
 from app.ai_brain.schemas.user_security_context import UserSecurityContext
 
 __all__ = [
@@ -14,4 +14,5 @@ __all__ = [
     # Router
     "RouterOutputSchema",
     "SubQuery",
+    "TimeRangeFilter",
 ]

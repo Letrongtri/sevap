@@ -230,8 +230,7 @@ class DocumentService:
                     document_id=updated_document.id,
                     access_level=access_level,
                     category=category,
-                    effective_date=effective_date,
-                    target_user_ids=target_user_ids
+                    effective_date=effective_date
                 )
 
                 return await self._to_document_response(updated_document)
@@ -257,8 +256,7 @@ class DocumentService:
                     file_path=str(uploaded_file_path),
                     access_level=access_level,
                     category=category,
-                    effective_date=effective_date,
-                    target_user_ids=target_user_ids
+                    effective_date=effective_date
                 )
 
                 return await self._to_document_response(reloaded)
@@ -338,8 +336,7 @@ class DocumentService:
             file_path=str(uploaded_file_path),
             access_level=access_level,
             category=category,
-            effective_date=effective_date,
-            target_user_ids=target_user_ids
+            effective_date=effective_date
         )
 
         return await self._to_document_response(saved_document)

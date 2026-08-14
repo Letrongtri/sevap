@@ -66,9 +66,12 @@ def _build_structured_context(
         elif chunks:
             chunk_lines = []
             for chunk in chunks:
-                doc_title = chunk.get("doc_title", "Tài liệu không xác định")
-                content   = chunk.get("content", "").strip()
-                chunk_lines.append(f"  - [{doc_title}]\n    {content}")
+                doc_title  = chunk.get("doc_title", "Tài liệu không xác định")
+                content    = chunk.get("content", "").strip()
+                metadata   = chunk.get("metadata") or {}
+                eff_date   = metadata.get("effective_date") or chunk.get("effective_date")
+                date_label = f" | Hiệu lực từ: {eff_date}" if eff_date else ""
+                chunk_lines.append(f"  - [{doc_title}{date_label}]\n    {content}")
             parts.append(header + "\n" + "\n".join(chunk_lines))
         else:
             parts.append(header + "\n Không tìm thấy tài liệu liên quan đến câu hỏi này.")
@@ -80,8 +83,12 @@ def _build_flat_context(chunks: List[dict]) -> str:
     """Flat context format cho single_rag (backward compat)."""
     context_parts = []
     for i, chunk in enumerate(chunks, 1):
+        doc_title = chunk.get('doc_title', '')
+        metadata  = chunk.get("metadata") or {}
+        eff_date  = metadata.get("effective_date") or chunk.get("effective_date")
+        date_label = f" | Hiệu lực từ: {eff_date}" if eff_date else ""
         context_parts.append(
-            f"[Document {i}: {chunk.get('doc_title', '')}]\n{chunk.get('content', '')}"
+            f"[Document {i}: {doc_title}{date_label}]\n{chunk.get('content', '')}"
         )
     return "\n\n---\n\n".join(context_parts)
 

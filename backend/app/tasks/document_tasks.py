@@ -10,9 +10,7 @@ from app.db.session import AsyncSessionLocal
 async def process_document_chunking_task(
     tenant_id: str, document_id: str, 
     file_path: str, access_level: str, 
-    category: str = None, effective_date: datetime = None,
-    department_ids: list[str] = None, role_access: list[str] = None, 
-    target_user_ids: list[str] = None
+    category: str = None, effective_date: datetime = None
 ):
     """
     Background task: Chunking và embedding tài liệu.
@@ -32,10 +30,7 @@ async def process_document_chunking_task(
                     effective_date.strftime("%Y-%m-%d") 
                     if effective_date is not None else None
                 ),
-                "access_level": access_level,
-                "department_ids": department_ids,
-                "user_accesses": target_user_ids,
-                "role_access": role_access
+                "access_level": access_level
             })
 
             document_chunk = DocumentChunk(
@@ -80,14 +75,11 @@ async def process_document_chunking_task(
 
 async def sync_chunk_metadata_task(
     tenant_id: str, document_id: str, access_level: str,
-    category: str = None, effective_date: datetime = None,
-    department_ids: List[str] = None, role_access: List[str] = None,
-    target_user_ids: List[str] = None
+    category: str = None, effective_date: datetime = None
 ):
     """
-    Background task: Chỉ đồng bộ lại trường metadata bảo mật (PAR Gate)
-    của các Chunk khi tài liệu thay đổi cấu hình phân quyền.
-    Dùng session DB mới độc lập với request session.
+    Background task: Chỉ đồng bộ lại metadata của các Chunk
+    khi tài liệu thay đổi cấu hình. Dùng session DB mới độc lập với request session.
     """
     try:
         async with AsyncSessionLocal() as session:
@@ -101,10 +93,7 @@ async def sync_chunk_metadata_task(
                 chunk_meta.update({
                     "category": category,
                     "effective_date": effective_date.strftime("%Y-%m-%d") if effective_date else None,
-                    "access_level": access_level,
-                    "department_ids": department_ids or [],
-                    "user_accesses": target_user_ids or [],
-                    "role_access": role_access or []
+                    "access_level": access_level
                 })
                 chunk.meta_data = chunk_meta
             
