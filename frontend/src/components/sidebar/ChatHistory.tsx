@@ -1,10 +1,24 @@
-import { Clock, Loader2, MessageSquare, Search, Trash2 } from 'lucide-react'
+import { useState } from 'react'
+import {
+    Clock,
+    Loader2,
+    MessageSquare,
+    MoreHorizontal,
+    Pencil,
+    Search,
+    Trash2,
+} from 'lucide-react'
 import { useChatStore } from '../../store/chatStore'
 import { useConversations } from '../../hooks/useConversations'
 import { useDeleteConversation } from '../../hooks/useDeleteConversation'
+import { useUpdateConversation } from '../../hooks/useUpdateConversation'
 import { useNavigate, useRouterState } from '@tanstack/react-router'
 import Tooltip from '../ui/Tooltip'
+import Modal from '../ui/Modal'
+import Input from '../ui/Input'
+import Button from '../ui/Button'
 import type { ID } from '../../types/common'
+import type { Conversation } from '../../types/chat'
 import { formatDateTimeToDDMMYYYY } from '../../../utils/formater'
 import { PRIVATE_ROUTES } from '../../routes/paths'
 
@@ -17,6 +31,10 @@ const ChatHistory = ({
 }) => {
     const { activeChatId, setActiveChat, searchKeyword, setSearchKeyword } =
         useChatStore()
+
+    const [activeMenuId, setActiveMenuId] = useState<ID | null>(null)
+    const [renamingConv, setRenamingConv] = useState<Conversation | null>(null)
+    const [renameTitle, setRenameTitle] = useState('')
 
     const routerState = useRouterState()
     const path = currentPath ?? routerState.location.pathname
@@ -33,6 +51,7 @@ const ChatHistory = ({
         isFetchingNextPage,
     } = useConversations()
     const { mutate: deleteConv } = useDeleteConversation()
+    const updateConvMutation = useUpdateConversation()
     const navigate = useNavigate()
 
     const handleSelectChat = (id: ID) => {
@@ -51,6 +70,23 @@ const ChatHistory = ({
                 fetchNextPage()
             }
         }
+    }
+
+    const handleOpenRenameModal = (conv: Conversation) => {
+        setRenamingConv(conv)
+        setRenameTitle(conv.title)
+    }
+
+    const handleSaveRename = () => {
+        if (!renamingConv || !renameTitle.trim()) return
+        updateConvMutation.mutate(
+            { id: renamingConv.id, title: renameTitle.trim() },
+            {
+                onSuccess: () => {
+                    setRenamingConv(null)
+                },
+            }
+        )
     }
 
     return (
@@ -134,12 +170,14 @@ const ChatHistory = ({
                         conversations.map((conv) => {
                             const isItemActive =
                                 isChatRoute && activeChatId === conv.id
+                            const isMenuOpen = activeMenuId === conv.id
+
                             return (
                                 <div
                                     key={conv.id}
                                     onClick={() => handleSelectChat(conv.id)}
                                     className={[
-                                        'group flex items-start gap-2 px-3 py-2 rounded-xl transition-all duration-150 cursor-pointer',
+                                        'group flex items-start gap-2 px-3 py-2 rounded-xl transition-all duration-150 cursor-pointer relative',
                                         isItemActive
                                             ? 'bg-primary/8 text-primary'
                                             : 'hover:bg-bg',
@@ -162,17 +200,73 @@ const ChatHistory = ({
                                             )}
                                         </p>
                                     </div>
-                                    <button
-                                        id={`delete-conv-${conv.id}`}
-                                        aria-label="Delete chat"
-                                        onClick={(e) => {
-                                            e.stopPropagation()
-                                            deleteConv(conv.id)
-                                        }}
-                                        className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-text-placeholder hover:text-error transition-all duration-150 flex-shrink-0"
+
+                                    {/* More action menu */}
+                                    <div
+                                        className="relative flex-shrink-0"
+                                        onClick={(e) => e.stopPropagation()}
                                     >
-                                        <Trash2 className="w-3 h-3" />
-                                    </button>
+                                        <button
+                                            id={`more-conv-${conv.id}`}
+                                            aria-label="Tùy chọn khác"
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                setActiveMenuId(
+                                                    isMenuOpen ? null : conv.id
+                                                )
+                                            }}
+                                            className={[
+                                                'p-1 rounded-lg text-text-placeholder hover:text-text-primary hover:bg-surface transition-all duration-150',
+                                                isMenuOpen
+                                                    ? 'opacity-100 bg-surface text-text-primary'
+                                                    : 'opacity-0 group-hover:opacity-100',
+                                            ].join(' ')}
+                                        >
+                                            <MoreHorizontal className="w-3.5 h-3.5" />
+                                        </button>
+
+                                        {isMenuOpen && (
+                                            <>
+                                                <div
+                                                    className="fixed inset-0 z-10"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        setActiveMenuId(null)
+                                                    }}
+                                                />
+                                                <div className="absolute right-0 top-full mt-1 z-20 w-32 bg-surface border border-border shadow-lg rounded-xl py-1 text-xs text-text-primary animate-scale-pop">
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            setActiveMenuId(
+                                                                null
+                                                            )
+                                                            handleOpenRenameModal(
+                                                                conv
+                                                            )
+                                                        }}
+                                                        className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-bg text-left transition-colors"
+                                                    >
+                                                        <Pencil className="w-3.5 h-3.5 text-text-muted" />
+                                                        <span>Đổi tên</span>
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            setActiveMenuId(
+                                                                null
+                                                            )
+                                                            deleteConv(conv.id)
+                                                        }}
+                                                        className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-bg text-error text-left transition-colors"
+                                                    >
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                        <span>Xóa</span>
+                                                    </button>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
                             )
                         })}
@@ -184,6 +278,53 @@ const ChatHistory = ({
                         </div>
                     )}
                 </div>
+            )}
+
+            {/* Modal Rename Conversation */}
+            {renamingConv && (
+                <Modal
+                    isOpen={!!renamingConv}
+                    onClose={() => setRenamingConv(null)}
+                    title="Đổi tên cuộc trò chuyện"
+                    size="sm"
+                    footer={
+                        <>
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => setRenamingConv(null)}
+                                disabled={updateConvMutation.isPending}
+                            >
+                                Hủy
+                            </Button>
+                            <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={handleSaveRename}
+                                isLoading={updateConvMutation.isPending}
+                                disabled={!renameTitle.trim()}
+                            >
+                                Lưu
+                            </Button>
+                        </>
+                    }
+                >
+                    <form
+                        onSubmit={(e) => {
+                            e.preventDefault()
+                            handleSaveRename()
+                        }}
+                        className="space-y-4"
+                    >
+                        <Input
+                            label="Tên cuộc trò chuyện"
+                            value={renameTitle}
+                            onChange={(e) => setRenameTitle(e.target.value)}
+                            placeholder="Nhập tên cuộc trò chuyện..."
+                            autoFocus
+                        />
+                    </form>
+                </Modal>
             )}
         </div>
     )

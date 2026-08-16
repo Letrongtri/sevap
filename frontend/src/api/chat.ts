@@ -61,6 +61,21 @@ export const deleteConversation = async (id: ID): Promise<void> => {
     await axiosClient.delete(`/conversations/${id}`)
 }
 
+/** Cập nhật tiêu đề (rename) conversation */
+export const updateConversation = async (
+    id: ID,
+    title: string
+): Promise<Conversation> => {
+    const res = await axiosClient.patch(`/conversations/${id}`, { title })
+    const d = res.data
+    return {
+        id: d.id,
+        title: d.title,
+        createdAt: d.created_at,
+        updatedAt: d.updated_at,
+    }
+}
+
 /**
  * Lấy chi tiết conversation + 10 messages cuối.
  * Dùng cho lần đầu mở chat (initial load).
