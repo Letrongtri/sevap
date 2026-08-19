@@ -7,6 +7,9 @@ from fastapi import FastAPI, status, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request as StarletteRequest
+from starlette.responses import Response
 
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
@@ -89,6 +92,30 @@ app = FastAPI(
 # Attach rate limiter to app state and register SlowAPIMiddleware
 app.state.limiter = limiter
 app.add_middleware(SlowAPIMiddleware)
+
+
+class MaxBodySizeMiddleware(BaseHTTPMiddleware):
+    """Middleware to enforce maximum request body size (returns 413 with JSON)."""
+
+    def __init__(self, app, max_size_bytes: int):
+        super().__init__(app)
+        self.max_size_bytes = max_size_bytes
+
+    async def dispatch(self, request: StarletteRequest, call_next) -> Response:
+        content_length = request.headers.get("content-length")
+        if content_length and int(content_length) > self.max_size_bytes:
+            return Response(
+                content='{"detail": "Request body too large"}',
+                status_code=413,
+                media_type="application/json",
+            )
+        return await call_next(request)
+
+
+app.add_middleware(
+    MaxBodySizeMiddleware,
+    max_size_bytes=settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024,
+)
 
 
 @app.exception_handler(RateLimitExceeded)

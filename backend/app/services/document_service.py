@@ -61,6 +61,8 @@ class DocumentService:
         tenant_id: str,
         policies: List[DocumentAccessPolicyCreate]
     ) -> None:
+        if not policies:
+            return
         for p in policies:
             for cond in p.conditions:
                 c_type = cond.condition_type.value if hasattr(cond.condition_type, "value") else str(cond.condition_type)

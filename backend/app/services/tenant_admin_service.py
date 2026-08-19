@@ -78,7 +78,7 @@ class TenantAdminService:
             merged_data: dict[str, AdminTenantChatStatisticsItem] = {}
 
             for time_bucket, conv_count in conversations_res:
-                clean_key = time_bucket[:10] if time_bucket else "Unknown"
+                clean_key = str(time_bucket)[:10] if time_bucket else "Unknown"
                 merged_data[clean_key] = AdminTenantChatStatisticsItem(
                     label=clean_key,
                     total_conversations=conv_count,
@@ -86,7 +86,7 @@ class TenantAdminService:
                 )
 
             for time_bucket, msg_count in messages_res:
-                clean_key = time_bucket[:10] if time_bucket else "Unknown"
+                clean_key = str(time_bucket)[:10] if time_bucket else "Unknown"
                 if clean_key in merged_data:
                     merged_data[clean_key].total_messages = msg_count
                 else:

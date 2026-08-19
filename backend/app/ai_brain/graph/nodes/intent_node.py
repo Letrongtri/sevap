@@ -39,7 +39,8 @@ async def intent_node(state: AgentState, config: RunnableConfig) -> dict:
             "retrieved_chunks": [],
             "reranked_chunks": [],
             "router_reasoning": "Tier-0 heuristic match: {}".format(heuristic.category_name),
-            "time_range": {"date_from": None, "date_to": None, "is_time_sensitive": False},
+            "time_range": {},
+            # "time_range": {"date_from": None, "date_to": None, "is_time_sensitive": False},
             "_next": GraphNodeID.DIRECT_RESPONSE_GENERATOR.value,
         }
 
@@ -83,6 +84,7 @@ async def intent_node(state: AgentState, config: RunnableConfig) -> dict:
         "retrieved_chunks": [],
         "reranked_chunks": [],
         "router_reasoning": router_output.reasoning,
-        "time_range": router_output.time_range.model_dump(),
+        "time_range": {},
+        # "time_range": router_output.time_range.model_dump(),
         "_next": GraphNodeID.RETRIEVAL.value
     }

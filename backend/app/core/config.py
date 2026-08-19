@@ -137,6 +137,7 @@ class Settings:
         self.GEOIP_DB_PATH = self.BASE_DIR / "data" / "geolite2" / "GeoLite2-City.mmdb"
 
         self.MAX_CAPACITY_TB = float(os.getenv("MAX_CAPACITY_TB", "4.0"))
+        self.MAX_UPLOAD_SIZE_MB = int(os.getenv("MAX_UPLOAD_SIZE_MB", "50"))  # 50 MB default
 
         # CORS Settings
         # self.ALLOWED_ORIGINS = parse_list_from_env("ALLOWED_ORIGINS", ["*"])

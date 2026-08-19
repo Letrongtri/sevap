@@ -1,3 +1,4 @@
+import asyncio
 import json
 from typing import List, AsyncGenerator
 
@@ -14,6 +15,9 @@ from app.ai_brain.retrieval.service import RetrievalService
 from app.ai_brain.schemas import UserSecurityContext
 from app.core.logging import logger
 from app.core.enum import GraphNodeID
+
+# Sentinel để báo hiệu queue đã kết thúc
+_QUEUE_DONE = object()
 
 
 class MessageService:
@@ -82,6 +86,12 @@ class MessageService:
           4. event: error     — if an unrecoverable error occurs
 
         Each yielded value is a complete SSE "data: ...\\n\\n" line.
+
+        ⚡ Anti-cancel design: LangGraph chạy trong một asyncio.Task riêng biệt
+        được bảo vệ bởi asyncio.shield(). Khi client (trình duyệt) ngắt kết nối
+        SSE (ví dụ: chuyển tab, refresh), BaseHTTPMiddleware sẽ cancel cancel scope
+        của nó nhưng KHÔNG thể cancel Task LangGraph vì đã được shield. Pipeline
+        tiếp tục chạy đến hoàn thành và persist kết quả vào DB bình thường.
         """
         # ── 1. Ensure conversation exists ──────────────────────────────────
         if conversation_id is None:
@@ -157,133 +167,201 @@ class MessageService:
                     exc_info=True,
                 )
 
-        # ── 7. Invoke LangGraph và stream kết quả ─────────────────────────
-        full_answer = ""
-        sources: list = []
-        agent_type: str | None = None
-        had_error = False
+        # ── 7. Tạo Queue để bridge LangGraph task → SSE generator ──────────
+        # Mỗi item trong queue là một SSE string đã encode sẵn.
+        # _QUEUE_DONE là sentinel báo hiệu kết thúc.
+        queue: asyncio.Queue = asyncio.Queue()
 
-        try:
-            # Reset all state fields from previous checkpoints to prevent state bleed
-            graph_input = {
-                "original_question": content,
-                "conversation_id": conversation_id,
-                "messages": [HumanMessage(content=content)],
-                "retry_count": 0,
-                "cache_hit": False,
-                "cache_response": None,
-                "rewritten_question": "",
-                "intent_type": "",
-                "execution_plan": "",
-                "sub_queries": [],
-                "router_reasoning": "",
-                "retrieved_chunks": [],
-                "reranked_chunks": [],
-                "sub_query_chunks": [],
-                "failed_sub_query_ids": [],
-                "passed_sub_query_ids": [],
-                "confidence_score": 0.0,
-                "final_answer": "",
-                "sources": [],
-                "prompt_templates": prompt_templates,
-                "_next": None,
-            }
+        # ── 8. Hàm worker chạy LangGraph trong Task riêng biệt ────────────
+        async def _run_graph() -> None:
+            """
+            Chạy toàn bộ pipeline LangGraph và đẩy SSE events vào queue.
+            Hàm này chạy trong asyncio.Task được bọc bởi asyncio.shield()
+            → không bị cancel khi client (browser) ngắt kết nối.
+            """
+            full_answer = ""
+            sources: list = []
+            agent_type: str | None = None
+            had_error = False
 
-            thread_config = {
-                "configurable": {
-                    "thread_id": conversation_id,
-                    # Per-request context — không persist bởi checkpointer
-                    # (tránh serialize lỗi với Postgres vì đây là dataclass/ORM objects)
-                    "user_security_ctx": security_ctx,
-                    "par_ctx": par_ctx,
-                    "chat_history": chat_history,
-                    "retrieval_service": self.retrieval_service,
+            try:
+                # Reset all state fields from previous checkpoints to prevent state bleed
+                graph_input = {
+                    "original_question": content,
+                    "conversation_id": conversation_id,
+                    "messages": [HumanMessage(content=content)],
+                    "retry_count": 0,
+                    "cache_hit": False,
+                    "cache_response": None,
+                    "rewritten_question": "",
+                    "intent_type": "",
+                    "execution_plan": "",
+                    "sub_queries": [],
+                    "router_reasoning": "",
+                    "retrieved_chunks": [],
+                    "reranked_chunks": [],
+                    "sub_query_chunks": [],
+                    "failed_sub_query_ids": [],
+                    "passed_sub_query_ids": [],
+                    "confidence_score": 0.0,
+                    "final_answer": "",
+                    "sources": [],
+                    "prompt_templates": prompt_templates,
+                    "_next": None,
                 }
-            }
 
-            # Stream sự kiện từ LangGraph — chỉ lấy token từ LLM node
-            async for event in self.compiled_graph.astream_events(
-                graph_input,
-                config=thread_config,
-                version="v2",
-            ):
-                event_name = event.get("event")
-                event_data = event.get("data", {})
+                thread_config = {
+                    "configurable": {
+                        "thread_id": conversation_id,
+                        # Per-request context — không persist bởi checkpointer
+                        # (tránh serialize lỗi với Postgres vì đây là dataclass/ORM objects)
+                        "user_security_ctx": security_ctx,
+                        "par_ctx": par_ctx,
+                        "chat_history": chat_history,
+                        "retrieval_service": self.retrieval_service,
+                    }
+                }
 
-                # Lấy token streaming từ on_chat_model_stream
-                if event_name == "on_chat_model_stream":
-                    # Chỉ stream token từ các node tạo câu trả lời trực tiếp cho người dùng
-                    node_id = event.get("metadata", {}).get("langgraph_node")
-                    if node_id not in [
-                        GraphNodeID.DIRECT_RESPONSE_GENERATOR.value,
-                        GraphNodeID.FINAL_RESPONSE_GENERATOR.value,
-                        GraphNodeID.FALLBACK_NODE.value,
-                        GraphNodeID.SECURITY_KILL_SWITCH.value
-                    ]:
-                        continue
+                # Stream sự kiện từ LangGraph — chỉ lấy token từ LLM node
+                async for event in self.compiled_graph.astream_events(
+                    graph_input,
+                    config=thread_config,
+                    version="v2",
+                ):
+                    event_name = event.get("event")
+                    event_data = event.get("data", {})
 
-                    chunk = event_data.get("chunk")
-                    if chunk and hasattr(chunk, "content") and chunk.content:
-                        token = chunk.content
-                        full_answer += token
-                        yield "event: token\ndata: " + json.dumps({"token": token}) + "\n\n"
+                    # Lấy token streaming từ on_chat_model_stream
+                    if event_name == "on_chat_model_stream":
+                        # Chỉ stream token từ các node tạo câu trả lời trực tiếp cho người dùng
+                        node_id = event.get("metadata", {}).get("langgraph_node")
+                        if node_id not in [
+                            GraphNodeID.DIRECT_RESPONSE_GENERATOR.value,
+                            GraphNodeID.FINAL_RESPONSE_GENERATOR.value,
+                            GraphNodeID.FALLBACK_NODE.value,
+                            GraphNodeID.SECURITY_KILL_SWITCH.value
+                        ]:
+                            continue
 
-            # ── 7. Lấy final state sau khi graph hoàn thành ────────────────
-            final_state = await self.compiled_graph.aget_state(config=thread_config)
-            if final_state and final_state.values:
-                state_vals = final_state.values
-                full_answer = state_vals.get("final_answer") or full_answer
-                sources = state_vals.get("sources") or []
-                # Xác định agent_type từ intent
-                intent = state_vals.get("intent_type")
-                agent_type = intent if intent else "rag"
+                        chunk = event_data.get("chunk")
+                        if chunk and hasattr(chunk, "content") and chunk.content:
+                            token = chunk.content
+                            full_answer += token
+                            await queue.put(
+                                "event: token\ndata: " + json.dumps({"token": token}) + "\n\n"
+                            )
 
-        except Exception:
-            had_error = True
-            logger.error(
-                "graph_stream_failed",
-                tenant_id=tenant_id,
-                user_id=user_id,
-                conversation_id=conversation_id,
-                exc_info=True,
-            )
-            # Rollback DB session để reset Postgres transaction state từ ABORTED
-            try:
-                await self.msg_repo.db.rollback()
+                # Lấy final state sau khi graph hoàn thành
+                final_state = await self.compiled_graph.aget_state(config=thread_config)
+                if final_state and final_state.values:
+                    state_vals = final_state.values
+                    full_answer = state_vals.get("final_answer") or full_answer
+                    sources = state_vals.get("sources") or []
+                    # Xác định agent_type từ intent
+                    intent = state_vals.get("intent_type")
+                    agent_type = intent if intent else "rag"
+
+            except asyncio.CancelledError:
+                # Task bị cancel từ bên ngoài (không nên xảy ra khi đã shield)
+                # Log và re-raise để asyncio xử lý đúng lifecycle của task
+                logger.warning(
+                    "graph_task_cancelled_unexpectedly",
+                    conversation_id=conversation_id,
+                )
+                raise
+
             except Exception:
-                pass
-            full_answer = "Đã xảy ra lỗi khi xử lý câu hỏi. Vui lòng thử lại."
-            yield "event: error\ndata: " + json.dumps({"message": full_answer}) + "\n\n"
+                had_error = True
+                logger.error(
+                    "graph_stream_failed",
+                    tenant_id=tenant_id,
+                    user_id=user_id,
+                    conversation_id=conversation_id,
+                    exc_info=True,
+                )
+                # Rollback DB session để reset Postgres transaction state từ ABORTED
+                try:
+                    await self.msg_repo.db.rollback()
+                except Exception:
+                    pass
+                full_answer = "Đã xảy ra lỗi khi xử lý câu hỏi. Vui lòng thử lại."
+                await queue.put(
+                    "event: error\ndata: " + json.dumps({"message": full_answer}) + "\n\n"
+                )
 
-        # ── 8. Persist assistant message ───────────────────────────────────
-        assistant_message_id = None
+            # ── Persist assistant message ──────────────────────────────────
+            assistant_message_id = None
+            try:
+                assistant_message = Message(
+                    conversation_id=conversation_id,
+                    actor="assistant",
+                    agent_type=agent_type,
+                    content=full_answer,
+                    retrieval_context=sources if sources else None,
+                    confidence_score=None,
+                )
+                new_assistant_message = await self.msg_repo.create_message(assistant_message)
+                if new_assistant_message:
+                    assistant_message_id = new_assistant_message.id
+            except Exception:
+                logger.error(
+                    "persist_assistant_message_failed",
+                    conversation_id=conversation_id,
+                    exc_info=True,
+                )
+                try:
+                    await self.msg_repo.db.rollback()
+                except Exception:
+                    pass
+
+            # Yield done (only when no error already signalled)
+            if not had_error:
+                await queue.put(
+                    "event: done\ndata: " + json.dumps({
+                        "assistant_message_id": assistant_message_id,
+                        "sources": sources,
+                        "agent_type": agent_type,
+                    }) + "\n\n"
+                )
+
+            # Báo hiệu kết thúc queue
+            await queue.put(_QUEUE_DONE)
+
+        # ── 9. Khởi chạy graph worker trong Task được shield khỏi cancel ──
+        # asyncio.shield() đảm bảo rằng khi BaseHTTPMiddleware cancel cancel scope
+        # (do client disconnect / tab switching), Task _run_graph vẫn tiếp tục
+        # chạy đến hoàn thành mà không bị ảnh hưởng.
+        graph_task = asyncio.ensure_future(_run_graph())
+        shielded = asyncio.shield(graph_task)
+
         try:
-            assistant_message = Message(
-                conversation_id=conversation_id,
-                actor="assistant",
-                agent_type=agent_type,
-                content=full_answer,
-                retrieval_context=sources if sources else None,
-                confidence_score=None,
-            )
-            new_assistant_message = await self.msg_repo.create_message(assistant_message)
-            if new_assistant_message:
-                assistant_message_id = new_assistant_message.id
-        except Exception:
-            logger.error(
-                "persist_assistant_message_failed",
-                conversation_id=conversation_id,
-                exc_info=True,
-            )
-            try:
-                await self.msg_repo.db.rollback()
-            except Exception:
-                pass
+            # ── 10. Đọc events từ queue và yield SSE ra cho client ─────────
+            while True:
+                try:
+                    # Timeout 300s để tránh treo vô hạn nếu graph_task bị lỗi im lặng
+                    item = await asyncio.wait_for(queue.get(), timeout=300.0)
+                except asyncio.TimeoutError:
+                    logger.error(
+                        "graph_task_timeout",
+                        conversation_id=conversation_id,
+                    )
+                    break
 
-        # ── 9. Yield done (only when no error already signalled) ───────────
-        if not had_error:
-            yield "event: done\ndata: " + json.dumps({
-                "assistant_message_id": assistant_message_id,
-                "sources": sources,
-                "agent_type": agent_type,
-            }) + "\n\n"
+                if item is _QUEUE_DONE:
+                    break
+
+                yield item
+
+        except asyncio.CancelledError:
+            # ⚡ Client ngắt kết nối (chuyển tab, refresh, đóng trình duyệt).
+            # SSE generator bị cancel NHƯNG graph_task VẪN TIẾP TỤC chạy
+            # nhờ asyncio.shield() — KHÔNG re-raise để tránh làm sập pipeline.
+            logger.info(
+                "sse_stream_cancelled_by_client_disconnect__graph_task_continues",
+                conversation_id=conversation_id,
+            )
+            # graph_task tiếp tục chạy ngầm và persist kết quả vào DB
+
+        finally:
+            # Hủy shielded future (wrapper), KHÔNG hủy graph_task bên trong
+            shielded.cancel()
